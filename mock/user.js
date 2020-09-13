@@ -26,7 +26,7 @@ const users = {
 module.exports = [
   // user login
   {
-    url: '/vue-element-admin/user/login',
+    url: '/service/token',
     type: 'post',
     response: config => {
       const { username } = config.body
@@ -35,13 +35,13 @@ module.exports = [
       // mock error
       if (!token) {
         return {
-          code: 60204,
+          code: 400,
           message: 'Account and password are incorrect.'
         }
       }
 
       return {
-        code: 20000,
+        code: 200,
         data: token
       }
     }
@@ -49,22 +49,13 @@ module.exports = [
 
   // get user info
   {
-    url: '/vue-element-admin/user/info\.*',
+    url: '/service/user',
     type: 'get',
     response: config => {
-      const { token } = config.query
-      const info = users[token]
-
-      // mock error
-      if (!info) {
-        return {
-          code: 50008,
-          message: 'Login failed, unable to get user details.'
-        }
-      }
+      const info = users['admin-token']
 
       return {
-        code: 20000,
+        code: 200,
         data: info
       }
     }
@@ -72,11 +63,11 @@ module.exports = [
 
   // user logout
   {
-    url: '/vue-element-admin/user/logout',
-    type: 'post',
+    url: '/service/token',
+    type: 'delete',
     response: _ => {
       return {
-        code: 20000,
+        code: 200,
         data: 'success'
       }
     }
