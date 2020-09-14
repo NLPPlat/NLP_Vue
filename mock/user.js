@@ -61,6 +61,19 @@ module.exports = [
     }
   },
 
+  // registerNum
+  // get user info
+  {
+    url: '/service/user',
+    type: 'post',
+    response: _ => {
+      return {
+        code: 200,
+        data: 'success'
+      }
+    }
+  },
+
   // user logout
   {
     url: '/service/token',

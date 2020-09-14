@@ -1,4 +1,5 @@
-import { login, getInfo, logout } from '@/api/service/user'
+// eslint-disable-next-line no-unused-vars
+import { login, getInfo, logout, registerNum } from '@/api/service/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
 
@@ -44,6 +45,16 @@ const actions = {
     })
   },
 
+  // register
+  registerNum(RegisterForm) {
+    return new Promise((resolve, reject) => {
+      registerNum(RegisterForm).then(response => {
+        resolve()
+      }).catch(error =>
+        reject(error)
+      )
+    })
+  },
   // get user info
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {

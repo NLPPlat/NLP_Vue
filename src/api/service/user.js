@@ -16,6 +16,14 @@ export function getInfo(token) {
   })
 }
 
+export function registerNum(data) {
+  return request({
+    url: '/service/user',
+    method: 'post',
+    data: data
+  })
+}
+
 export function logout() {
   return request({
     url: '/service/token',
