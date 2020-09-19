@@ -1,16 +1,16 @@
 <template>
   <div>
-    <complex-table />
+    <inline-edit-table />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
-import complexTable from './components/complex-table'
+import inlineEditTable from './components/inline-edit-table'
 
 export default {
-  name: 'DataSet',
-  components: { complexTable },
+  name: 'DataDetail',
+  components: { inlineEditTable },
   data() {
     return {
     }

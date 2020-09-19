@@ -23,6 +23,12 @@ const componentsRouter = {
       name: 'data-set',
       meta: { title: '数据集' }
     }, {
+      path: 'data-detail',
+      component: () => import('@/views/process-manage/data-set/data-detail/index'),
+      name: 'data-detail',
+      hidden: true,
+      meta: { title: '数据详情' }
+    }, {
       path: 'annotation',
       component: () => import('@/views/process-manage/annotation/index'),
       name: 'annotation',
