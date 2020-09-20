@@ -18,10 +18,10 @@
         <el-form-item label="任务描述">
           <el-input v-model="uploadForm.desc" type="textarea" placeholder="选填" style="width:400px" />
         </el-form-item>
-        <el-form-item label="是否公开" prop="publicity">
+        <el-form-item label="公开性" prop="publicity">
           <el-radio-group v-model="uploadForm.publicity">
-            <el-radio label="是" />
-            <el-radio label="否" />
+            <el-radio label="公开" />
+            <el-radio label="不公开" />
           </el-radio-group>
         </el-form-item>
         <el-form-item label="文件上传" prop="filelist">
@@ -34,6 +34,7 @@
             :data="uploadForm"
             :limit="1"
             :auto-upload="false"
+            :on-success="handleUploadSuccess"
             accept=".csv, .txt, .tsv, .doc, .docx, .xls, .xlsx"
             style="height:120px"
           >
@@ -115,6 +116,15 @@ export default {
         }
       })
       this.$refs.uploadFunc.submit()
+    },
+    handleUploadSuccess() {
+      this.$notify({
+        title: '上传成功',
+        message: '后台解析文件中。',
+        type: 'success',
+        duration: 2000
+      })
+      this.$router.push('/process-manage/data-set')
     }
   }
 }
