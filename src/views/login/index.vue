@@ -49,7 +49,7 @@
 
       <div style="position:relative">
         <div class="tips">
-          <span style="margin-left:36px;margin-right:36px;">没有账号？</span>
+          <span style="margin-left:36px;margin-right:36px;cursor:pointer;" @click="showRegisterDialog=true">没有账号？</span>
           <span>找回密码</span>
         </div>
         <div class="tips">
@@ -66,15 +66,19 @@
     <el-dialog title="社交帐号登录" :visible.sync="showDialog">
       <social-sign />
     </el-dialog>
+    <el-dialog title="注册" :visible.sync="showRegisterDialog">
+      <Register />
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import SocialSign from './components/SocialSignin'
+import SocialSign from './components/social-signin'
+import Register from './components/register'
 
 export default {
   name: 'Login',
-  components: { SocialSign },
+  components: { SocialSign, Register },
   data() {
     const validateUsername = (rule, value, callback) => {
       if (value.length < 4) {
@@ -103,6 +107,7 @@ export default {
       capsTooltip: false,
       loading: false,
       showDialog: false,
+      showRegisterDialog: false,
       redirect: undefined,
       otherQuery: {}
     }

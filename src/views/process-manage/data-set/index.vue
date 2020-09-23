@@ -1,16 +1,16 @@
 <template>
   <div>
-    <complex-table />
+    <data-set-table />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
-import complexTable from './components/complex-table'
+import DataSetTable from './components/data-set-table'
 
 export default {
   name: 'DataSet',
-  components: { complexTable },
+  components: { DataSetTable },
   data() {
     return {
     }

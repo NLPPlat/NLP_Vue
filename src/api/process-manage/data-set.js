@@ -11,7 +11,7 @@ export function fetchList(query) {
 export function fetchDetail(query) {
   return request({
     url: '/process-manage/dataset/detail',
-    method: 'get'
-    // params: query
+    method: 'get',
+    params: query
   })
 }

@@ -23,7 +23,7 @@ const componentsRouter = {
       name: 'data-set',
       meta: { title: '数据集' }
     }, {
-      path: 'data-detail',
+      path: 'data-detail/:id',
       component: () => import('@/views/process-manage/data-set/data-detail/index'),
       name: 'data-detail',
       hidden: true,

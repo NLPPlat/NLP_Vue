@@ -1,16 +1,16 @@
 <template>
   <div>
-    <inline-edit-table />
+    <data-detail-table />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
-import inlineEditTable from './components/inline-edit-table'
+import DataDetailTable from './components/data-detail-table'
 
 export default {
   name: 'DataDetail',
-  components: { inlineEditTable },
+  components: { DataDetailTable },
   data() {
     return {
     }

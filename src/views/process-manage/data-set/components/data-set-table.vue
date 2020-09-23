@@ -126,7 +126,7 @@ const calendarTypeKeyValue = calendarTypeOptions.reduce((acc, cur) => {
 }, {})
 
 export default {
-  name: 'ComplexTable',
+  name: 'DataSetTable',
   components: { Pagination },
   directives: { waves },
   filters: {
@@ -194,11 +194,10 @@ export default {
       fetchList(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        console.log(this.list)
         // Just to simulate the time of the request
         setTimeout(() => {
           this.listLoading = false
-        }, 1.5 * 1000)
+        }, 0 * 1000)
       })
     },
     handleFilter() {
@@ -264,7 +263,7 @@ export default {
       })
     },
     handleManage(row) {
-      this.$router.push('/process-manage/data-detail')
+      this.$router.push('/process-manage/data-detail/' + row._id)
     },
     updateData() {
       this.$refs['dataForm'].validate((valid) => {

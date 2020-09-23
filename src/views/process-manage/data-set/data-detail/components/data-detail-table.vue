@@ -16,7 +16,7 @@
         </template>
       </el-table-column> -->
 
-      <el-table-column label="标签">
+      <el-table-column align="center" width="60px" label="标签" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <template v-if="row.edit">
             <el-input v-model="row.label" class="edit-input" size="small" />
@@ -25,34 +25,43 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="标签">
+      <el-table-column label="标题" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <template v-if="row.edit">
-            <el-input v-model="row.label" class="edit-input" size="small" />
+            <el-input v-model="row.title" class="edit-input" size="small" />
           </template>
-          <span v-else>{{ row.label }}</span>
+          <span v-else>{{ row.title }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column label="标签">
+      <el-table-column label="文本1" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <template v-if="row.edit">
-            <el-input v-model="row.label" class="edit-input" size="small" />
+            <el-input v-model="row.text1" class="edit-input" size="small" />
           </template>
-          <span v-else>{{ row.label }}</span>
+          <span v-else>{{ row.text1 }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column align="center" label="Actions" width="120px">
+      <el-table-column label="文本2" :show-overflow-tooltip="true">
+        <template slot-scope="{row}">
+          <template v-if="row.edit">
+            <el-input v-model="row.text2" class="edit-input" size="small" />
+          </template>
+          <span v-else>{{ row.text2 }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column align="center" label="操作" width="200px">
         <template slot-scope="{row}">
           <el-button
             v-if="row.edit"
             type="success"
             size="small"
-            icon="el-icon-circle-check-outline"
+            icon="el-icon-success"
             @click="confirmEdit(row)"
           >
-            Ok
+            确认
           </el-button>
           <el-button
             v-else
@@ -61,19 +70,31 @@
             icon="el-icon-edit"
             @click="row.edit=!row.edit"
           >
-            Edit
+            编辑
+          </el-button>
+          <el-button
+            type="danger"
+            size="small"
+            icon="el-icon-delete"
+          >
+            删除
           </el-button>
         </template>
       </el-table-column>
     </el-table>
+
+    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
+
   </div>
 </template>
 
 <script>
 import { fetchDetail } from '@/api/process-manage/data-set'
+import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
 export default {
-  name: 'InlineEditTable',
+  name: 'DataDetailTable',
+  components: { Pagination },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -88,7 +109,9 @@ export default {
     return {
       list: null,
       listLoading: true,
+      total: 0,
       listQuery: {
+        id: null,
         page: 1,
         limit: 10
       }
@@ -99,6 +122,7 @@ export default {
   },
   methods: {
     async getList() {
+      this.listQuery.id = this.$route.params.id
       this.listLoading = true
       const { data } = await fetchDetail(this.listQuery)
       const items = data.items
@@ -107,6 +131,7 @@ export default {
         v.originalTitle = v.title //  will be used when user click the cancel botton
         return v
       })
+      this.total = data.total
       this.listLoading = false
     },
     cancelEdit(row) {
@@ -131,7 +156,7 @@ export default {
 
 <style scoped>
 .edit-input {
-  padding-right: 100px;
+
 }
 .cancel-btn {
   position: absolute;
