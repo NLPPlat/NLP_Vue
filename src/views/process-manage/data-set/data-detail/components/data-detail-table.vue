@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
+    <el-table v-loading="listLoading" :data="list" border fit style="width: 100%">
 
       <!-- <el-table-column width="120px" align="center" label="Author">
         <template slot-scope="{row}">

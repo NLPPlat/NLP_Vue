@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import store from '@/store'
 
 export function login(data) {
   return request({
@@ -16,17 +17,19 @@ export function register(data) {
   })
 }
 
-export function getInfo(token) {
+export function getInfo() {
   return request({
     url: '/service/user',
     method: 'get',
-    headers: { 'Authorization': 'Bearer ' + token }
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })
 }
 
 export function logout() {
+  console.log(store)
   return request({
     url: '/service/token',
-    method: 'delete'
+    method: 'delete',
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })
 }

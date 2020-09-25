@@ -57,17 +57,17 @@
           <span />
         </div>
 
-        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
+        <el-button class="thirdparty-button" type="primary" @click="showSocialDialog=true">
           社交账号登录
         </el-button>
       </div>
     </el-form>
 
-    <el-dialog title="社交帐号登录" :visible.sync="showDialog">
+    <el-dialog title="社交帐号登录" :visible.sync="showSocialDialog">
       <social-sign />
     </el-dialog>
     <el-dialog title="注册" :visible.sync="showRegisterDialog">
-      <Register />
+      <register @closeRegisterDialog="closeRegisterDialog" />
     </el-dialog>
   </div>
 </template>
@@ -106,7 +106,7 @@ export default {
       passwordType: 'password',
       capsTooltip: false,
       loading: false,
-      showDialog: false,
+      showSocialDialog: false,
       showRegisterDialog: false,
       redirect: undefined,
       otherQuery: {}
@@ -177,25 +177,10 @@ export default {
         }
         return acc
       }, {})
+    },
+    closeRegisterDialog() {
+      this.showRegisterDialog = false
     }
-    // afterQRScan() {
-    //   if (e.key === 'x-admin-oauth-code') {
-    //     const code = getQueryObject(e.newValue)
-    //     const codeMap = {
-    //       wechat: 'code',
-    //       tencent: 'code'
-    //     }
-    //     const type = codeMap[this.auth_type]
-    //     const codeName = code[type]
-    //     if (codeName) {
-    //       this.$store.dispatch('LoginByThirdparty', codeName).then(() => {
-    //         this.$router.push({ path: this.redirect || '/' })
-    //       })
-    //     } else {
-    //       alert('第三方登录失败')
-    //     }
-    //   }
-    // }
   }
 }
 </script>

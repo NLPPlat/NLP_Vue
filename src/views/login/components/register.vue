@@ -80,9 +80,9 @@ export default {
       this.$refs.RegisterFormRef.validate(valid => {
         if (valid) {
           this.loading = true
-          console.log(this.RegisterForm)
           this.$store.dispatch('user/register', this.RegisterForm)
             .then(() => {
+              this.$emit('closeRegisterDialog')
               this.$notify({
                 title: '注册成功',
                 message: '可使用注册的用户名与密码登录',
