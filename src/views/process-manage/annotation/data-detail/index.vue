@@ -1,16 +1,16 @@
 <template>
   <div>
-    <annotation-table />
+    <data-detail-table />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
-import AnnotationTable from './components/annotation-table'
+import DataDetailTable from './components/data-detail-table'
 
 export default {
-  name: 'Annotation',
-  components: { AnnotationTable },
+  name: 'DataDetail',
+  components: { DataDetailTable },
   data() {
     return {
     }

@@ -5,7 +5,7 @@ export function login(data) {
   return request({
     url: '/service/token',
     method: 'post',
-    data
+    data: data
   })
 }
 

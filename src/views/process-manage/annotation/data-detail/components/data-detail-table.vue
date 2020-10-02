@@ -2,16 +2,39 @@
   <div class="app-container">
     <el-table v-loading="listLoading" :data="list" border fit style="width: 100%">
 
-      <el-table-column v-if="titleContain" label="标题" width="250px" :show-overflow-tooltip="true">
+      <!-- <el-table-column width="120px" align="center" label="Author">
+        <template slot-scope="{row}">
+          <span>{{ row.author }}</span>
+        </template>
+      </el-table-column> -->
+
+      <!-- <el-table-column class-name="status-col" label="Status" width="110">
+        <template slot-scope="{row}">
+          <el-tag :type="row.status | statusFilter">
+            {{ row.status }}
+          </el-tag>
+        </template>
+      </el-table-column> -->
+
+      <!-- <el-table-column align="center" width="60px" label="标签" :show-overflow-tooltip="true">
+        <template slot-scope="{row}">
+          <template v-if="row.edit">
+            <el-input v-model="row.label" class="edit-input" size="small" />
+          </template>
+          <span v-else>{{ row.label }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="标题" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <template v-if="row.edit">
             <el-input v-model="row.title" class="edit-input" size="small" />
           </template>
           <span v-else>{{ row.title }}</span>
         </template>
-      </el-table-column>
+      </el-table-column> -->
 
-      <el-table-column v-if="taskType!=='文本关系分析'" label="文本" :show-overflow-tooltip="true">
+      <el-table-column label="文本" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <template v-if="row.edit">
             <el-input v-model="row.text1" class="edit-input" size="small" />
@@ -19,52 +42,25 @@
           <span v-else>{{ row.text1 }}</span>
         </template>
       </el-table-column>
-
-      <el-table-column v-if="taskType==='文本关系分析'" label="文本1" :show-overflow-tooltip="true">
-        <template slot-scope="{row}">
-          <template v-if="row.edit">
-            <el-input v-model="row.text1" class="edit-input" size="small" />
-          </template>
-          <span v-else>{{ row.text1 }}</span>
-        </template>
-      </el-table-column>
-
-      <el-table-column v-if="taskType==='文本关系分析'" label="文本2" :show-overflow-tooltip="true">
+      <!--
+      <el-table-column label="文本2" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <template v-if="row.edit">
             <el-input v-model="row.text2" class="edit-input" size="small" />
           </template>
           <span v-else>{{ row.text2 }}</span>
         </template>
-      </el-table-column>
+      </el-table-column> -->
 
       <el-table-column align="center" label="操作" width="200px">
         <template slot-scope="{row}">
           <el-button
-            v-if="row.edit"
-            type="success"
-            size="small"
-            icon="el-icon-success"
-            @click="confirmEdit(row)"
-          >
-            确认
-          </el-button>
-          <el-button
-            v-else
             type="primary"
             size="small"
             icon="el-icon-edit"
-            @click="row.edit=!row.edit"
+            @click="handleEdit(row)"
           >
-            编辑
-          </el-button>
-          <el-button
-            type="danger"
-            size="small"
-            icon="el-icon-delete"
-            @click="handleDelete(row)"
-          >
-            删除
+            标注
           </el-button>
         </template>
       </el-table-column>
@@ -76,7 +72,7 @@
 </template>
 
 <script>
-import { fetchDetail, editDataVector, deletetDataVector } from '@/api/process-manage/data-set'
+import { fetchDetail } from '@/api/process-manage/data-set'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
 export default {
@@ -97,8 +93,6 @@ export default {
       list: null,
       listLoading: true,
       total: 0,
-      taskType: null,
-      titleContain: false,
       listQuery: {
         id: null,
         page: 1,
@@ -116,40 +110,32 @@ export default {
       const { data } = await fetchDetail(this.listQuery)
       const items = data.items
       this.list = items.map(v => {
-        this.$set(v, 'edit', false)
-        if ('title' in v) {
-          this.titleContain = true
-        }
+        this.$set(v, 'edit', false) // https://vuejs.org/v2/guide/reactivity.html
+        v.originalTitle = v.title //  will be used when user click the cancel botton
         return v
       })
       this.total = data.total
-      this.taskType = data.taskType
       this.listLoading = false
     },
-    confirmEdit(row) {
+    cancelEdit(row) {
+      row.title = row.originalTitle
       row.edit = false
-      editDataVector({ 'datasetid': this.listQuery.id, 'vectorid': row.id, 'vector': row }).then(response => {
-        this.$message({
-          message: '文本编辑成功！',
-          type: 'success'
-        })
-        this.getList()
+      this.$message({
+        message: 'The title has been restored to the original value',
+        type: 'warning'
       })
     },
-    handleDelete(row) {
-      deletetDataVector({ 'datasetid': this.listQuery.id, 'vectorid': row.id }).then(response => {
-        this.$message({
-          message: '文本删除成功！',
-          type: 'success'
-        })
-        this.getList()
-      })
+    handleEdit(row) {
+      this.$router.push('/process-manage/annotation/annotation-detail/' + '56/45')
     }
   }
 }
 </script>
 
 <style scoped>
+.edit-input {
+
+}
 .cancel-btn {
   position: absolute;
   right: 15px;

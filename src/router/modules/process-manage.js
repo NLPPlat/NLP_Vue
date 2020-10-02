@@ -23,9 +23,9 @@ const componentsRouter = {
       name: 'data-set',
       meta: { title: '数据集' }
     }, {
-      path: 'data-detail/:id',
+      path: 'data-set/data-detail/:id',
       component: () => import('@/views/process-manage/data-set/data-detail/index'),
-      name: 'data-detail',
+      name: 'data-set-data-detail',
       hidden: true,
       meta: { title: '数据详情' }
     }, {
@@ -33,6 +33,18 @@ const componentsRouter = {
       component: () => import('@/views/process-manage/annotation/index'),
       name: 'annotation',
       meta: { title: '数据标注' }
+    }, {
+      path: 'annotation/data-detail/:id',
+      component: () => import('@/views/process-manage/annotation/data-detail/index'),
+      name: 'annotation-data-detail',
+      hidden: true,
+      meta: { title: '数据详情' }
+    }, {
+      path: 'annotation/annotation-detail/:id/:id',
+      component: () => import('@/views/process-manage/annotation/annotation-detail/index'),
+      name: 'annotation-annotation-detail',
+      hidden: true,
+      meta: { title: '标注详情' }
     }, {
       path: 'pre-process',
       component: () => import('@/views/process-manage/pre-process/index'),

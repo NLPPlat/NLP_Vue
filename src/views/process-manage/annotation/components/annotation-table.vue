@@ -66,29 +66,40 @@
           <el-tag>{{ row.taskType | typeFilter }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="任务状态" column-key="status" :filters="statusFilter" class-name="status-col" width="120px">
+      <el-table-column label="标注状态" column-key="annotationStatus" :filters="annotationStatusFilter" class-name="status-col" width="120px">
         <template slot-scope="{row}">
-          <el-tag :type="row.status | statusFilter">
-            {{ row.status }}
+          <el-tag :type="row.annotationStatus | statusFilter">
+            {{ row.annotationStatus }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="280px" class-name="small-padding fixed-width">
-        <template slot-scope="{row,$index}">
-          <div v-if="row.username===$store.state.user.username">
-            <el-button type="primary" size="mini" @click="handleManage(row)">
-              管理数据
+        <template slot-scope="{row}">
+          <div v-if="row.username===$store.state.user.username&&row.annotationStatus==='未开始'">
+            <el-button type="primary" size="mini" @click="handleSetAnnotation(row)">
+              配置任务
             </el-button>
             <el-button v-if="row.status!='published'" size="mini" type="success">
               数据脉络
             </el-button>
-            <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="handleDelete(row,$index)">
-              删除
+          </div>
+          <div v-else-if="row.annotationStatus==='标注中'">
+            <el-button type="primary" size="mini" @click="handleManage(row)">
+              进入标注
+            </el-button>
+            <el-button type="danger" size="mini" @click="handleSetAnnotation(row)">
+              取消标注
+            </el-button>
+            <el-button v-if="row.status!='published'" size="mini" type="success">
+              数据脉络
             </el-button>
           </div>
-          <div v-else>
-            <el-button type="primary" size="mini">
-              拷贝数据集
+          <div v-else-if="row.annotationStatus==='标注完成'">
+            <el-button type="primary" size="mini" @click="handleSetAnnotation(row)">
+              查看标注
+            </el-button>
+            <el-button v-if="row.status!='published'" size="mini" type="success">
+              数据脉络
             </el-button>
           </div>
 
@@ -97,14 +108,20 @@
     </el-table>
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
+
+    <el-dialog title="标注任务配置" :visible.sync="configDialogShow">
+      <component :is="dialogComponent" ref="dialogComponent" :clickid="clickID" @closeConfigDialog="closeConfigDialog" />
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
-import { fetchList } from '@/api/process-manage/data-set'
+import { fetchList } from '@/api/process-manage/annotation'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+import ExtractionDialog from './extraction-dialog'
 
 const taskTypeOptions = [
   { key: '通用单文本分类', display_name: '通用单文本分类' },
@@ -121,14 +138,15 @@ const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
 }, {})
 
 export default {
-  name: 'DataSetTable',
-  components: { Pagination },
+  name: 'AnnotationTable',
+  components: { Pagination, ExtractionDialog },
   directives: { waves },
   filters: {
     statusFilter(status) {
       const statusMap = {
-        '解析完成': 'success',
-        '解析中': 'info'
+        '标注完成': 'success',
+        '标注中': 'primary',
+        '未开始': 'info'
       }
       return statusMap[status]
     },
@@ -142,6 +160,8 @@ export default {
       list: null,
       total: 0,
       listLoading: true,
+      dialogComponent: '',
+      clickID: '',
       listQuery: {
         page: 1,
         limit: 20,
@@ -149,7 +169,7 @@ export default {
         taskName: '',
         username: ['自己', '他人'],
         taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
-        status: ['解析中', '解析完成']
+        annotationStatus: ['未开始', '标注中', '标注完成']
       },
       searchQuery: {
         usernameSelect: '',
@@ -159,6 +179,7 @@ export default {
       taskTypeOptions,
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
       downloadLoading: false,
+      configDialogShow: false,
       usernameFilter: [
         { text: '自己', value: '自己' },
         { text: '他人', value: '他人' }
@@ -171,9 +192,10 @@ export default {
         { text: '文本摘要', value: '文本摘要' },
         { text: '文本排序学习', value: '文本排序学习' }
       ],
-      statusFilter: [
-        { text: '解析中', value: '解析中' },
-        { text: '解析完成', value: '解析完成' }
+      annotationStatusFilter: [
+        { text: '未开始', value: '未开始' },
+        { text: '标注中', value: '标注中' },
+        { text: '标注完成', value: '标注完成' }
       ]
     }
   },
@@ -210,8 +232,14 @@ export default {
       }
       this.handleFilter()
     },
+    handleSetAnnotation(row) {
+      this.configDialogShow = true
+      this.clickID = row._id
+      this.dialogComponent = ExtractionDialog
+      this.$refs.dialogComponent.init()
+    },
     handleManage(row) {
-      this.$router.push('/process-manage/data-set/data-detail/' + row._id)
+      this.$router.push('/process-manage/annotation/data-detail/' + row._id)
     },
     handleDelete(row, index) {
       this.$notify({
@@ -273,6 +301,10 @@ export default {
       // console.log(row.username)
       console.log(this.$store.state.user.username)
       return true
+    },
+    closeConfigDialog() {
+      this.configDialogShow = false
+      this.getList()
     }
   }
 }

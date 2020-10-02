@@ -41,30 +41,12 @@
       <el-table-column align="center" label="操作" width="200px">
         <template slot-scope="{row}">
           <el-button
-            v-if="row.edit"
-            type="success"
-            size="small"
-            icon="el-icon-success"
-            @click="confirmEdit(row)"
-          >
-            确认
-          </el-button>
-          <el-button
-            v-else
             type="primary"
             size="small"
-            icon="el-icon-edit"
-            @click="row.edit=!row.edit"
+            icon="el-icon-refresh"
+            @click="handleRecycle(row)"
           >
-            编辑
-          </el-button>
-          <el-button
-            type="danger"
-            size="small"
-            icon="el-icon-delete"
-            @click="handleDelete(row)"
-          >
-            删除
+            恢复
           </el-button>
         </template>
       </el-table-column>
@@ -76,11 +58,11 @@
 </template>
 
 <script>
-import { fetchDetail, editDataVector, deletetDataVector } from '@/api/process-manage/data-set'
+import { fetchRubbish, recycleDataVector } from '@/api/process-manage/data-set'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
 export default {
-  name: 'DataDetailTable',
+  name: 'DataRubbishTable',
   components: { Pagination },
   filters: {
     statusFilter(status) {
@@ -113,7 +95,7 @@ export default {
     async getList() {
       this.listQuery.id = this.$route.params.id
       this.listLoading = true
-      const { data } = await fetchDetail(this.listQuery)
+      const { data } = await fetchRubbish(this.listQuery)
       const items = data.items
       this.list = items.map(v => {
         this.$set(v, 'edit', false)
@@ -126,20 +108,10 @@ export default {
       this.taskType = data.taskType
       this.listLoading = false
     },
-    confirmEdit(row) {
-      row.edit = false
-      editDataVector({ 'datasetid': this.listQuery.id, 'vectorid': row.id, 'vector': row }).then(response => {
+    handleRecycle(row) {
+      recycleDataVector({ 'datasetid': this.listQuery.id, 'vectorid': row.id }).then(response => {
         this.$message({
-          message: '文本编辑成功！',
-          type: 'success'
-        })
-        this.getList()
-      })
-    },
-    handleDelete(row) {
-      deletetDataVector({ 'datasetid': this.listQuery.id, 'vectorid': row.id }).then(response => {
-        this.$message({
-          message: '文本删除成功！',
+          message: '文本恢复成功！',
           type: 'success'
         })
         this.getList()
