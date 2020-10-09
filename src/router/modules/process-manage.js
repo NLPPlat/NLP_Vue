@@ -40,7 +40,7 @@ const componentsRouter = {
       hidden: true,
       meta: { title: '数据详情' }
     }, {
-      path: 'annotation/annotation-detail/:id/:id',
+      path: 'annotation/annotation-detail/:datasetid/:vectorid',
       component: () => import('@/views/process-manage/annotation/annotation-detail/index'),
       name: 'annotation-annotation-detail',
       hidden: true,

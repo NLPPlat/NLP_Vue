@@ -101,11 +101,11 @@ export default {
     }
   },
   created() {
+    this.listQuery.id = this.$route.params.id
     this.getList()
   },
   methods: {
     async getList() {
-      this.listQuery.id = this.$route.params.id
       this.listLoading = true
       const { data } = await fetchDetail(this.listQuery)
       const items = data.items
@@ -126,16 +126,13 @@ export default {
       })
     },
     handleEdit(row) {
-      this.$router.push('/process-manage/annotation/annotation-detail/' + '56/45')
+      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.id + '/' + row.id)
     }
   }
 }
 </script>
 
 <style scoped>
-.edit-input {
-
-}
 .cancel-btn {
   position: absolute;
   right: 15px;

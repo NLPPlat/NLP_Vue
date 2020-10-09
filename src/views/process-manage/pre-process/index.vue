@@ -1,15 +1,15 @@
 <template>
   <div>
-    hello world! This is preprocess page.
+    <data-set-table />
   </div>
 </template>
 
 <script>
-// import { mapGetters } from 'vuex'
+import DataSetTable from './components/data-set-table'
 
 export default {
-  name: 'Home',
-  components: { },
+  name: 'PreProcess',
+  components: { DataSetTable },
   data() {
     return {
     }

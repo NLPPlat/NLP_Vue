@@ -107,11 +107,11 @@ export default {
     }
   },
   created() {
+    this.listQuery.id = this.$route.params.id
     this.getList()
   },
   methods: {
     async getList() {
-      this.listQuery.id = this.$route.params.id
       this.listLoading = true
       const { data } = await fetchDetail(this.listQuery)
       const items = data.items

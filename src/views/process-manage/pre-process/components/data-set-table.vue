@@ -38,7 +38,7 @@
           <span>{{ row._id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务名称" width="160px" align="center">
+      <el-table-column label="任务名称" width="180px" align="center">
         <template slot-scope="{row}">
           <span class="link-type">{{ row.taskName }}</span>
         </template>
@@ -48,7 +48,7 @@
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="公开性" width="180px" align="center">
+      <el-table-column label="公开性" width="200px" align="center">
         <template slot-scope="{row}">
           <el-radio-group v-model="row.publicity">
             <el-radio-button label="公开" />
@@ -73,7 +73,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" min-width="280px" class-name="small-padding fixed-width">
         <template slot-scope="{row,$index}">
           <div v-if="row.username===$store.state.user.username">
             <el-button type="primary" size="mini" @click="handleManage(row)">
@@ -82,16 +82,13 @@
             <el-button v-if="row.status!='published'" size="mini" type="success">
               数据脉络
             </el-button>
-            <el-button type="primary" size="mini" @click="copyDataSet(row)">
-              拷贝
-            </el-button>
             <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="handleDelete(row,$index)">
               删除
             </el-button>
           </div>
           <div v-else>
-            <el-button type="primary" size="mini" @click="copyDataSet(row)">
-              拷贝
+            <el-button type="primary" size="mini">
+              拷贝数据集
             </el-button>
           </div>
 
@@ -101,29 +98,11 @@
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
-    <el-dialog
-      title="拷贝至"
-      :visible.sync="datasetCopy.copyDialogVisible"
-      width="30%"
-    >
-      <div style="text-align:center;width:100%;">
-        <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="原始数据集" border>原始数据集</el-radio>
-          <el-radio label="预处理数据集" border>预处理数据集</el-radio>
-        </el-radio-group>
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleCopy">确认</el-button>
-
-      </div>
-    </el-dialog>
-
   </div>
 </template>
 
 <script>
 import { fetchList } from '@/api/process-manage/data-set'
-import { datasetCopy } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -196,13 +175,7 @@ export default {
       statusFilter: [
         { text: '解析中', value: '解析中' },
         { text: '解析完成', value: '解析完成' }
-      ],
-      datasetCopy: {
-        copyDialogVisible: false,
-        copyDes: '',
-        datasetInitid: ''
-      }
-
+      ]
     }
   },
   created() {
@@ -240,11 +213,6 @@ export default {
     },
     handleManage(row) {
       this.$router.push('/process-manage/data-set/data-detail/' + row._id)
-    },
-    copyDataSet(row) {
-      this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
-      this.datasetCopy.copyDialogVisible = true
     },
     handleDelete(row, index) {
       this.$notify({
@@ -299,16 +267,11 @@ export default {
       }
       this.handleFilter()
     },
-    handleCopy() {
-      this.datasetCopy.copyDialogVisible = false
-      datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
-
-      })
-    },
     handleDataUpload() {
 
     },
     handleShowTest(row) {
+      // console.log(row.username)
       console.log(this.$store.state.user.username)
       return true
     }

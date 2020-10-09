@@ -19,3 +19,29 @@ export function annotationConfig(data) {
   })
 }
 
+export function fetchTags(query) {
+  return request({
+    url: '/process-manage/annotation/config',
+    method: 'get',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+export function fetchVector(query) {
+  return request({
+    url: '/process-manage/annotation/detail/vector',
+    method: 'get',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+export function uploadAnnotationTags(data) {
+  return request({
+    url: '/process-manage/annotation/detail/tags',
+    method: 'post',
+    data: data,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
