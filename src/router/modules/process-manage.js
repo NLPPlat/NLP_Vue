@@ -51,6 +51,12 @@ const componentsRouter = {
       name: 'pre-process',
       meta: { title: '预处理' }
     }, {
+      path: 'pre-process/pre-process-manage/:datasetid',
+      component: () => import('@/views/process-manage/pre-process/pre-process-manage/index'),
+      name: 'pre-process-manage',
+      hidden: true,
+      meta: { title: '预处理过程' }
+    }, {
       path: 'model-train',
       component: () => import('@/views/process-manage/model-train/index'),
       name: 'model-train',

@@ -66,10 +66,10 @@
           <el-tag>{{ row.taskType | typeFilter }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="任务状态" column-key="status" :filters="statusFilter" class-name="status-col" width="120px">
+      <el-table-column label="任务状态" column-key="analyseStatus" :filters="statusFilter" class-name="status-col" width="120px">
         <template slot-scope="{row}">
-          <el-tag :type="row.status | statusFilter">
-            {{ row.status }}
+          <el-tag :type="row.analyseStatus | statusFilter">
+            {{ row.analyseStatus }}
           </el-tag>
         </template>
       </el-table-column>
@@ -79,13 +79,13 @@
             <el-button type="primary" size="mini" @click="handleManage(row)">
               管理数据
             </el-button>
-            <el-button v-if="row.status!='published'" size="mini" type="success">
+            <el-button v-if="row.analyseStatus!='published'" size="mini" type="success">
               数据脉络
             </el-button>
             <el-button type="primary" size="mini" @click="copyDataSet(row)">
               拷贝
             </el-button>
-            <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="handleDelete(row,$index)">
+            <el-button v-if="row.analyseStatus!='deleted'" size="mini" type="danger" @click="handleDelete(row,$index)">
               删除
             </el-button>
           </div>
@@ -122,8 +122,7 @@
 </template>
 
 <script>
-import { fetchList } from '@/api/process-manage/data-set'
-import { datasetCopy } from '@/api/common/dataset'
+import { datasetCopy, datasetListFetch } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -169,9 +168,10 @@ export default {
         limit: 20,
         sort: '-id',
         taskName: '',
+        datasetType: '原始数据集',
         username: ['自己', '他人'],
         taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
-        status: ['解析中', '解析完成']
+        analyseStatus: ['解析中', '解析完成']
       },
       searchQuery: {
         usernameSelect: '',
@@ -211,10 +211,9 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      fetchList(this.listQuery).then(response => {
+      datasetListFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        // Just to simulate the time of the request
         setTimeout(() => {
           this.listLoading = false
         }, 0 * 1000)
@@ -302,7 +301,13 @@ export default {
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false
       datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
-
+        this.getList()
+        this.$notify({
+          title: '拷贝成功',
+          message: '可操作拷贝完成的数据集。',
+          type: 'success',
+          duration: 2000
+        })
       })
     },
     handleDataUpload() {

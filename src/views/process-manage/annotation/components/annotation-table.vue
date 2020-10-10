@@ -117,7 +117,7 @@
 </template>
 
 <script>
-import { fetchList } from '@/api/process-manage/annotation'
+import { datasetListFetch } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -167,6 +167,7 @@ export default {
         limit: 20,
         sort: '-id',
         taskName: '',
+        datasetType: '标注数据集',
         username: ['自己', '他人'],
         taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
         annotationStatus: ['未开始', '标注中', '标注完成']
@@ -205,7 +206,7 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      fetchList(this.listQuery).then(response => {
+      datasetListFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
         // Just to simulate the time of the request
