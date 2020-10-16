@@ -115,7 +115,7 @@
 </template>
 
 <script>
-import { datasetCopy, datasetListFetch } from '@/api/common/dataset'
+import { datasetCopy, datasetListFetch, datasetDelete } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -240,13 +240,15 @@ export default {
       this.datasetCopy.copyDialogVisible = true
     },
     handleDelete(row, index) {
-      this.$notify({
-        title: 'Success',
-        message: 'Delete Successfully',
-        type: 'success',
-        duration: 2000
+      datasetDelete({ 'datasetid': row._id, 'datasetType': '预处理数据集' }).then(response => {
+        this.$notify({
+          title: '删除成功',
+          message: '已从预处理数据集中移除',
+          type: 'success',
+          duration: 2000
+        })
+        this.getList()
       })
-      this.list.splice(index, 1)
     },
     handleDownload() {
       this.downloadLoading = true

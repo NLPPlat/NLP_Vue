@@ -6,6 +6,7 @@ Vue.use(Router)
 /* Layout */
 import Layout from '@/layout'
 import ProcessManage from './modules/process-manage'
+import DataManage from './modules/data-manage'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -79,19 +80,7 @@ export const constantRoutes = [
     ]
   },
   ProcessManage,
-  {
-    path: '/data-manage',
-    component: Layout,
-    redirect: '/data/index',
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/data-manage/index'),
-        name: 'DataManage',
-        meta: { title: '数据管理', icon: 'documentation', affix: false }
-      }
-    ]
-  },
+  DataManage,
   {
     path: '/gui',
     component: Layout,

@@ -48,11 +48,11 @@
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="公开性" width="200px" align="center">
+      <el-table-column label="共同标注" width="200px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.publicity">
-            <el-radio-button label="公开" />
-            <el-radio-button label="不公开" />
+          <el-radio-group v-model="row.annotationPublicity">
+            <el-radio-button label="允许" />
+            <el-radio-button label="不允许" />
           </el-radio-group>
         </template>
       </el-table-column>
@@ -79,7 +79,7 @@
             <el-button type="primary" size="mini" @click="handleSetAnnotation(row)">
               配置任务
             </el-button>
-            <el-button v-if="row.status!='published'" size="mini" type="success">
+            <el-button size="mini" type="success">
               数据脉络
             </el-button>
           </div>
@@ -90,7 +90,7 @@
             <el-button type="danger" size="mini" @click="handleSetAnnotation(row)">
               取消标注
             </el-button>
-            <el-button v-if="row.status!='published'" size="mini" type="success">
+            <el-button size="mini" type="success">
               数据脉络
             </el-button>
           </div>
@@ -98,7 +98,7 @@
             <el-button type="primary" size="mini" @click="handleSetAnnotation(row)">
               查看标注
             </el-button>
-            <el-button v-if="row.status!='published'" size="mini" type="success">
+            <el-button size="mini" type="success">
               数据脉络
             </el-button>
           </div>
@@ -121,7 +121,11 @@ import { datasetListFetch } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
-import ExtractionDialog from './extraction-dialog'
+import ExtractionConfigDialog from './extraction-config-dialog'
+import RelationAnalysisConfigDialog from './relation-analysis-config-dialog'
+import L2rConfigDialog from './l2r-config-dialog'
+import SummaryConfigDialog from './summary-config-dialog'
+import ClassificationConfigDialog from './classification-config-dialog'
 
 const taskTypeOptions = [
   { key: '通用单文本分类', display_name: '通用单文本分类' },
@@ -138,8 +142,8 @@ const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
 }, {})
 
 export default {
-  name: 'AnnotationTable',
-  components: { Pagination, ExtractionDialog },
+  name: 'DatasetTable',
+  components: { Pagination, ExtractionConfigDialog, RelationAnalysisConfigDialog, L2rConfigDialog, SummaryConfigDialog, ClassificationConfigDialog },
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -209,7 +213,6 @@ export default {
       datasetListFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        // Just to simulate the time of the request
         setTimeout(() => {
           this.listLoading = false
         }, 0 * 1000)
@@ -236,7 +239,23 @@ export default {
     handleSetAnnotation(row) {
       this.configDialogShow = true
       this.clickID = row._id
-      this.dialogComponent = ExtractionDialog
+      switch (row.taskType) {
+        case '实体关系抽取':
+          this.dialogComponent = ExtractionConfigDialog
+          break
+        case '文本关系分析':
+          this.dialogComponent = RelationAnalysisConfigDialog
+          break
+        case '文本排序学习':
+          this.dialogComponent = L2rConfigDialog
+          break
+        case '文本摘要':
+          this.dialogComponent = SummaryConfigDialog
+          break
+        case '通用单文本分类':
+          this.dialogComponent = ClassificationConfigDialog
+          break
+      }
       this.$refs.dialogComponent.init()
     },
     handleManage(row) {

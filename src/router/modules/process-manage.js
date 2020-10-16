@@ -71,11 +71,6 @@ const componentsRouter = {
       component: () => import('@/views/process-manage/model-train/index'),
       name: 'task-manage',
       meta: { title: '任务管理' }
-    }, {
-      path: 'model-manage',
-      component: () => import('@/views/process-manage/model-manage/index'),
-      name: 'model-manage',
-      meta: { title: '模型管理' }
     }
   ]
 }

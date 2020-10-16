@@ -8,14 +8,24 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="步骤名称" width="200px" align="center">
+      <el-table-column label="ID" width="60px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.id }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="步骤名称" width="150px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.preprocessName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="步骤类别" width="200px" align="center">
+      <el-table-column label="步骤类别" width="150px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.preprocessType }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="承接步骤ID" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.previousProcessID }}</span>
         </template>
       </el-table-column>
       <el-table-column label="执行状态" column-key="preprocessStatus" :filters="statusFilter" class-name="status-col" width="160px">
@@ -33,7 +43,7 @@
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row,$index}">
           <div v-if="row.preprocessStatus==='已完成'">
-            <el-button type="primary" size="mini" @click="handleManage(row)">
+            <el-button type="primary" size="mini" @click="handleManage(row,$index)">
               查看数据
             </el-button>
             <el-button size="mini" type="success">
@@ -43,8 +53,13 @@
               删除
             </el-button>
           </div>
+          <div v-if="row.preprocessStatus==='执行中'">
+            <el-button size="mini" type="danger" @click="handleDelete(row,$index)">
+              删除
+            </el-button>
+          </div>
           <div v-if="row.preprocessStatus==='未开始'">
-            <el-button type="primary" size="mini" @click="handleManage(row)">
+            <el-button type="primary" size="mini" @click="handleDealPreprocess(row,$index)">
               开始执行
             </el-button>
             <el-button size="mini" type="danger" @click="handleDelete(row,$index)">
@@ -63,9 +78,10 @@
       </el-col>
     </el-row>
 
-    <el-dialog title="新增步骤" :visible.sync="preprocessAdd.show">
+    <!-- 新增步骤对话框 -->
+    <el-dialog title="新增步骤" :visible.sync="preprocessAdd.show" width="500px">
       <el-row type="flex" justify="center">
-        <el-col :span="12" style="text-align:left">
+        <el-col :span="18" style="text-align:left">
           <el-form :model="preprocessAdd" label-width="100px">
             <el-form-item label="选择步骤">
               <el-cascader
@@ -75,11 +91,21 @@
                 placeholder="下一步需要执行的步骤"
               />
             </el-form-item>
+            <el-form-item label="承接步骤">
+              <el-select v-model="preprocessAdd.previousProcessID" placeholder="从哪一步骤开始执行">
+                <el-option
+                  v-for="item in list"
+                  :key="item.id"
+                  :label="'ID:'+item.id+'  '+item.preprocessName"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
             <el-form-item label="Spark支持">
               <el-switch v-model="preprocessAdd.sparkSwitch" />
             </el-form-item>
             <el-form-item label="参数配置">
-              <el-button type="success" plain size="small">点击配置</el-button>
+              <el-button type="success" plain size="small" @click="preprocessParams.show=true">点击配置</el-button>
             </el-form-item>
           </el-form>
         </el-col>
@@ -89,20 +115,24 @@
           <el-button type="primary" @click="handlePreprocessAdd">确认</el-button>
         </el-col>
       </el-row>
-
     </el-dialog>
 
+    <!-- 参数配置对话框 -->
+    <el-dialog title="参数配置" :visible.sync="preprocessParams.show" width="700px">
+      <pre-process-params-dialog :key="preprocessAdd.preprocessSelect" :preprocess-name="preprocessAdd.preprocessSelect[1]" @getPreprocessParams="getPreprocessParams" />
+    </el-dialog>
   </div>
 
 </template>
 
 <script>
+import PreProcessParamsDialog from './pre-process-params-dialog'
 
-import { preprocessStatusFetch, preprocessAdd } from '@/api/process-manage/preprocess'
+import { preprocessStatusFetch, preprocessAdd, preprocessDeal } from '@/api/process-manage/preprocess'
 
 export default {
   name: 'PreProcessManageTable',
-  components: { },
+  components: { PreProcessParamsDialog },
   directives: { },
   filters: {
     statusFilter(status) {
@@ -125,6 +155,7 @@ export default {
       preprocessAdd: {
         show: false,
         preprocessSelect: '',
+        previousProcessID: '',
         sparkSwitch: false,
         preprocessList: [{
           value: '基本预处理',
@@ -210,6 +241,18 @@ export default {
             label: '树模型'
           }]
         }]
+      },
+      preprocessParams: {
+        show: false,
+        params: {}
+      }
+    }
+  },
+  watch: {
+    'preprocessAdd.preprocessSelect': {
+      deep: true,
+      handler(newVal, oldVal) {
+        this.preprocessParams.params = this.$store.state.preprocessParams[newVal[1]]
       }
     }
   },
@@ -224,9 +267,21 @@ export default {
       })
     },
     handlePreprocessAdd() {
-      preprocessAdd({ 'datasetid': this.listQuery.datasetid, 'preprocessAdd': this.preprocessAdd.preprocessSelect, 'sparkSupport': this.preprocessAdd.sparkSwitch }).then(response => {
+      preprocessAdd({ 'datasetid': this.listQuery.datasetid, 'preprocessAdd': this.preprocessAdd.preprocessSelect, 'previousProcessID': this.preprocessAdd.previousProcessID, 'sparkSupport': this.preprocessAdd.sparkSwitch, 'preprocessParams': this.preprocessParams.params }).then(response => {
         this.getList()
         this.preprocessAdd.show = false
+      })
+    },
+    getPreprocessParams(params) {
+      this.preprocessParams.params = params
+      this.preprocessParams.show = false
+    },
+    handleDealPreprocess(row, $index) {
+      preprocessDeal({ 'datasetid': this.listQuery.datasetid, 'preprocessIndex': $index }).then(response => {
+        this.getList()
+        this.$message({
+          message: row.preprocessName + '开始执行'
+        })
       })
     }
   }

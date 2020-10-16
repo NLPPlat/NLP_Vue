@@ -52,6 +52,14 @@
         <el-button v-else class="button-new-tag" size="small" @click="showRelationInput">+新标签</el-button>
       </div>
     </el-card>
+    <el-form>
+      <el-form-item label="共同标注">
+        <el-radio-group v-model="annotationPublicity">
+          <el-radio-button label="允许" />
+          <el-radio-button label="不允许" />
+        </el-radio-group>
+      </el-form-item>
+    </el-form>
     <el-button type="primary" style="display:block;margin:0 auto" @click="handleSubmit">提交任务</el-button>
   </div>
 </template>
@@ -59,11 +67,12 @@
 <script>
 import { annotationConfig } from '@/api/process-manage/annotation'
 export default {
-  name: 'ExtractionDialog',
+  name: 'ExtractionConfigDialog',
   props: ['clickid'],
   data() {
     return {
       id: '',
+      annotationPublicity: '不允许',
       entityTags: [],
       entityInputVisible: false,
       entityInputValue: '',
@@ -74,7 +83,6 @@ export default {
   },
   created() {
     this.id = this.clickid
-    console.log(this.id)
   },
   methods: {
     init() {
@@ -124,7 +132,7 @@ export default {
       this.relationInputValue = ''
     },
     handleSubmit() {
-      annotationConfig({ 'id': this.id, 'entityTags': this.entityTags, 'relationTags': this.relationTags }).then(response => {
+      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'entityTags': this.entityTags, 'relationTags': this.relationTags }).then(response => {
         this.$notify({
           title: '配置成功',
           message: '可以开始进行标注。',

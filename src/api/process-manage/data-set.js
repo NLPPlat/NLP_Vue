@@ -54,3 +54,12 @@ export function recycleDataVector(query) {
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })
 }
+
+export function dataCut(data) {
+  return request({
+    url: '/process-manage/dataset/dataset/ID/vectors',
+    method: 'put',
+    data: data,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}

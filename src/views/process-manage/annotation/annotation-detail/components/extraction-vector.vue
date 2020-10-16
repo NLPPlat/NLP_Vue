@@ -68,7 +68,7 @@
 <script>
 import { fetchTags, fetchVector, uploadAnnotationTags } from '@/api/process-manage/annotation'
 export default {
-  name: 'ExtractionDetail',
+  name: 'ExtractionVector',
   components: { },
   data() {
     return {
@@ -81,9 +81,6 @@ export default {
         relationTags: [],
         activeEntityTags: [],
         activateRelationTags: []
-      },
-      annotation: {
-
       },
       text: '',
       label: {
@@ -108,7 +105,6 @@ export default {
     this.listQuery.datasetid = this.$route.params.datasetid
     this.listQuery.vectorid = this.$route.params.vectorid
     this.getTags()
-    this.getVector()
   },
   methods: {
     getTags() {
@@ -117,6 +113,7 @@ export default {
         this.tags.relationTags = response.data.annotationFormat.relationTags
         this.tags.activeEntityTags = response.data.annotationFormat.entityTags
         this.tags.activeRelationTags = response.data.annotationFormat.relationTags
+        this.getVector()
       })
     },
     getVector() {
@@ -132,6 +129,9 @@ export default {
         } else {
           this.label = response.data.vector.label
         }
+        setTimeout(() => {
+          this.drawEntities()
+        }, 100)
       })
     },
     upload() {
@@ -149,6 +149,9 @@ export default {
     },
     entitySelectChange(item) {
       this.label.entity[item].push({ ...this.tempEntity })
+      this.drawEntitiy(this.tempEntity.start, this.tempEntity.end)
+      var text = window.getSelection()
+      text.empty()
       this.extractionDialogVisible = false
     },
     handleCloseEntityTag(entityTag, item) {
@@ -178,61 +181,65 @@ export default {
     },
     textSelect() {
       var text = window.getSelection()
+      var textAnchorNode = text.anchorNode
       if (text.toString() !== '') {
         var start = text.anchorOffset
         var end = text.focusOffset
-        if (start <= end) {
-          this.tempEntity.start = start
-          this.tempEntity.end = end
-        } else {
-          this.tempEntity.start = end
-          this.tempEntity.end = start
+        if (start > end) {
+          [start, end] = [end, start]
         }
+        var textShow = this.$refs.textShow
+        var textNodeList = textShow.childNodes
+        var nodeLen = 0
+        for (var i = 0; i < textNodeList.length; i++) {
+          var node = textNodeList[i]
+          if (node.nodeType === 3) {
+            if (node.contains(textAnchorNode)) {
+              start = start + nodeLen
+              end = end + nodeLen
+              break
+            }
+            nodeLen = nodeLen + node.length
+          }
+        }
+        this.tempEntity.start = start
+        this.tempEntity.end = end
         this.tempEntity.text = text.toString()
-        text.empty()
         this.extractionDialogVisible = true
       }
+    },
+    drawEntities() {
+      for (var i = 0; i < this.tags.entityTags.length; i++) {
+        var tag = this.tags.entityTags[i]
+        for (var j = 0; j < this.label.entity[tag].length; j++) {
+          var entity = this.label.entity[tag][j]
+          this.drawEntitiy(entity.start, entity.end)
+        }
+      }
+    },
+    drawEntitiy(start, end) {
+      console.log(start, end)
+      var textShow = this.$refs.textShow
+      var textNodeList = textShow.childNodes
+      var nodeLen = 0
+      for (var i = 0; i < textNodeList.length; i++) {
+        var node = textNodeList[i]
+        if (node.nodeType === 3) {
+          if (nodeLen + node.textContent.length > start) {
+            var range = document.createRange()
+            range.setStart(node, start - nodeLen)
+            range.setEnd(node, end - nodeLen)
+            var selectionContents = range.extractContents()
+            var span = document.createElement('span')
+            span.style.backgroundColor = 'green'
+            span.appendChild(selectionContents)
+            range.insertNode(span)
+            break
+          }
+          nodeLen = nodeLen + node.length
+        }
+      }
     }
-    // this.text = this.reCal(text, this.text)
-    // var textNode = this.$refs.textShow.childNodes[0]
-    // var textNode = this.$refs.textShow
-    // textNode.normalize()
-    // console.log(this.$refs.textShow.childNodes)
-    // console.log(textNode.childNodes)
-    // var textSelect = window.getSelection()
-    // console.log(textSelect)
-    // var start = textSelect.anchorOffset
-    // var end = textSelect.focusOffset
-    // console.log(start, end)
-    // this.rangeEdit(start, end, textSelect.anchorNode)
-    // this.$refs.textShow.childrens.normalize()
-    // text.splitText(start)
-    // console.log(text)
-    // var text = window.getSelection().getRangeAt(0)
-    // if (text.toString() !== '') {
-    //   var selectionContents = text.extractContents()
-    //   var span = document.createElement('span')
-    //   span.style.backgroundColor = 'yellow'
-    //   span.appendChild(selectionContents)
-    //   text.insertNode(span)
-    // }
-
-    // rangeEdit(start, end, node) {
-    //   var range = document.createRange()
-    //   range.setStart(node, start)
-    //   range.setEnd(node, end)
-    //   var selectionContents = range.extractContents()
-    //   var span = document.createElement('span')
-    //   span.style.backgroundColor = 'yellow'
-    //   span.appendChild(selectionContents)
-    //   range.insertNode(span)
-    // },
-    // reCal(subStr, str) {
-    //   var replaceStr = '<span style="background-color:red">' + subStr + '</span>'
-    //   var initRe = new RegExp(subStr, 'g')
-    //   var strRes = str.replace(initRe, replaceStr)
-    //   return strRes
-    // }
   }
 }
 </script>

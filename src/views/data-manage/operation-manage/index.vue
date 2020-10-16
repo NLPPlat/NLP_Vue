@@ -1,16 +1,15 @@
 <template>
   <div>
-    <dataset-table />
+    hello world! This is model-manage page.
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
-import DatasetTable from './components/dataset-table'
 
 export default {
-  name: 'Annotation',
-  components: { DatasetTable },
+  name: 'Home',
+  components: { },
   data() {
     return {
     }

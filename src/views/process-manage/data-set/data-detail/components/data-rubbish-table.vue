@@ -2,6 +2,21 @@
   <div class="app-container">
     <el-table v-loading="listLoading" :data="list" border fit style="width: 100%">
 
+      <el-table-column v-if="taskType==='文本排序学习'|groupOn==='on'" width="60px" label="组" align="center">
+        <template slot-scope="{row}">
+          <template v-if="row.edit">
+            <el-input v-model="row.group" class="edit-input" size="small" />
+          </template>
+          <span v-else>{{ row.group }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="ID" width="60px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.id }}</span>
+        </template>
+      </el-table-column>
+
       <el-table-column v-if="titleContain" label="标题" width="250px" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <template v-if="row.edit">
@@ -80,6 +95,7 @@ export default {
       listLoading: true,
       total: 0,
       taskType: null,
+      groupOn: 'off',
       titleContain: false,
       listQuery: {
         id: null,
@@ -106,6 +122,7 @@ export default {
       })
       this.total = data.total
       this.taskType = data.taskType
+      this.groupOn = data.groupOn
       this.listLoading = false
     },
     handleRecycle(row) {

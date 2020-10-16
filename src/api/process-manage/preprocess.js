@@ -18,3 +18,12 @@ export function preprocessAdd(data) {
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })
 }
+
+export function preprocessDeal(data) {
+  return request({
+    url: '/process-manage/pre-process/preprocess/id',
+    method: 'put',
+    data: data,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}

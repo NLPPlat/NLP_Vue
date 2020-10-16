@@ -54,6 +54,7 @@ export default {
       // 监听图标点击节点事件
       // var self = this
       this.chart.on('click', function(params) {
+        console.log(params)
         if (params.componentType === 'series') {
           if (params.seriesType === 'graph') {
             if (params.dataType === 'node') {
@@ -64,7 +65,11 @@ export default {
       })
       this.chart.setOption({
         tooltip: {
-          show: false
+          trigger: 'item',
+          formatter: function(params) {
+            console.log(params)
+            return 'hellosfaefef'
+          }
         },
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
@@ -100,7 +105,7 @@ export default {
             x: 0,
             y: 800
           }, {
-            name: '中间过程数据集',
+            name: '预处理数据集',
             x: 500,
             y: 600
           }, {

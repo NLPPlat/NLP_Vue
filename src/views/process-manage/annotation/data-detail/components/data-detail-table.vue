@@ -2,55 +2,35 @@
   <div class="app-container">
     <el-table v-loading="listLoading" :data="list" border fit style="width: 100%">
 
-      <!-- <el-table-column width="120px" align="center" label="Author">
+      <el-table-column v-if="taskType==='文本排序学习'|groupOn==='on'" width="60px" label="组" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.author }}</span>
-        </template>
-      </el-table-column> -->
-
-      <!-- <el-table-column class-name="status-col" label="Status" width="110">
-        <template slot-scope="{row}">
-          <el-tag :type="row.status | statusFilter">
-            {{ row.status }}
-          </el-tag>
-        </template>
-      </el-table-column> -->
-
-      <!-- <el-table-column align="center" width="60px" label="标签" :show-overflow-tooltip="true">
-        <template slot-scope="{row}">
-          <template v-if="row.edit">
-            <el-input v-model="row.label" class="edit-input" size="small" />
-          </template>
-          <span v-else>{{ row.label }}</span>
+          <span>{{ row.group }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column label="标题" :show-overflow-tooltip="true">
+      <el-table-column label="ID" width="60px" align="center">
         <template slot-scope="{row}">
-          <template v-if="row.edit">
-            <el-input v-model="row.title" class="edit-input" size="small" />
-          </template>
-          <span v-else>{{ row.title }}</span>
-        </template>
-      </el-table-column> -->
-
-      <el-table-column label="文本" :show-overflow-tooltip="true">
-        <template slot-scope="{row}">
-          <template v-if="row.edit">
-            <el-input v-model="row.text1" class="edit-input" size="small" />
-          </template>
-          <span v-else>{{ row.text1 }}</span>
+          <span>{{ row.id }}</span>
         </template>
       </el-table-column>
-      <!--
-      <el-table-column label="文本2" :show-overflow-tooltip="true">
+
+      <el-table-column v-if="taskType!=='文本关系分析'" label="文本" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
-          <template v-if="row.edit">
-            <el-input v-model="row.text2" class="edit-input" size="small" />
-          </template>
-          <span v-else>{{ row.text2 }}</span>
+          <span>{{ row.text1 }}</span>
         </template>
-      </el-table-column> -->
+      </el-table-column>
+
+      <el-table-column v-if="taskType==='文本关系分析'" label="文本1" :show-overflow-tooltip="true">
+        <template slot-scope="{row}">
+          <span>{{ row.text1 }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column v-if="taskType==='文本关系分析'" label="文本2" :show-overflow-tooltip="true">
+        <template slot-scope="{row}">
+          <span>{{ row.text2 }}</span>
+        </template>
+      </el-table-column>
 
       <el-table-column align="center" label="操作" width="200px">
         <template slot-scope="{row}">
@@ -93,6 +73,8 @@ export default {
       list: null,
       listLoading: true,
       total: 0,
+      taskType: '',
+      groupOn: 'off',
       listQuery: {
         id: null,
         page: 1,
@@ -115,6 +97,8 @@ export default {
         return v
       })
       this.total = data.total
+      this.taskType = data.taskType
+      this.groupOn = data.groupOn
       this.listLoading = false
     },
     cancelEdit(row) {
@@ -126,7 +110,11 @@ export default {
       })
     },
     handleEdit(row) {
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.id + '/' + row.id)
+      if (this.taskType === '文本排序学习') {
+        this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.id + '/' + row.group)
+      } else {
+        this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.id + '/' + row.id)
+      }
     }
   }
 }
