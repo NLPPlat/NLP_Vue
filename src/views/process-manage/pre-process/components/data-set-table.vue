@@ -72,7 +72,7 @@
             <el-button type="primary" size="mini" @click="handleManage(row)">
               进入预处理
             </el-button>
-            <el-button v-if="row.analyseStatus!='published'" size="mini" type="success">
+            <el-button v-if="row.analyseStatus!='published'" size="mini" type="success" @click="handleDataVenation(row)">
               数据脉络
             </el-button>
             <el-button type="primary" size="mini" @click="copyDataSet(row)">
@@ -299,6 +299,9 @@ export default {
       datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
         this.getList()
       })
+    },
+    handleDataVenation(row) {
+      this.$router.push('/data-manage/data-venation/' + row._id)
     },
     handleDataUpload() {
 

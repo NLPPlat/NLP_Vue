@@ -30,7 +30,7 @@
                 </template>
               </el-table-column>
 
-              <el-table-column align="center" label="选择" width="200px">
+              <el-table-column align="center" label="选择摘要" width="200px">
                 <template slot-scope="{row}">
                   <el-checkbox v-model="row.label" />
                 </template>
@@ -47,7 +47,7 @@
 import { fetchTags, uploadAnnotationTags } from '@/api/process-manage/annotation'
 import { groupVectorsFetch } from '@/api/common/dataset'
 export default {
-  name: 'SummaryVectorExtraction',
+  name: 'SummaryVectorExtractive',
   data() {
     return {
       listQuery: {

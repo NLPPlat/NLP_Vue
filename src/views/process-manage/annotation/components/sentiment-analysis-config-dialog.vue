@@ -1,17 +1,20 @@
 <template>
   <div>
+
     <el-form>
-      <el-form-item label="标注方式">
+      <el-form-item label="标注类别">
         <el-radio-group v-model="annotationFormat.level">
-          <el-radio-button label="单点标注" />
-          <el-radio-button label="列表标注" />
+          <el-radio-button label="句子级" />
+          <el-radio-button label="篇章级" />
+          <el-radio-button label="aspect级" />
         </el-radio-group>
       </el-form-item>
     </el-form>
 
-    <el-card v-if="annotationFormat.level==='单点标注'" class="box-card">
+    <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <span>程度词典</span>
+        <span v-if="annotationFormat.level==='aspect级'">aspect词典</span>
+        <span v-else>情感标签/意图标签</span>
       </div>
       <div>
         <el-tag
@@ -33,7 +36,8 @@
           @blur="handletagsInputConfirm"
         />
         <div v-else style="display:inline-block">
-          <el-button class="button-new-tag" size="small" @click="showtagsInput">+新程度词</el-button>
+          <el-button v-if="annotationFormat.level==='aspect级'" class="button-new-tag" size="small" @click="showtagsInput">+新aspect</el-button>
+          <el-button v-else class="button-new-tag" size="small" @click="showtagsInput">+新情感/意图</el-button>
         </div>
       </div>
     </el-card>
@@ -53,16 +57,16 @@
 <script>
 import { annotationConfig } from '@/api/process-manage/annotation'
 export default {
-  name: 'L2rConfigDialog',
+  name: 'SentimentAnalysisConfigDialog',
   props: ['clickid'],
   data() {
     return {
       id: '',
+      annotationPublicity: '不允许',
       annotationFormat: {
-        level: '列表标注',
+        level: 'aspect级',
         tags: []
       },
-      annotationPublicity: '不允许',
       tagsInputVisible: false,
       tagsInputValue: ''
     }

@@ -40,7 +40,25 @@
       </el-table-column>
       <el-table-column label="任务名称" width="160px" align="center">
         <template slot-scope="{row}">
-          <span class="link-type">{{ row.taskName }}</span>
+          <el-popover
+            placement="right"
+            width="400"
+            trigger="click"
+          >
+            <el-form>
+              <el-form-item label="任务名称">
+                <el-input v-model="row.taskName" />
+              </el-form-item>
+              <el-form-item label="任务描述">
+                <el-input v-model="row.desc" type="textarea" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.taskName,row.desc)">保存</el-button>
+              </el-form-item>
+            </el-form>
+            <span slot="reference" class="link-type">{{ row.taskName }}</span>
+          </el-popover>
+
         </template>
       </el-table-column>
       <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
@@ -74,18 +92,18 @@
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
-        <template slot-scope="{row,$index}">
+        <template slot-scope="{row}">
           <div v-if="row.username===$store.state.user.username">
             <el-button type="primary" size="mini" @click="handleManage(row)">
               管理数据
             </el-button>
-            <el-button v-if="row.analyseStatus!='published'" size="mini" type="success">
+            <el-button size="mini" type="success" @click="handleDataVenation(row)">
               数据脉络
             </el-button>
             <el-button type="primary" size="mini" @click="copyDataSet(row)">
               拷贝
             </el-button>
-            <el-button v-if="row.analyseStatus!='deleted'" size="mini" type="danger" @click="handleDelete(row,$index)">
+            <el-button size="mini" type="danger" @click="handleDelete(row)">
               删除
             </el-button>
           </div>
@@ -94,7 +112,6 @@
               拷贝
             </el-button>
           </div>
-
         </template>
       </el-table-column>
     </el-table>
@@ -114,7 +131,6 @@
       </div>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="handleCopy">确认</el-button>
-
       </div>
     </el-dialog>
 
@@ -122,7 +138,7 @@
 </template>
 
 <script>
-import { datasetCopy, datasetListFetch, datasetDelete } from '@/api/common/dataset'
+import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -202,7 +218,6 @@ export default {
         copyDes: '',
         datasetInitid: ''
       }
-
     }
   },
   created() {
@@ -245,7 +260,7 @@ export default {
       this.datasetCopy.copyDes = ''
       this.datasetCopy.copyDialogVisible = true
     },
-    handleDelete(row, index) {
+    handleDelete(row) {
       datasetDelete({ 'datasetid': row._id, 'datasetType': '原始数据集' }).then(response => {
         this.$notify({
           title: '删除成功',
@@ -255,6 +270,16 @@ export default {
         })
         this.getList()
       })
+    },
+    handleInfoVerity(id, taskName, desc) {
+      datasetInfoVerify({ 'datasetid': id, 'taskName': taskName, 'desc': desc }).then(response => {
+        document.body.click()
+        this.$message.success('任务信息修改成功！')
+        this.getList()
+      })
+    },
+    handleDataVenation(row) {
+      this.$router.push('/data-manage/data-venation/' + row._id)
     },
     handleDownload() {
       this.downloadLoading = true

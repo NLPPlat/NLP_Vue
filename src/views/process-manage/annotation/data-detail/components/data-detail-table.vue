@@ -1,5 +1,21 @@
 <template>
   <div class="app-container">
+
+    <el-row style="margin-bottom:20px">
+      <el-col :span="4">
+        <el-button v-if="annotationStatus!=='标注完成'" type="primary" @click="handleCompleteAnnotation()">
+          完成标注
+        </el-button>
+        <el-button v-if="annotationStatus==='标注完成'" type="primary">
+          拷贝
+        </el-button>
+      </el-col>
+      <el-col :span="8">
+        <el-progress :text-inside="true" :stroke-width="35" :percentage="100*(1-processController.nolabel/processController.all).toFixed(2)" />
+      </el-col>
+
+    </el-row>
+
     <el-table v-loading="listLoading" :data="list" border fit style="width: 100%">
 
       <el-table-column v-if="taskType==='文本排序学习'|groupOn==='on'" width="60px" label="组" align="center">
@@ -53,6 +69,7 @@
 
 <script>
 import { fetchDetail } from '@/api/process-manage/data-set'
+import { fetchAnnotationStatus, completeAnnotationStatus, fetchAnnotationProcess } from '@/api/process-manage/annotation'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
 export default {
@@ -74,17 +91,24 @@ export default {
       listLoading: true,
       total: 0,
       taskType: '',
+      annotationStatus: '',
       groupOn: 'off',
       listQuery: {
         id: null,
         page: 1,
         limit: 10
+      },
+      processController: {
+        all: null,
+        nolabel: null
       }
     }
   },
   created() {
     this.listQuery.id = this.$route.params.id
     this.getList()
+    this.getStatus()
+    this.getProcess()
   },
   methods: {
     async getList() {
@@ -100,6 +124,22 @@ export default {
       this.taskType = data.taskType
       this.groupOn = data.groupOn
       this.listLoading = false
+    },
+    getStatus() {
+      fetchAnnotationStatus({ 'datasetid': this.listQuery.id }).then(response => {
+        this.annotationStatus = response.data.annotationStatus
+      })
+    },
+    getProcess() {
+      fetchAnnotationProcess({ 'datasetid': this.listQuery.id }).then(response => {
+        this.processController.all = response.data.allCount
+        this.processController.nolabel = response.data.nolabelCount
+      })
+    },
+    handleCompleteAnnotation() {
+      completeAnnotationStatus({ 'datasetid': this.listQuery.id }).then(response => {
+        this.getStatus()
+      })
     },
     cancelEdit(row) {
       row.title = row.originalTitle

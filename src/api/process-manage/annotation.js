@@ -45,3 +45,30 @@ export function uploadAnnotationTags(data) {
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })
 }
+
+export function fetchAnnotationStatus(query) {
+  return request({
+    url: '/process-manage/annotation/status/ID',
+    method: 'get',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+export function completeAnnotationStatus(data) {
+  return request({
+    url: '/process-manage/annotation/status/ID',
+    method: 'post',
+    data: data,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+export function fetchAnnotationProcess(query) {
+  return request({
+    url: '/process-manage/annotation/process/ID',
+    method: 'get',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}

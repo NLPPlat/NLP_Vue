@@ -126,6 +126,7 @@ import RelationAnalysisConfigDialog from './relation-analysis-config-dialog'
 import L2rConfigDialog from './l2r-config-dialog'
 import SummaryConfigDialog from './summary-config-dialog'
 import ClassificationConfigDialog from './classification-config-dialog'
+import SentimentAnalysisConfigDialog from './sentiment-analysis-config-dialog'
 
 const taskTypeOptions = [
   { key: '通用单文本分类', display_name: '通用单文本分类' },
@@ -143,7 +144,7 @@ const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
 
 export default {
   name: 'DatasetTable',
-  components: { Pagination, ExtractionConfigDialog, RelationAnalysisConfigDialog, L2rConfigDialog, SummaryConfigDialog, ClassificationConfigDialog },
+  components: { Pagination, ExtractionConfigDialog, RelationAnalysisConfigDialog, L2rConfigDialog, SummaryConfigDialog, ClassificationConfigDialog, SentimentAnalysisConfigDialog },
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -254,6 +255,9 @@ export default {
           break
         case '通用单文本分类':
           this.dialogComponent = ClassificationConfigDialog
+          break
+        case '情感分析/意图识别':
+          this.dialogComponent = SentimentAnalysisConfigDialog
           break
       }
       this.$refs.dialogComponent.init()

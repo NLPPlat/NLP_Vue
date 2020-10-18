@@ -2,8 +2,21 @@
   <div class="app-container">
 
     <el-row style="margin-bottom:20px">
-      <el-button type="primary" @click="dataCut.show=true">数据拆分</el-button>
-      <el-button type="success">数据清洗</el-button>
+      <el-button type="primary" @click="dataCut.show=true">
+        数据拆分
+      </el-button>
+      <el-button type="primary">
+        数据清洗
+      </el-button>
+      <el-button type="success" @click="handleDataVenation(row)">
+        数据脉络
+      </el-button>
+      <el-button type="primary" @click="handleSetAnnotation()">
+        数据标注
+      </el-button>
+      <el-button type="primary" @click="copyDataSet(row)">
+        拷贝
+      </el-button>
     </el-row>
 
     <el-table v-loading="listLoading" :data="list" border fit style="width: 100%">
@@ -119,16 +132,45 @@
       </el-row>
     </el-dialog>
 
+    <!-- 数据拷贝对话框 -->
+    <el-dialog
+      title="拷贝至"
+      :visible.sync="datasetCopy.copyDialogVisible"
+      width="30%"
+    >
+      <div style="text-align:center;width:100%;">
+        <el-radio-group v-model="datasetCopy.copyDes">
+          <el-radio label="原始数据集" border>原始数据集</el-radio>
+          <el-radio label="预处理数据集" border>预处理数据集</el-radio>
+        </el-radio-group>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleCopy">确认</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 数据标注对话框 -->
+    <el-dialog title="标注任务配置" :visible.sync="annotation.configDialogShow">
+      <component :is="annotation.dialogComponent" ref="annotationDialogComponent" :clickid="annotation.clickID" @closeConfigDialog="closeConfigDialog" />
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
+import { datasetCopy } from '@/api/common/dataset'
 import { fetchDetail, editDataVector, deletetDataVector, dataCut } from '@/api/process-manage/data-set'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
+import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
+import L2rConfigDialog from '@/views/process-manage/annotation/components/l2r-config-dialog'
+import SummaryConfigDialog from '@/views/process-manage/annotation/components/summary-config-dialog'
+import ClassificationConfigDialog from '@/views/process-manage/annotation/components/classification-config-dialog'
+import SentimentAnalysisConfigDialog from '@/views/process-manage/annotation/components/sentiment-analysis-config-dialog'
 
 export default {
   name: 'DataDetailTable',
-  components: { Pagination },
+  components: { Pagination, ExtractionConfigDialog, RelationAnalysisConfigDialog, L2rConfigDialog, SummaryConfigDialog, ClassificationConfigDialog, SentimentAnalysisConfigDialog },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -147,6 +189,11 @@ export default {
       taskType: null,
       groupOn: 'off',
       titleContain: false,
+      annotation: {
+        configDialogShow: false,
+        dialogComponent: '',
+        clickID: ''
+      },
       listQuery: {
         id: null,
         page: 1,
@@ -156,6 +203,11 @@ export default {
         show: false,
         level: '句子',
         tool: ''
+      },
+      datasetCopy: {
+        copyDialogVisible: false,
+        copyDes: '',
+        datasetInitid: ''
       }
     }
   },
@@ -203,6 +255,55 @@ export default {
       dataCut({ 'datasetid': this.listQuery.id, 'level': this.dataCut.level, 'tool': this.dataCut.tool }).then(response => {
         this.dataCut.show = false
       })
+    },
+    handleDataVenation() {
+      this.$router.push('/data-manage/data-venation/' + this.listQuery.id)
+    },
+    copyDataSet(row) {
+      this.datasetCopy.datasetInitid = this.listQuery.id
+      this.datasetCopy.copyDes = ''
+      this.datasetCopy.copyDialogVisible = true
+    },
+    handleCopy() {
+      this.datasetCopy.copyDialogVisible = false
+      datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
+        this.getList()
+        this.$notify({
+          title: '拷贝成功',
+          message: '可操作拷贝完成的数据集。',
+          type: 'success',
+          duration: 2000
+        })
+      })
+    },
+    closeConfigDialog() {
+      this.annotation.configDialogShow = false
+      this.$router.push('/process-manage/annotation/data-detail/' + this.listQuery.id)
+    },
+    handleSetAnnotation() {
+      this.annotation.configDialogShow = true
+      this.annotation.clickID = this.listQuery.id
+      switch (this.taskType) {
+        case '实体关系抽取':
+          this.annotation.dialogComponent = ExtractionConfigDialog
+          break
+        case '文本关系分析':
+          this.annotation.dialogComponent = RelationAnalysisConfigDialog
+          break
+        case '文本排序学习':
+          this.annotation.dialogComponent = L2rConfigDialog
+          break
+        case '文本摘要':
+          this.annotation.dialogComponent = SummaryConfigDialog
+          break
+        case '通用单文本分类':
+          this.annotation.dialogComponent = ClassificationConfigDialog
+          break
+        case '情感分析/意图识别':
+          this.annotation.dialogComponent = SentimentAnalysisConfigDialog
+          break
+      }
+      this.$refs.annotationDialogComponent.init()
     }
   }
 }

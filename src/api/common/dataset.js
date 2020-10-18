@@ -28,6 +28,15 @@ export function datasetDelete(data) {
   })
 }
 
+export function datasetInfoVerify(data) {
+  return request({
+    url: '/common/dataset/dataset/ID/info',
+    method: 'patch',
+    data: data,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
 export function tasktypeFetch(query) {
   return request({
     url: '/common/dataset/dataset/ID/tasktype',

@@ -4,6 +4,7 @@
 
 <script>
 import echarts from 'echarts'
+import { venationFetch } from '@/api/data-manage/venation'
 require('echarts/theme/macarons') // echarts theme
 
 // const animationDuration = 6000
@@ -26,6 +27,10 @@ export default {
   },
   data() {
     return {
+      listQuery: {
+        datasetid: ''
+      },
+      venation: {},
       chart: null,
       chartStyle: {
         dataNode: {
@@ -35,6 +40,10 @@ export default {
         }
       }
     }
+  },
+  created() {
+    this.listQuery.datasetid = this.$route.params.datasetid
+    this.getVenation()
   },
   mounted() {
     this.$nextTick(() => {
@@ -49,10 +58,22 @@ export default {
     this.chart = null
   },
   methods: {
+    getVenation() {
+      venationFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
+        this.venation = response.data.venation
+      })
+    },
+    venationListToString(venationList) {
+      var str = ''
+      for (var i = 0; i < venationList.length; i++) {
+        str = str + 'ID(' + venationList[i].id + ') ' + venationList[i].taskName + ' ' + venationList[i].username + '<br>'
+      }
+      return str
+    },
     initChart() {
       this.chart = echarts.init(this.$el, 'macarons')
       // 监听图标点击节点事件
-      // var self = this
+      var self = this
       this.chart.on('click', function(params) {
         console.log(params)
         if (params.componentType === 'series') {
@@ -67,8 +88,8 @@ export default {
         tooltip: {
           trigger: 'item',
           formatter: function(params) {
-            console.log(params)
-            return 'hellosfaefef'
+            var str = self.venationListToString(self.venation[params.name])
+            return str
           }
         },
         animationDurationUpdate: 1500,
