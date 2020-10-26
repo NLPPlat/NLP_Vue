@@ -1,14 +1,6 @@
 <template>
-  <div class="app-container">
-    <div class="block">
-      <el-row type="flex" justify="space-between">
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" icon="el-icon-arrow-left" @click="handleBack">上一个</el-button>
-        </el-col>
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" @click="handleNext">下一个<i class="el-icon-arrow-right el-icon--right" /></el-button>
-        </el-col>
-      </el-row>
+  <div>
+    <div>
       <el-row>
         <el-col :span="10">
           <el-card class="box-card">
@@ -45,6 +37,7 @@
           </el-card>
         </el-col>
       </el-row>
+
     </div>
 
     <el-dialog
@@ -66,22 +59,20 @@
 </template>
 
 <script>
-import { fetchTags, fetchVector, uploadAnnotationTags } from '@/api/process-manage/annotation'
+
 export default {
   name: 'ExtractionVector',
   components: { },
+  props: { initData: { default: [] }, initTags: { default: {}}},
   data() {
     return {
-      listQuery: {
-        datasetid: '',
-        vectorid: ''
-      },
       tags: {
         entityTags: [],
         relationTags: [],
         activeEntityTags: [],
         activateRelationTags: []
       },
+      data: {},
       text: '',
       label: {
         entity: {},
@@ -102,50 +93,29 @@ export default {
     }
   },
   created() {
-    this.listQuery.datasetid = this.$route.params.datasetid
-    this.listQuery.vectorid = this.$route.params.vectorid
-    this.getTags()
+    this.data = this.initData
+    // 初始化label
+    this.tags.entityTags = this.initTags['entityTags']
+    this.tags.relationTags = this.initTags['relationTags']
+    this.tags.activeEntityTags = this.tags.entityTags
+    this.tags.activeRelationTags = this.tags.relationTags
+    // 初始化向量
+    this.text = this.data.text1
+    if (this.data.label === '') {
+      for (var entityTag of this.tags.entityTags) {
+        this.label.entity[entityTag] = []
+      }
+      for (var relationTag of this.tags.relationTags) {
+        this.label.relation[relationTag] = []
+      }
+    } else {
+      this.label = this.data.label
+    }
   },
   methods: {
-    getTags() {
-      fetchTags(this.listQuery).then(response => {
-        this.tags.entityTags = response.data.annotationFormat.entityTags
-        this.tags.relationTags = response.data.annotationFormat.relationTags
-        this.tags.activeEntityTags = response.data.annotationFormat.entityTags
-        this.tags.activeRelationTags = response.data.annotationFormat.relationTags
-        this.getVector()
-      })
-    },
-    getVector() {
-      fetchVector(this.listQuery).then(response => {
-        this.text = response.data.vector.text1
-        if (response.data.vector.label === '') {
-          for (var entityTag of this.tags.entityTags) {
-            this.label.entity[entityTag] = []
-          }
-          for (var relationTag of this.tags.relationTags) {
-            this.label.relation[relationTag] = []
-          }
-        } else {
-          this.label = response.data.vector.label
-        }
-        setTimeout(() => {
-          this.drawEntities()
-        }, 100)
-      })
-    },
     upload() {
-      uploadAnnotationTags({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.vectorid, 'label': this.label }).then(response => {
-        console.log(response)
-      })
-    },
-    handleBack() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.vectorid) - 1))
-    },
-    handleNext() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.vectorid) + 1))
+      this.data.label = this.label
+      this.$emit('upload', this.data)
     },
     entitySelectChange(item) {
       this.label.entity[item].push({ ...this.tempEntity })
@@ -231,7 +201,7 @@ export default {
             range.setEnd(node, end - nodeLen)
             var selectionContents = range.extractContents()
             var span = document.createElement('span')
-            span.style.backgroundColor = 'green'
+            span.style.color = 'blue'
             span.appendChild(selectionContents)
             range.insertNode(span)
             break

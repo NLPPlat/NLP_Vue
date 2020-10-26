@@ -32,11 +32,11 @@
 
       <el-table-column label="ID" width="60px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.id }}</span>
+          <span>{{ row.vectorid }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column v-if="titleContain" label="标题" width="250px" :show-overflow-tooltip="true">
+      <el-table-column v-if="titleContain" label="标题" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <template v-if="row.edit">
             <el-input v-model="row.title" class="edit-input" size="small" />
@@ -158,8 +158,9 @@
 </template>
 
 <script>
-import { datasetCopy } from '@/api/common/dataset'
-import { fetchDetail, editDataVector, deletetDataVector, dataCut } from '@/api/process-manage/data-set'
+import { datasetCopy, datasetVectorsFetch, datasetInfoFetch } from '@/api/common/dataset'
+import { editDataVector, dataCut } from '@/api/process-manage/data-set'
+import { fetchAnnotationStatus } from '@/api/process-manage/annotation'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
 import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
@@ -192,12 +193,14 @@ export default {
       annotation: {
         configDialogShow: false,
         dialogComponent: '',
-        clickID: ''
+        clickID: '',
+        status: ''
       },
       listQuery: {
-        id: null,
+        datasetid: null,
         page: 1,
-        limit: 10
+        limit: 10,
+        deleted: '未删除'
       },
       dataCut: {
         show: false,
@@ -212,13 +215,14 @@ export default {
     }
   },
   created() {
-    this.listQuery.id = this.$route.params.id
+    this.listQuery.datasetid = this.$route.params.id
     this.getList()
+    this.getAnnotationStatus()
   },
   methods: {
     async getList() {
       this.listLoading = true
-      const { data } = await fetchDetail(this.listQuery)
+      const { data } = await datasetVectorsFetch(this.listQuery)
       const items = data.items
       this.list = items.map(v => {
         this.$set(v, 'edit', false)
@@ -228,13 +232,20 @@ export default {
         return v
       })
       this.total = data.total
-      this.taskType = data.taskType
-      this.groupOn = data.groupOn
+      datasetInfoFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
+        this.taskType = response.data.taskType
+        this.groupOn = response.data.groupOn
+      })
       this.listLoading = false
+    },
+    getAnnotationStatus() {
+      fetchAnnotationStatus({ 'datasetid': this.listQuery.datasetid }).then(response => {
+        this.annotation.status = response.data.annotationStatus
+      })
     },
     confirmEdit(row) {
       row.edit = false
-      editDataVector({ 'datasetid': this.listQuery.id, 'vectorid': row.id, 'vector': row }).then(response => {
+      editDataVector({ 'datasetid': this.listQuery.datasetid, 'vectorid': row.vectorid, 'vector': row }).then(response => {
         this.$message({
           message: '文本编辑成功！',
           type: 'success'
@@ -243,7 +254,8 @@ export default {
       })
     },
     handleDelete(row) {
-      deletetDataVector({ 'datasetid': this.listQuery.id, 'vectorid': row.id }).then(response => {
+      row.deleted = '已删除'
+      editDataVector({ 'datasetid': this.listQuery.datasetid, 'vectorid': row.vectorid, 'vector': row }).then(response => {
         this.$message({
           message: '文本删除成功！',
           type: 'success'
@@ -252,12 +264,14 @@ export default {
       })
     },
     handleDataCut() {
-      dataCut({ 'datasetid': this.listQuery.id, 'level': this.dataCut.level, 'tool': this.dataCut.tool }).then(response => {
+      dataCut({ 'datasetid': this.listQuery.datasetid, 'level': this.dataCut.level, 'tool': this.dataCut.tool }).then(response => {
         this.dataCut.show = false
+        this.$message.success('数据拆分成功！')
+        this.getList()
       })
     },
     handleDataVenation() {
-      this.$router.push('/data-manage/data-venation/' + this.listQuery.id)
+      this.$router.push('/data-manage/data-venation/' + this.listQuery.datasetid)
     },
     copyDataSet(row) {
       this.datasetCopy.datasetInitid = this.listQuery.id
@@ -281,29 +295,33 @@ export default {
       this.$router.push('/process-manage/annotation/data-detail/' + this.listQuery.id)
     },
     handleSetAnnotation() {
-      this.annotation.configDialogShow = true
-      this.annotation.clickID = this.listQuery.id
-      switch (this.taskType) {
-        case '实体关系抽取':
-          this.annotation.dialogComponent = ExtractionConfigDialog
-          break
-        case '文本关系分析':
-          this.annotation.dialogComponent = RelationAnalysisConfigDialog
-          break
-        case '文本排序学习':
-          this.annotation.dialogComponent = L2rConfigDialog
-          break
-        case '文本摘要':
-          this.annotation.dialogComponent = SummaryConfigDialog
-          break
-        case '通用单文本分类':
-          this.annotation.dialogComponent = ClassificationConfigDialog
-          break
-        case '情感分析/意图识别':
-          this.annotation.dialogComponent = SentimentAnalysisConfigDialog
-          break
+      if (this.annotation.status === '未开始') {
+        this.annotation.configDialogShow = true
+        this.annotation.clickID = this.listQuery.id
+        switch (this.taskType) {
+          case '实体关系抽取':
+            this.annotation.dialogComponent = ExtractionConfigDialog
+            break
+          case '文本关系分析':
+            this.annotation.dialogComponent = RelationAnalysisConfigDialog
+            break
+          case '文本排序学习':
+            this.annotation.dialogComponent = L2rConfigDialog
+            break
+          case '文本摘要':
+            this.annotation.dialogComponent = SummaryConfigDialog
+            break
+          case '通用单文本分类':
+            this.annotation.dialogComponent = ClassificationConfigDialog
+            break
+          case '情感分析/意图识别':
+            this.annotation.dialogComponent = SentimentAnalysisConfigDialog
+            break
+        }
+        this.$refs.annotationDialogComponent.init()
+      } else {
+        this.closeConfigDialog()
       }
-      this.$refs.annotationDialogComponent.init()
     }
   }
 }

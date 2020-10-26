@@ -3,7 +3,7 @@
 
     <el-form>
       <el-form-item label="标注类别">
-        <el-radio-group v-model="annotationFormat.level">
+        <el-radio-group v-model="annotationFormat.type">
           <el-radio-button label="句子级" />
           <el-radio-button label="篇章级" />
           <el-radio-button label="aspect级" />
@@ -13,7 +13,7 @@
 
     <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <span v-if="annotationFormat.level==='aspect级'">aspect词典</span>
+        <span v-if="annotationFormat.type==='aspect级'">aspect词典</span>
         <span v-else>情感标签/意图标签</span>
       </div>
       <div>
@@ -64,7 +64,7 @@ export default {
       id: '',
       annotationPublicity: '不允许',
       annotationFormat: {
-        level: 'aspect级',
+        type: 'aspect级',
         tags: []
       },
       tagsInputVisible: false,

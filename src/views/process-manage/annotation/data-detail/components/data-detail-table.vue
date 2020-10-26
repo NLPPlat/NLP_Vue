@@ -6,12 +6,12 @@
         <el-button v-if="annotationStatus!=='标注完成'" type="primary" @click="handleCompleteAnnotation()">
           完成标注
         </el-button>
-        <el-button v-if="annotationStatus==='标注完成'" type="primary">
+        <el-button v-if="annotationStatus==='标注完成'" type="primary" @click="handleCopy()">
           拷贝
         </el-button>
       </el-col>
       <el-col :span="8">
-        <el-progress :text-inside="true" :stroke-width="35" :percentage="100*(1-processController.nolabel/processController.all).toFixed(2)" />
+        <annotation-progress :id="listQuery.datasetid" />
       </el-col>
 
     </el-row>
@@ -26,7 +26,7 @@
 
       <el-table-column label="ID" width="60px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.id }}</span>
+          <span>{{ row.vectorid }}</span>
         </template>
       </el-table-column>
 
@@ -68,13 +68,14 @@
 </template>
 
 <script>
-import { fetchDetail } from '@/api/process-manage/data-set'
-import { fetchAnnotationStatus, completeAnnotationStatus, fetchAnnotationProcess } from '@/api/process-manage/annotation'
-import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+import { datasetCopy, datasetVectorsFetch, datasetInfoFetch } from '@/api/common/dataset'
+import { fetchAnnotationStatus, completeAnnotationStatus } from '@/api/process-manage/annotation'
+import Pagination from '@/components/Pagination'
+import AnnotationProgress from '@/views/process-manage/annotation/components/annotation-progress'
 
 export default {
   name: 'DataDetailTable',
-  components: { Pagination },
+  components: { Pagination, AnnotationProgress },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -92,53 +93,60 @@ export default {
       total: 0,
       taskType: '',
       annotationStatus: '',
+      annotationFormat: {},
       groupOn: 'off',
       listQuery: {
-        id: null,
+        datasetid: null,
         page: 1,
-        limit: 10
-      },
-      processController: {
-        all: null,
-        nolabel: null
+        limit: 10,
+        deleted: '未删除'
       }
     }
   },
   created() {
-    this.listQuery.id = this.$route.params.id
+    this.listQuery.datasetid = this.$route.params.id
     this.getList()
     this.getStatus()
-    this.getProcess()
   },
   methods: {
     async getList() {
       this.listLoading = true
-      const { data } = await fetchDetail(this.listQuery)
+      const { data } = await datasetVectorsFetch(this.listQuery)
       const items = data.items
       this.list = items.map(v => {
-        this.$set(v, 'edit', false) // https://vuejs.org/v2/guide/reactivity.html
-        v.originalTitle = v.title //  will be used when user click the cancel botton
+        if ('title' in v) {
+          this.titleContain = true
+        }
         return v
       })
       this.total = data.total
-      this.taskType = data.taskType
-      this.groupOn = data.groupOn
+      datasetInfoFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
+        this.taskType = response.data.taskType
+        this.groupOn = response.data.groupOn
+        this.annotationFormat = response.data.annotationFormat
+      })
       this.listLoading = false
     },
     getStatus() {
-      fetchAnnotationStatus({ 'datasetid': this.listQuery.id }).then(response => {
+      fetchAnnotationStatus({ 'datasetid': this.listQuery.datasetid }).then(response => {
         this.annotationStatus = response.data.annotationStatus
       })
     },
-    getProcess() {
-      fetchAnnotationProcess({ 'datasetid': this.listQuery.id }).then(response => {
-        this.processController.all = response.data.allCount
-        this.processController.nolabel = response.data.nolabelCount
+    handleCompleteAnnotation() {
+      completeAnnotationStatus({ 'datasetid': this.listQuery.datasetid }).then(response => {
+        this.$message.success('标注任务提交成功！')
+        this.getStatus()
       })
     },
-    handleCompleteAnnotation() {
-      completeAnnotationStatus({ 'datasetid': this.listQuery.id }).then(response => {
-        this.getStatus()
+    handleCopy() {
+      datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.listQuery.datasetid, 'copyDes': '预处理数据集' }).then(response => {
+        this.$notify({
+          title: '拷贝成功',
+          message: '已自动拷贝至预处理数据集。',
+          type: 'success',
+          duration: 2000
+        })
+        this.$router.push('/process-manage/pre-process/pre-process-manage/' + response.data.datasetid)
       })
     },
     cancelEdit(row) {
@@ -150,10 +158,10 @@ export default {
       })
     },
     handleEdit(row) {
-      if (this.taskType === '文本排序学习') {
-        this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.id + '/' + row.group)
+      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type)) {
+        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + row.group)
       } else {
-        this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.id + '/' + row.id)
+        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + row.vectorid)
       }
     }
   }

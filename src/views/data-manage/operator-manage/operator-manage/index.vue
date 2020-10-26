@@ -1,15 +1,16 @@
 <template>
   <div>
-    hello world! This is model-manage page.
+    <operators-table />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
+import OperatorsTable from './components/operators-table'
 
 export default {
-  name: 'Home',
-  components: { },
+  name: 'OperatorManage',
+  components: { OperatorsTable },
   data() {
     return {
     }

@@ -1,14 +1,6 @@
 <template>
-  <div class="app-container">
-    <div class="block">
-      <el-row type="flex" justify="space-between">
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" icon="el-icon-arrow-left" @click="handleBack">上一个</el-button>
-        </el-col>
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" @click="handleNext">下一个<i class="el-icon-arrow-right el-icon--right" /></el-button>
-        </el-col>
-      </el-row>
+  <div>
+    <div>
       <el-row>
         <el-col :span="8">
           <el-card class="box-card">
@@ -75,17 +67,14 @@
 </template>
 
 <script>
-import { fetchTags, fetchVector, uploadAnnotationTags } from '@/api/process-manage/annotation'
-import { Pass } from 'codemirror'
+
 export default {
   name: 'RelationAnalysisVector',
   components: { },
+  props: { initData: { default: [] }, initTags: { default: {}}},
   data() {
     return {
-      listQuery: {
-        datasetid: '',
-        vectorid: ''
-      },
+      data: [],
       tags: {
         textTags: [],
         text1Tags: [],
@@ -97,58 +86,23 @@ export default {
         text: [],
         text1: [],
         text2: []
-      },
-      extractionDialogVisible: false,
-      relationDialogVisible: false,
-      tempEntity: {
-        text: '',
-        start: '',
-        end: ''
-      },
-      tempRelation: {
-        entity1: {},
-        entity2: {},
-        count: 0
       }
     }
   },
   created() {
-    this.listQuery.datasetid = this.$route.params.datasetid
-    this.listQuery.vectorid = this.$route.params.vectorid
+    this.data = this.initData
+    this.tags = this.initTags
+    this.text1 = this.data.text1
+    this.text2 = this.data.text2
+    if (this.data.label !== '') {
+      this.label = this.data.label
+    }
     this.getTags()
   },
   methods: {
-    getTags() {
-      fetchTags(this.listQuery).then(response => {
-        this.tags.textTags = response.data.annotationFormat.textTags
-        this.tags.text1Tags = response.data.annotationFormat.text1Tags
-        this.tags.text2Tags = response.data.annotationFormat.text2Tags
-        this.getVector()
-      })
-    },
-    getVector() {
-      fetchVector(this.listQuery).then(response => {
-        this.text1 = response.data.vector.text1
-        this.text2 = response.data.vector.text2
-        if (response.data.vector.label === '') {
-          Pass
-        } else {
-          this.label = response.data.vector.label
-        }
-      })
-    },
     upload() {
-      uploadAnnotationTags({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.vectorid, 'label': this.label }).then(response => {
-        console.log(response)
-      })
-    },
-    handleBack() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.vectorid) - 1))
-    },
-    handleNext() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.vectorid) + 1))
+      this.data.label = this.label
+      this.$emit('upload', this.data)
     }
   }
 }

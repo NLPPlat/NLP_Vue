@@ -58,7 +58,7 @@ export default {
       RegisterFormRules: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 4, message: '用户名长度不小于4位', trigger: 'blur' }
+          { min: 2, message: '用户名长度不小于2位', trigger: 'blur' }
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },

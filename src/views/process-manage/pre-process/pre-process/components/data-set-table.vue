@@ -40,7 +40,25 @@
       </el-table-column>
       <el-table-column label="任务名称" width="160px" align="center">
         <template slot-scope="{row}">
-          <span class="link-type">{{ row.taskName }}</span>
+          <el-popover
+            placement="right"
+            width="400"
+            trigger="click"
+          >
+            <el-form>
+              <el-form-item label="任务名称">
+                <el-input v-model="row.taskName" />
+              </el-form-item>
+              <el-form-item label="任务描述">
+                <el-input v-model="row.desc" type="textarea" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.taskName,row.desc)">保存</el-button>
+              </el-form-item>
+            </el-form>
+            <span slot="reference" class="link-type">{{ row.taskName }}</span>
+          </el-popover>
+
         </template>
       </el-table-column>
       <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
@@ -115,7 +133,7 @@
 </template>
 
 <script>
-import { datasetCopy, datasetListFetch, datasetDelete } from '@/api/common/dataset'
+import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -262,6 +280,13 @@ export default {
           filename: 'table-list'
         })
         this.downloadLoading = false
+      })
+    },
+    handleInfoVerity(id, taskName, desc) {
+      datasetInfoVerify({ 'datasetid': id, 'taskName': taskName, 'desc': desc }).then(response => {
+        document.body.click()
+        this.$message.success('任务信息修改成功！')
+        this.getList()
       })
     },
     formatJson(filterVal) {

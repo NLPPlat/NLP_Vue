@@ -2,7 +2,7 @@
   <div>
     <el-form>
       <el-form-item label="标注方式">
-        <el-radio-group v-model="annotationFormat">
+        <el-radio-group v-model="annotationFormat.type">
           <el-radio-button label="抽取式" />
           <el-radio-button label="生成式" />
         </el-radio-group>
@@ -26,7 +26,9 @@ export default {
   data() {
     return {
       id: '',
-      annotationFormat: '抽取式',
+      annotationFormat: {
+        type: '抽取式'
+      },
       annotationPublicity: '不允许'
     }
   },

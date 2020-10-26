@@ -1,14 +1,6 @@
 <template>
-  <div class="app-container">
-    <div class="block">
-      <el-row type="flex" justify="space-between">
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" icon="el-icon-arrow-left" @click="handleBack">上一个</el-button>
-        </el-col>
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" @click="handleNext">下一个<i class="el-icon-arrow-right el-icon--right" /></el-button>
-        </el-col>
-      </el-row>
+  <div>
+    <div>
       <el-row>
         <el-col :span="12">
           <el-card class="box-card">
@@ -72,58 +64,37 @@
 </template>
 
 <script>
-import { fetchTags, fetchVector, uploadAnnotationTags } from '@/api/process-manage/annotation'
+
 export default {
   name: 'SentimentAnalysisVectorAspect',
   components: { },
+  props: { initData: { default: [] }, initTags: { default: {}}},
   data() {
     return {
-      listQuery: {
-        datasetid: '',
-        vectorid: ''
-      },
       aspects: [],
       label: [],
+      data: '',
       text: ''
     }
   },
   created() {
-    this.listQuery.datasetid = this.$route.params.datasetid
-    this.listQuery.vectorid = this.$route.params.vectorid
-    this.getTags()
+    this.data = this.initData
+    this.aspects = this.initTags
+    this.text = this.data.text1
+    if (this.data.label !== '') {
+      this.label = this.data.label
+    }
   },
   methods: {
-    getTags() {
-      fetchTags(this.listQuery).then(response => {
-        this.aspects = response.data.annotationFormat.tags
-        this.getVector()
-      })
-    },
-    getVector() {
-      fetchVector({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.vectorid }).then(response => {
-        this.text = response.data.vector.text1
-        if (response.data.vector.label !== '') {
-          this.label = response.data.vector.label
-        }
-      })
+    upload() {
+      this.data.label = this.label
+      this.$emit('upload', this.data)
     },
     handleAdd() {
       this.label.push({ 'aspect': '', 'polarity': 'Positive' })
     },
     deleteRow(row) {
       this.label.splice(row.$index, 1)
-    },
-    upload() {
-      uploadAnnotationTags({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.vectorid, 'label': this.label }).then(response => {
-      })
-    },
-    handleBack() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.vectorid) - 1))
-    },
-    handleNext() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.vectorid) + 1))
     }
   }
 }

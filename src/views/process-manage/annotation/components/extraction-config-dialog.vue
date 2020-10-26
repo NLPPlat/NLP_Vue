@@ -132,7 +132,7 @@ export default {
       this.relationInputValue = ''
     },
     handleSubmit() {
-      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'entityTags': this.entityTags, 'relationTags': this.relationTags }).then(response => {
+      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'annotationFormat': { 'type': '', 'tags': { 'entityTags': this.entityTags, 'relationTags': this.relationTags }}}).then(response => {
         this.$notify({
           title: '配置成功',
           message: '可以开始进行标注。',

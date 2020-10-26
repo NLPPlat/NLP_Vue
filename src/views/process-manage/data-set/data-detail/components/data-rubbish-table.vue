@@ -13,7 +13,7 @@
 
       <el-table-column label="ID" width="60px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.id }}</span>
+          <span>{{ row.vectorid }}</span>
         </template>
       </el-table-column>
 
@@ -73,7 +73,8 @@
 </template>
 
 <script>
-import { fetchRubbish, recycleDataVector } from '@/api/process-manage/data-set'
+import { datasetVectorsFetch, datasetInfoFetch } from '@/api/common/dataset'
+import { editDataVector } from '@/api/process-manage/data-set'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
 export default {
@@ -98,35 +99,38 @@ export default {
       groupOn: 'off',
       titleContain: false,
       listQuery: {
-        id: null,
+        datasetid: null,
         page: 1,
-        limit: 10
+        limit: 10,
+        deleted: '已删除'
       }
     }
   },
   created() {
-    this.listQuery.id = this.$route.params.id
+    this.listQuery.datasetid = this.$route.params.id
     this.getList()
   },
   methods: {
     async getList() {
       this.listLoading = true
-      const { data } = await fetchRubbish(this.listQuery)
+      const { data } = await datasetVectorsFetch(this.listQuery)
       const items = data.items
       this.list = items.map(v => {
-        this.$set(v, 'edit', false)
         if ('title' in v) {
           this.titleContain = true
         }
         return v
       })
       this.total = data.total
-      this.taskType = data.taskType
-      this.groupOn = data.groupOn
+      datasetInfoFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
+        this.taskType = response.data.taskType
+        this.groupOn = response.data.groupOn
+      })
       this.listLoading = false
     },
     handleRecycle(row) {
-      recycleDataVector({ 'datasetid': this.listQuery.id, 'vectorid': row.id }).then(response => {
+      row.deleted = '未删除'
+      editDataVector({ 'datasetid': this.listQuery.datasetid, 'vectorid': row.vectorid, 'vector': row }).then(response => {
         this.$message({
           message: '文本恢复成功！',
           type: 'success'

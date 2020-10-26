@@ -13,29 +13,34 @@
           <span>{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="步骤名称" width="150px" align="center">
+      <el-table-column label="步骤名称" width="160px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.preprocessName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="步骤类别" width="150px" align="center">
+      <el-table-column label="步骤类别" width="140px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.preprocessType }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="承接步骤ID" width="150px" align="center">
+      <el-table-column label="承接步骤ID" width="120px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.previousProcessID }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="执行状态" column-key="preprocessStatus" :filters="statusFilter" class-name="status-col" width="160px">
+      <el-table-column label="执行参数" width="140px" align="center">
+        <template slot-scope="{}">
+          <el-button type="success" plain size="mini">点击查看</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="执行状态" column-key="preprocessStatus" :filters="statusFilter" class-name="status-col" width="120px">
         <template slot-scope="{row}">
           <el-tag :type="row.preprocessStatus | statusFilter">
             {{ row.preprocessStatus }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Spark支持" width="160px" align="center">
+      <el-table-column label="Spark支持" width="120px" align="center">
         <template slot-scope="{row}">
           <el-switch v-model="row.sparkSupport" disabled />
         </template>
@@ -43,7 +48,7 @@
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row,$index}">
           <div v-if="row.preprocessStatus==='已完成'">
-            <el-button type="primary" size="mini" @click="handleManage(row,$index)">
+            <el-button type="primary" size="mini" @click="handleManageData(row.id)">
               查看数据
             </el-button>
             <el-button size="mini" type="success">
@@ -70,11 +75,14 @@
       </el-table-column>
     </el-table>
     <el-row type="flex" justify="space-around" style="margin-top:50px">
-      <el-col :span="10" style="text-align:right">
+      <el-col :span="9" style="text-align:right">
         <el-button type="primary" @click="preprocessAdd.show=true">新增步骤</el-button>
       </el-col>
-      <el-col :span="10" style="text-align:left">
-        <el-button type="primary">快速执行</el-button>
+      <el-col :span="6" style="text-align:center">
+        <el-button type="primary">一键执行</el-button>
+      </el-col>
+      <el-col :span="9" style="text-align:left">
+        <el-button type="primary" @click="featuresConstruction.show=true">特征集生成</el-button>
       </el-col>
     </el-row>
 
@@ -104,6 +112,9 @@
             <el-form-item label="Spark支持">
               <el-switch v-model="preprocessAdd.sparkSwitch" />
             </el-form-item>
+            <el-form-item v-if="preprocessAdd.sparkSwitch===true" label="Spark Master">
+              <el-input v-model="preprocessAdd.sparkMaster" />
+            </el-form-item>
             <el-form-item label="参数配置">
               <el-button type="success" plain size="small" @click="preprocessParams.show=true">点击配置</el-button>
             </el-form-item>
@@ -121,18 +132,25 @@
     <el-dialog title="参数配置" :visible.sync="preprocessParams.show" width="700px">
       <pre-process-params-dialog :key="preprocessAdd.preprocessSelect" :preprocess-name="preprocessAdd.preprocessSelect[1]" @getPreprocessParams="getPreprocessParams" />
     </el-dialog>
+
+    <!-- 特征生成对话框 -->
+    <el-dialog title="特征生成配置" :visible.sync="featuresConstruction.show" width="700px">
+      <features-construction-dialog />
+    </el-dialog>
   </div>
 
 </template>
 
 <script>
 import PreProcessParamsDialog from './pre-process-params-dialog'
+import FeaturesConstructionDialog from './features-construction-dialog'
 
 import { preprocessStatusFetch, preprocessAdd, preprocessDeal } from '@/api/process-manage/preprocess'
+import { operatorsForUserFetch } from '@/api/common/operator'
 
 export default {
   name: 'PreProcessManageTable',
-  components: { PreProcessParamsDialog },
+  components: { PreProcessParamsDialog, FeaturesConstructionDialog },
   directives: { },
   filters: {
     statusFilter(status) {
@@ -157,95 +175,17 @@ export default {
         preprocessSelect: '',
         previousProcessID: '',
         sparkSwitch: false,
-        preprocessList: [{
-          value: '基本预处理',
-          label: '基本预处理',
-          children: [{
-            value: '分词',
-            label: '分词'
-          }, {
-            value: '词性标注',
-            label: '词性标注'
-          }, {
-            value: '去停用词',
-            label: '去停用词'
-          }, {
-            value: '关键词提取',
-            label: '关键词提取'
-          }]
-        }, {
-          value: '向量模型',
-          label: '向量模型',
-          children: [{
-            value: 'TFIDF',
-            label: 'TFIDF'
-          }, {
-            value: 'Word2vec',
-            label: 'Word2vec'
-          }, {
-            value: 'Doc2vec',
-            label: 'Doc2vec'
-          }, {
-            value: 'GloVe',
-            label: 'GloVe'
-          }, {
-            value: 'ELMo',
-            label: 'ELMo'
-          }, {
-            value: 'BERT',
-            label: 'BERT'
-          }]
-        }, {
-          value: '特征工程',
-          label: '特征工程',
-          children: [{
-            value: 'Embedding Matrix',
-            label: 'Embedding Matrix'
-          }, {
-            value: '自定义特征',
-            label: '自定义特征'
-          }]
-        }, {
-          value: '特征降维',
-          label: '特征降维',
-          children: [{
-            value: 'PCA',
-            label: 'PCA'
-          }, {
-            value: 'LDA',
-            label: 'LDA'
-          }]
-        }, {
-          value: '特征选择',
-          label: '特征选择',
-          children: [{
-            value: '方差选择',
-            label: '方差选择'
-          }, {
-            value: '相关系数',
-            label: '相关系数'
-          }, {
-            value: '卡方检验',
-            label: '卡方检验'
-          }, {
-            value: '互信息法',
-            label: '互信息法'
-          }, {
-            value: '递归特征消除',
-            label: '递归特征消除'
-          }, {
-            value: '惩罚项',
-            label: '惩罚项'
-          }, {
-            value: '树模型',
-            label: '树模型'
-          }]
-        }]
+        sparkMaster: 'local[4]',
+        preprocessList: []
       },
       preprocessParams: {
         show: false,
-        params: {}
-      }
+        preprocessShow: ''
+      },
+      featuresConstruction: {
+        show: false
+      },
+      timer: null
     }
   },
   watch: {
@@ -258,12 +198,32 @@ export default {
   },
   created() {
     this.listQuery.datasetid = this.$route.params.datasetid
+    this.preprocessAdd.preprocessList = this.$store.state.preprocessParams.preprocessList
     this.getList()
+    this.getOperators()
+    this.timeout = setInterval(() => {
+      this.getList()
+    }, 1000 * 2)
+  },
+  beforeDestroy() {
+    clearInterval(this.timeout)
   },
   methods: {
     getList() {
       preprocessStatusFetch(this.listQuery).then(response => {
         this.list = response.data.items
+      })
+    },
+    getOperators() {
+      operatorsForUserFetch({ 'operatorType': '预处理算子' }).then(response => {
+        var operators = {}
+        operators['value'] = '自定义算子'
+        operators['label'] = '自定义算子'
+        operators['children'] = []
+        for (var i = 0; i < response.data.items.length; i++) {
+          operators['children'].push({ 'value': response.data.items[i].operatorName, 'label': response.data.items[i].operatorName })
+        }
+        this.preprocessAdd.preprocessList.push(operators)
       })
     },
     handlePreprocessAdd() {
@@ -283,6 +243,12 @@ export default {
           message: row.preprocessName + '开始执行'
         })
       })
+    },
+    handleManageData(preprocessid) {
+      this.$router.push('/process-manage/pre-process/data-detail/' + this.listQuery.datasetid + '/' + preprocessid)
+    },
+    handleAddOperator() {
+      this.$router.push('/data-manage/operator-manage/codehub/-1')
     }
   }
 }

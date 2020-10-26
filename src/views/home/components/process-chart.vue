@@ -139,7 +139,7 @@ export default {
               normal: { color: this.chartStyle.assistantNode.color }
             }
           }, {
-            name: '数据集',
+            name: '数据查看',
             x: 1000,
             y: 800,
             symbol: this.chartStyle.processNode.symbol,
@@ -234,16 +234,7 @@ export default {
               normal: { color: this.chartStyle.assistantNode.color }
             }}, {
             name: '任务管理',
-            x: 1500,
-            y: 1500,
-            symbol: this.chartStyle.processNode.symbol,
-            symbolSize: this.chartStyle.processNode.symbolSize,
-            itemStyle: {
-              normal: { color: this.chartStyle.processNode.color }
-            }
-          }, {
-            name: '模型管理',
-            x: 3000,
+            x: 2500,
             y: 1500,
             symbol: this.chartStyle.processNode.symbol,
             symbolSize: this.chartStyle.processNode.symbolSize,
@@ -364,7 +355,7 @@ export default {
             }
           }, {
             source: 13,
-            target: 16,
+            target: 15,
             lineStyle: {
               curveness: 0
             }

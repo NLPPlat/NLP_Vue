@@ -75,11 +75,16 @@ export default {
       // 监听图标点击节点事件
       var self = this
       this.chart.on('click', function(params) {
-        console.log(params)
         if (params.componentType === 'series') {
           if (params.seriesType === 'graph') {
             if (params.dataType === 'node') {
-              // 点击到了 graph 的 node（节点）上。
+              switch (params.name) {
+                case '原始数据集':
+                  break
+                case '预处理数据集':
+                  break
+              }
+              self.$emit('datasetListShow', self.venation[params.name])
             }
           }
         }

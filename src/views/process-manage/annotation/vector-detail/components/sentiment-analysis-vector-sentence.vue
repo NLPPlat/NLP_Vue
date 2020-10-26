@@ -1,14 +1,6 @@
 <template>
-  <div class="app-container">
-    <div class="block">
-      <el-row type="flex" justify="space-between">
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" icon="el-icon-arrow-left" @click="handleBack">上一个</el-button>
-        </el-col>
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" @click="handleNext">下一个<i class="el-icon-arrow-right el-icon--right" /></el-button>
-        </el-col>
-      </el-row>
+  <div>
+    <div>
       <el-row>
         <el-col :span="24">
           <el-card class="box-card">
@@ -45,48 +37,25 @@
 </template>
 
 <script>
-import { fetchTags, uploadAnnotationTags } from '@/api/process-manage/annotation'
-import { groupVectorsFetch } from '@/api/common/dataset'
+
 export default {
   name: 'SentimentAnalysisVectorSentence',
+  components: { },
+  props: { initData: { default: [] }, initTags: { default: {}}},
+
   data() {
     return {
-      listQuery: {
-        datasetid: '',
-        group: ''
-      },
       tags: [],
       textList: []
     }
   },
   created() {
-    this.listQuery.datasetid = this.$route.params.datasetid
-    this.listQuery.group = this.$route.params.vectorid
-    this.getTags()
+    this.textList = this.initData
+    this.tags = this.initTags
   },
   methods: {
-    getTags() {
-      fetchTags(this.listQuery).then(response => {
-        this.tags = response.data.annotationFormat.tags
-        this.getVector()
-      })
-    },
-    getVector() {
-      groupVectorsFetch({ 'datasetid': this.listQuery.datasetid, 'group': this.listQuery.group }).then(response => {
-        this.textList = response.data.vectors
-      })
-    },
     upload() {
-      uploadAnnotationTags({ 'datasetid': this.listQuery.datasetid, 'group': this.listQuery.group, 'vectors': this.textList }).then(response => {
-      })
-    },
-    handleBack() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.group) - 1))
-    },
-    handleNext() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.group) + 1))
+      this.$emit('upload', this.textList)
     }
   }
 }

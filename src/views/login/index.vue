@@ -81,8 +81,8 @@ export default {
   components: { SocialSign, Register },
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (value.length < 4) {
-        callback(new Error('用户名长度不小于4位'))
+      if (value.length < 2) {
+        callback(new Error('用户名长度不小于2位'))
       } else {
         callback()
       }

@@ -10,6 +10,19 @@ const getters = {
   introduction: state => state.user.introduction,
   roles: state => state.user.roles,
   permission_routes: state => state.permission.routes,
-  errorLogs: state => state.errorLog.logs
+  errorLogs: state => state.errorLog.logs,
+
+  groupModeFetch: function(state) {
+    return function(taskType, annotationType) {
+      if (taskType in state.annotationSettings.groupAnnotationMode) {
+        for (var i = 0; i < state.annotationSettings.groupAnnotationMode[taskType].length; i++) {
+          if (state.annotationSettings.groupAnnotationMode[taskType][i] === annotationType) {
+            return true
+          }
+        }
+      }
+      return false
+    }
+  }
 }
 export default getters

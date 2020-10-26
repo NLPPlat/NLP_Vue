@@ -4,7 +4,7 @@
       <draggable :set-data="setData" :list="list" group="article" class="dragArea">
         <div v-for="element in list" :key="element.id" class="list-complete-item">
           <div class="list-complete-item-handle">
-            (ID:{{ element.id }}){{ element.text1 }}
+            (ID:{{ element.vectorid }}){{ element.text1 }}
           </div>
           <div style="position:absolute;right:0px;">
             <span style="float: right ;margin-top: -25px;margin-right:5px;" @click="handleSearch(element)">

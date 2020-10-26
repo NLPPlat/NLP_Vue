@@ -185,7 +185,7 @@ export default {
       this.text2InputValue = ''
     },
     handleSubmit() {
-      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'textTags': this.textTags, 'text1Tags': this.text1Tags, 'text2Tags': this.text2Tags }).then(response => {
+      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'annotationFormat': { 'type': '', 'tags': { 'textTags': this.textTags, 'text1Tags': this.text1Tags, 'text2Tags': this.text2Tags }}}).then(response => {
         this.$notify({
           title: '配置成功',
           message: '可以开始进行标注。',

@@ -7,10 +7,18 @@
             <el-option v-for="item in Object.keys(preprocessDialog.preprocessParams)" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
-        <el-form-item label="参数值">
+        <el-form-item v-if="preprocessDialog.preprocessParamsSelect in preprocessDialog.preprocessParamsTools" label="参数值">
+          <el-select v-model="preprocessDialog.preprocessParams[preprocessDialog.preprocessParamsSelect]" placeholder="请选择要修改的参数">
+            <el-option v-for="item in preprocessDialog.preprocessParamsTools[preprocessDialog.preprocessParamsSelect]" :key="item" :label="item" :value="item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-else label="参数值">
           <el-input v-model="preprocessDialog.preprocessParams[preprocessDialog.preprocessParamsSelect]" placeholder="参数值" />
         </el-form-item>
       </el-form>
+    </el-row>
+    <el-row style="margin-left:7%;margin-right:7%">
+      <span v-show="preprocessDialog.preprocessParamsSelect!==''" style="font-size:8px">{{ '参数含义： '+preprocessDialog.preprocessParamsIntroduction[preprocessDialog.preprocessParamsSelect] }}</span>
     </el-row>
     <el-row type="flex" justify="space-around" style="margin-top:30px">
       <el-col :span="10" style="text-align:right">
@@ -41,6 +49,8 @@ export default {
     return {
       preprocessDialog: {
         preprocessParams: {},
+        preprocessParamsIntroduction: {},
+        preprocessParamsTools: {},
         preprocessParamsSelect: ''
       }
     }
@@ -51,6 +61,10 @@ export default {
   methods: {
     getParams() {
       this.preprocessDialog.preprocessParams = this.$store.state.preprocessParams[this.preprocessName]
+      this.preprocessDialog.preprocessParamsIntroduction = this.$store.state.preprocessParams[this.preprocessName + '参数说明']
+      if ((this.preprocessName + '选项') in this.$store.state.preprocessParams) {
+        this.preprocessDialog.preprocessParamsTools = this.$store.state.preprocessParams[this.preprocessName + '选项']
+      }
     },
     confirmParams() {
       this.$emit('getPreprocessParams', this.preprocessDialog.preprocessParams)

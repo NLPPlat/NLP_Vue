@@ -72,7 +72,6 @@ export default {
         this.$refs.savetextTagInput.$refs.input.focus()
       })
     },
-
     handletextInputConfirm() {
       const textInputValue = this.textInputValue
       if (textInputValue) {
@@ -82,7 +81,7 @@ export default {
       this.textInputValue = ''
     },
     handleSubmit() {
-      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'textTags': this.textTags }).then(response => {
+      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'annotationFormat': { 'tags': this.textTags, 'type': '' }}).then(response => {
         this.$notify({
           title: '配置成功',
           message: '可以开始进行标注。',

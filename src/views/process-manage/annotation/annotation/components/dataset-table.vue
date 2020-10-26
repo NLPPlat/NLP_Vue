@@ -50,7 +50,7 @@
       </el-table-column>
       <el-table-column label="共同标注" width="200px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.annotationPublicity">
+          <el-radio-group v-model="row.annotationPublicity" :disabled="row.username!=$store.state.user.username">
             <el-radio-button label="允许" />
             <el-radio-button label="不允许" />
           </el-radio-group>
@@ -95,11 +95,19 @@
             </el-button>
           </div>
           <div v-else-if="row.annotationStatus==='标注完成'">
-            <el-button type="primary" size="mini" @click="handleSetAnnotation(row)">
+            <el-button type="primary" size="mini" @click="handleManage(row)">
               查看标注
+            </el-button>
+            <el-button type="primary" size="mini">
+              导出标注
             </el-button>
             <el-button size="mini" type="success">
               数据脉络
+            </el-button>
+          </div>
+          <div v-else>
+            <el-button type="primary" size="mini">
+              拷贝
             </el-button>
           </div>
 
@@ -121,12 +129,12 @@ import { datasetListFetch } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
-import ExtractionConfigDialog from './extraction-config-dialog'
-import RelationAnalysisConfigDialog from './relation-analysis-config-dialog'
-import L2rConfigDialog from './l2r-config-dialog'
-import SummaryConfigDialog from './summary-config-dialog'
-import ClassificationConfigDialog from './classification-config-dialog'
-import SentimentAnalysisConfigDialog from './sentiment-analysis-config-dialog'
+import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
+import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
+import L2rConfigDialog from '@/views/process-manage/annotation/components/l2r-config-dialog'
+import SummaryConfigDialog from '@/views/process-manage/annotation/components/summary-config-dialog'
+import ClassificationConfigDialog from '@/views/process-manage/annotation/components/classification-config-dialog'
+import SentimentAnalysisConfigDialog from '@/views/process-manage/annotation/components/sentiment-analysis-config-dialog'
 
 const taskTypeOptions = [
   { key: '通用单文本分类', display_name: '通用单文本分类' },

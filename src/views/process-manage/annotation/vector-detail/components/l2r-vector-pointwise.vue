@@ -1,23 +1,14 @@
 <template>
-  <div class="app-container">
-    <div class="block">
-      <el-row type="flex" justify="space-between">
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" icon="el-icon-arrow-left" @click="handleBack">上一个</el-button>
-        </el-col>
-        <el-col :span="2" style="text-align:center">
-          <el-button type="primary" @click="handleNext">下一个<i class="el-icon-arrow-right el-icon--right" /></el-button>
-        </el-col>
-      </el-row>
+  <div>
+    <div>
       <el-row>
-
         <el-col :span="8">
           <el-card class="box-card">
             <div slot="header" class="clearfix" style="text-align:center">
               <span>查询文本</span>
             </div>
             <div ref="textShow" style="line-height:27.5px">
-              {{ text }}
+              {{ text.text1 }}
             </div>
           </el-card>
         </el-col>
@@ -28,13 +19,11 @@
               <span>结果文本列表</span>
             </div>
             <el-table :data="textList" fit style="width: 100%">
-
               <el-table-column label="句子/段落">
                 <template slot-scope="{row}">
                   <span>{{ row.text1 }}</span>
                 </template>
               </el-table-column>
-
               <el-table-column align="center" label="程度" width="200px">
                 <template slot-scope="{row}">
                   <el-select v-model="row.label" placeholder="选择程度词">
@@ -47,7 +36,6 @@
                   </el-select>
                 </template>
               </el-table-column>
-
             </el-table>
           </el-card>
         </el-col>
@@ -57,52 +45,36 @@
 </template>
 
 <script>
-import { fetchTags, uploadAnnotationTags } from '@/api/process-manage/annotation'
-import { groupVectorsFetch } from '@/api/common/dataset'
+
 export default {
   name: 'L2rVectorPointwise',
+  components: { },
+  props: { initData: { default: [] }, initTags: { default: {}}},
   data() {
     return {
-      listQuery: {
-        datasetid: '',
-        group: ''
-      },
       tags: [],
+      data: [],
       text: '',
       textList: []
     }
   },
   created() {
-    this.listQuery.datasetid = this.$route.params.datasetid
-    this.listQuery.group = this.$route.params.vectorid
-    this.getTags()
+    this.tags = this.initTags
+    this.data = this.initData
+    this.text = this.data[0]
+    for (var i = 1; i < this.data.length; i++) {
+      this.textList.push(this.data[i])
+    }
   },
   methods: {
-    getTags() {
-      fetchTags(this.listQuery).then(response => {
-        this.tags = response.data.annotationFormat.tags
-        this.getVector()
-      })
-    },
-    getVector() {
-      groupVectorsFetch({ 'datasetid': this.listQuery.datasetid, 'group': this.listQuery.group }).then(response => {
-        this.text = response.data.vectors[0].text1
-        for (var i = 1; i < response.data.vectors.length; i++) {
-          this.textList.push(response.data.vectors[i])
-        }
-      })
-    },
     upload() {
-      uploadAnnotationTags({ 'datasetid': this.listQuery.datasetid, 'group': this.listQuery.group, 'vectors': this.textList }).then(response => {
-      })
-    },
-    handleBack() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.group) - 1))
-    },
-    handleNext() {
-      this.upload()
-      this.$router.push('/process-manage/annotation/annotation-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.group) + 1))
+      this.data = []
+      this.text.label = 0
+      this.data.push(this.text)
+      for (var j = 0; j < this.textList.length; j++) {
+        this.data.push(this.textList[j])
+      }
+      this.$emit('upload', this.data)
     }
   }
 }

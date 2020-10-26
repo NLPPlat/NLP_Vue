@@ -19,7 +19,7 @@ const componentsRouter = {
       meta: { title: '数据接入' }
     }, {
       path: 'data-set',
-      component: () => import('@/views/process-manage/data-set/index'),
+      component: () => import('@/views/process-manage/data-set/data-set/index'),
       name: 'data-set',
       meta: { title: '数据集' }
     }, {
@@ -30,7 +30,7 @@ const componentsRouter = {
       meta: { title: '数据详情' }
     }, {
       path: 'annotation',
-      component: () => import('@/views/process-manage/annotation/index'),
+      component: () => import('@/views/process-manage/annotation/annotation/index'),
       name: 'annotation',
       meta: { title: '数据标注' }
     }, {
@@ -40,14 +40,14 @@ const componentsRouter = {
       hidden: true,
       meta: { title: '数据详情' }
     }, {
-      path: 'annotation/annotation-detail/:datasetid/:vectorid',
-      component: () => import('@/views/process-manage/annotation/annotation-detail/index'),
-      name: 'annotation-annotation-detail',
+      path: 'annotation/vector-detail/:datasetid/:id',
+      component: () => import('@/views/process-manage/annotation/vector-detail/index'),
+      name: 'annotation-vector-detail',
       hidden: true,
       meta: { title: '标注详情' }
     }, {
       path: 'pre-process',
-      component: () => import('@/views/process-manage/pre-process/index'),
+      component: () => import('@/views/process-manage/pre-process/pre-process/index'),
       name: 'pre-process',
       meta: { title: '预处理' }
     }, {
@@ -56,6 +56,12 @@ const componentsRouter = {
       name: 'pre-process-manage',
       hidden: true,
       meta: { title: '预处理过程' }
+    }, {
+      path: 'pre-process/data-detail/:datasetid/:preprocessid',
+      component: () => import('@/views/process-manage/pre-process/data-detail/index'),
+      name: 'pre-process-data-detail',
+      hidden: true,
+      meta: { title: '数据详情' }
     }, {
       path: 'model-train',
       component: () => import('@/views/process-manage/model-train/index'),

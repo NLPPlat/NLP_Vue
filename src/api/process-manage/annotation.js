@@ -1,29 +1,22 @@
 import request from '@/utils/request'
 import store from '@/store'
 
-export function fetchList(query) {
-  return request({
-    url: '/process-manage/annotation/list',
-    method: 'get',
-    params: query,
-    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
-  })
-}
-
-export function annotationConfig(data) {
-  return request({
-    url: '/process-manage/annotation/config',
-    method: 'post',
-    data: data,
-    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
-  })
-}
-
+// 某个数据集标注任务配置获取
 export function fetchTags(query) {
   return request({
-    url: '/process-manage/annotation/config',
+    url: '/process-manage/annotation/datasets/ID/annotation/config',
     method: 'get',
     params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+// 某个数据集标注任务配置
+export function annotationConfig(data) {
+  return request({
+    url: '/process-manage/annotation/datasets/ID/annotation/config',
+    method: 'post',
+    data: data,
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })
 }
@@ -64,9 +57,9 @@ export function completeAnnotationStatus(data) {
   })
 }
 
-export function fetchAnnotationProcess(query) {
+export function fetchAnnotationProgress(query) {
   return request({
-    url: '/process-manage/annotation/process/ID',
+    url: '/process-manage/annotation/datasets/ID/progress',
     method: 'get',
     params: query,
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }

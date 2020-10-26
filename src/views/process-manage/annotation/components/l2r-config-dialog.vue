@@ -2,14 +2,14 @@
   <div>
     <el-form>
       <el-form-item label="标注方式">
-        <el-radio-group v-model="annotationFormat.level">
+        <el-radio-group v-model="annotationFormat.type">
           <el-radio-button label="单点标注" />
           <el-radio-button label="列表标注" />
         </el-radio-group>
       </el-form-item>
     </el-form>
 
-    <el-card v-if="annotationFormat.level==='单点标注'" class="box-card">
+    <el-card v-if="annotationFormat.type==='单点标注'" class="box-card">
       <div slot="header" class="clearfix">
         <span>程度词典</span>
       </div>
@@ -59,7 +59,7 @@ export default {
     return {
       id: '',
       annotationFormat: {
-        level: '列表标注',
+        type: '列表标注',
         tags: []
       },
       annotationPublicity: '不允许',

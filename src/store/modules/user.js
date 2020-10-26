@@ -50,7 +50,6 @@ const actions = {
 
   // register
   register({ commit }, RegisterInfo) {
-    console.log(RegisterInfo)
     return new Promise((resolve, reject) => {
       register(RegisterInfo).then(response => {
         resolve()

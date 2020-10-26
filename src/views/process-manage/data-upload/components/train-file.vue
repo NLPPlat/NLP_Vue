@@ -107,7 +107,7 @@ export default {
       },
       uploadInfo: {
         filelist: [],
-        uploadUrl: process.env.VUE_APP_BASE_API + '/process-manage/data/train/file',
+        uploadUrl: process.env.VUE_APP_BASE_API + '/process-manage/data-upload/train-file',
         headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token }
       },
       uploadRules: {
