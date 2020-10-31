@@ -6,8 +6,10 @@
 
         <el-form-item label="算子类型">
           <el-select v-model="codeUpload.operatorType" placeholder="请选择算子类型">
+            <el-option label="分词分句算子" value="分词分句算子" />
             <el-option label="数据清洗算子" value="数据清洗算子" />
             <el-option label="预处理算子" value="预处理算子" />
+            <el-option label="数据切割算子" value="数据切割算子" />
           </el-select>
         </el-form-item>
         <el-form-item label="算子名称">
@@ -28,7 +30,7 @@
       <el-button type="primary" @click="datasetSelect.show=true">
         在线调试
       </el-button>
-      <el-button type="primary">
+      <el-button type="primary" @click="handleReadpy()">
         本地读取
       </el-button>
       <el-button type="success" @click="APIDrawer=true">
@@ -69,48 +71,22 @@
           <el-collapse-item title="app.dataAPI.preprocess.getPreprocessData(id)" name="0">
             <div>输入预处理步骤id，返回结果。id为-1时为最后一个步骤。</div>
           </el-collapse-item>
-          <el-collapse-item title="dealCut(docs=[])-->list" name="1">
-            <div>执行分词步骤并获取结果，以list格式返回。参数docs为要进行分词的文本列表。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealCutBySpark(docs=[])-->list" name="2">
-            <div>基于Spark分布式计算分词并获取结果，以list格式返回。参数docs为要进行分词的文本列表。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealStopwords(docs=[],stopwordslist=[])-->list" name="3">
-            <div>执行去停用词步骤并获取结果，以list格式返回。参数docs为要进行去停用词的二维文本列表，参数stopwordslist为停用词表。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealStopwordsBySpark(docs=[],stopwordslist=[])-->list" name="4">
-            <div>基于Spark分布式计算去停用词并获取结果，以list格式返回。参数docs为要进行去停用词的二维文本列表，参数stopwordslist为停用词表。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealTFIDF(docs=[])-->ndarray" name="5">
-            <div>执行TFIDF矩阵计算并获取结果，以ndarray格式返回。参数docs为要计算TFIDF的二维文本列表。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealTFIDFBySpark(docs=[])-->Daraframe" name="6">
-            <div>训基于Spark分布式计算TFIDF矩阵并获取结果，以Dataframe格式返回。参数docs为要计算TFIDF的二维文本列表。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealWord2vec(docs=[],params) -->model" name="7">
-            <div>执行Word2vec训练并获取结果，返回Gensim模型。参数docs为要进行模型训练的二维文本列表，参数params为训练参数，详见参数管理模块或Gensim说明文档。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealWord2vecBySpark(docs=[],params) -->model" name="8">
-            <div>执行Word2vec训练并获取结果，返回pyspark.ml.feature的word2vec模型。参数docs为要进行模型训练的二维文本列表，参数params为训练参数，详见参数管理模块或pyspark说明文档。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealDoc2vec(docs=[],params) -->model" name="9">
-            <div>执行doc2vec训练并获取结果，返回Gensim模型。参数docs为要进行模型训练的二维文本列表，参数params为训练参数，详见参数管理模块或Gensim说明文档。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealGloVe(docs=[],params) -->model" name="10">
-            <div>执行GLoVe训练并获取结果，返回Gensim模型。参数docs为要进行模型训练的二维文本列表，参数params为训练参数，详见参数管理模块或GloVe官方说明文档。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealBERTEmbedding(docs=[],level=’char’,params)-->ndarray" name="11">
-            <div>获取BERT预训练向量矩阵，以ndarray格式返回。参数docs为要进行模型训练的二维文本列表，参数level为嵌入矩阵的级别，level取值'char'时返回字向量矩阵，level取值'sen'时返回句向矩阵，level取值'doc'时返回文档向量矩阵，参数params为训练参数，详见BERT官方说明文档。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealEmbeddingMake(docs=[],model)-->ndarray" name="12">
-            <div>使用模型和文本生成embedding矩阵，以ndarray格式返回。参数docs为要生成embedding矩阵的二维文本列表，参数model为要使用的Gensim模型。</div>
-          </el-collapse-item>
-          <el-collapse-item title="dealEmbeddingMakeBySpark(docs=[],model)-->ndarray" name="13">
-            <div>基于Spark分布式计算模型和文本生成的embedding矩阵，以ndarray格式返回。参数docs为要生成embedding矩阵的二维文本列表，参数model为要使用的Gensim模型。</div>
-          </el-collapse-item>
         </el-collapse>
       </el-card>
     </el-drawer>
+
+    <div>
+      <el-upload
+        v-show="readpyInfo.show"
+        class="upload-demo"
+        :auto-upload="false"
+        :on-change="fileChange"
+        :file-list="readpyInfo.filelist"
+        accept=".py, .txt"
+      >
+        <el-button id="readpySelect">选取文件</el-button>
+      </el-upload>
+    </div>
 
   </div>
 </template>
@@ -142,6 +118,28 @@ export default {
         list: [],
         datasetid: '',
         show: false
+      },
+      readpyInfo: {
+        show: false,
+        filelist: []
+      }
+    }
+  },
+  watch: {
+    'codeUpload.operatorType': {
+      handler: function(val) {
+        switch (val) {
+          case '分词分句算子':
+          case '数据清洗算子':
+            this.getDatasetList('原始数据集')
+            break
+          case '预处理算子':
+            this.getDatasetList('预处理数据集')
+            break
+          case '数据切割算子':
+            this.getDatasetList('特征数据集')
+            break
+        }
       }
     }
   },
@@ -158,8 +156,8 @@ export default {
         })
       }
     },
-    getDatasetList() {
-      datasetIDListFetch({ 'datasetType': '预处理数据集' }).then(response => {
+    getDatasetList(datasetType) {
+      datasetIDListFetch({ 'datasetType': datasetType }).then(response => {
         this.datasetSelect.list = response.data.items
       })
     },
@@ -179,6 +177,16 @@ export default {
         this.$message.success('程序运行完成！')
         this.console.code = response.data
       })
+    },
+    handleReadpy() {
+      document.querySelector('#readpySelect').click()
+    },
+    fileChange(event) {
+      const reader = new FileReader()
+      reader.readAsText(event.raw)
+      reader.onload = () => {
+        this.codeUpload.code = reader.result
+      }
     }
   }
 }

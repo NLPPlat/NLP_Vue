@@ -11,6 +11,7 @@ import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/python/python.js'
 // theme css
 import 'codemirror/theme/panda-syntax.css'
+import 'codemirror/theme/duotone-light.css'
 
 import 'codemirror/addon/lint/lint.css'
 import 'codemirror/theme/rubyblue.css'
@@ -41,6 +42,8 @@ export default {
       lineNumbers: true,
       mode: 'python',
       theme: 'panda-syntax',
+      // theme: 'duotone-light',
+
       gutters: ['CodeMirror-lint-markers'],
       lint: true
     })

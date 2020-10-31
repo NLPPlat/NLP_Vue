@@ -1,15 +1,16 @@
 <template>
   <div>
-    hello world! This is task-manage page.
+    <data-set-table />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
+import DataSetTable from './components/data-set-table'
 
 export default {
-  name: 'Home',
-  components: { },
+  name: 'DataSet',
+  components: { DataSetTable },
   data() {
     return {
     }

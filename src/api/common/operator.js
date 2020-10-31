@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 import store from '@/store'
 
-// # 算子列表获取
+// 某个人的算子列表获取
 export function operatorsForUserFetch(query) {
   return request({
     url: '/common/operator/operators',

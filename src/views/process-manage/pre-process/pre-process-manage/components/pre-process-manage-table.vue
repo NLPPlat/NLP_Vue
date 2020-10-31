@@ -134,8 +134,37 @@
     </el-dialog>
 
     <!-- 特征生成对话框 -->
-    <el-dialog title="特征生成配置" :visible.sync="featuresConstruction.show" width="700px">
-      <features-construction-dialog />
+    <el-dialog title="特征集生成配置" :visible.sync="featuresConstruction.show" width="500px">
+      <el-row type="flex" justify="center">
+        <el-col :span="18" style="text-align:left">
+          <el-form :model="featuresConstruction" label-width="120px">
+            <el-form-item label="选择步骤">
+              <el-select v-model="featuresConstruction.preprocessID" placeholder="由哪一步骤生成特征集">
+                <el-option
+                  v-for="item in list"
+                  :key="item.id"
+                  :label="'ID:'+item.id+'  '+item.preprocessName"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="选择特征集内容">
+              <el-checkbox-group v-model="featuresConstruction.columns">
+                <el-checkbox label="label(映射后的标签)" name="type" />
+                <el-checkbox label="label_name(标签原名)" name="type" />
+                <el-checkbox label="vectors(文本向量)" name="type" />
+                <el-checkbox label="matrix(特征矩阵)" name="type" />
+                <el-checkbox label="url(模型URL)" name="type" />
+              </el-checkbox-group>
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+      <el-row type="flex" justify="center" style="margin-top:20px">
+        <el-col :span="4" style="text-align:center">
+          <el-button type="primary" @click="handleCopy()">确认</el-button>
+        </el-col>
+      </el-row>
     </el-dialog>
   </div>
 
@@ -143,14 +172,14 @@
 
 <script>
 import PreProcessParamsDialog from './pre-process-params-dialog'
-import FeaturesConstructionDialog from './features-construction-dialog'
 
 import { preprocessStatusFetch, preprocessAdd, preprocessDeal } from '@/api/process-manage/preprocess'
 import { operatorsForUserFetch } from '@/api/common/operator'
+import { datasetCopy } from '@/api/common/dataset'
 
 export default {
   name: 'PreProcessManageTable',
-  components: { PreProcessParamsDialog, FeaturesConstructionDialog },
+  components: { PreProcessParamsDialog },
   directives: { },
   filters: {
     statusFilter(status) {
@@ -183,7 +212,9 @@ export default {
         preprocessShow: ''
       },
       featuresConstruction: {
-        show: false
+        show: false,
+        preprocessID: '',
+        columns: ['label(映射后的标签)', 'label_name(标签原名)', 'matrix(特征矩阵)']
       },
       timer: null
     }
@@ -249,6 +280,17 @@ export default {
     },
     handleAddOperator() {
       this.$router.push('/data-manage/operator-manage/codehub/-1')
+    },
+    handleCopy() {
+      datasetCopy({ 'datasetInitid': this.listQuery.datasetid, 'params': { 'preprocessid': this.featuresConstruction.preprocessID }, 'datasetInitType': '预处理数据集', 'copyDes': '特征数据集' }).then(response => {
+        this.featuresConstruction.show = false
+        this.$notify({
+          title: '生成成功',
+          message: '可对生成的特征集进行训练。',
+          type: 'success',
+          duration: 2000
+        })
+      })
     }
   }
 }

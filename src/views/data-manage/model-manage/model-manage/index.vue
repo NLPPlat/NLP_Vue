@@ -1,16 +1,16 @@
 <template>
   <div>
-    <codehub-editor />
+    <models-table />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
-import CodehubEditor from './components/codehub-editor'
+import ModelsTable from './components/models-table'
 
 export default {
-  name: 'OperatorCodehub',
-  components: { CodehubEditor },
+  name: 'ModelManage',
+  components: { ModelsTable },
   data() {
     return {
     }

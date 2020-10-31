@@ -18,21 +18,27 @@ const componentsRouter = {
       name: 'data-venation',
       meta: { title: '数据脉络' }
     }, {
-      path: 'operator-manage/operator-manage',
+      path: 'operator-manage',
       component: () => import('@/views/data-manage/operator-manage/operator-manage/index'),
       name: 'operator-manage',
       meta: { title: '算子管理' }
     }, {
       path: 'operator-manage/codehub/:operatorid',
       component: () => import('@/views/data-manage/operator-manage/codehub/index'),
-      name: 'codehub',
+      name: 'operator-manage-codehub',
       hidden: true,
       meta: { title: '算子编辑' }
     }, {
       path: 'model-manage',
-      component: () => import('@/views/data-manage/model-manage/index'),
+      component: () => import('@/views/data-manage/model-manage/model-manage/index'),
       name: 'model-manage',
       meta: { title: '模型管理' }
+    }, {
+      path: 'model-manage/codehub/:modelid',
+      component: () => import('@/views/data-manage/model-manage/codehub/index'),
+      name: 'model-manage-codehub',
+      hidden: true,
+      meta: { title: '模型编辑' }
     }
   ]
 }

@@ -64,9 +64,15 @@ const componentsRouter = {
       meta: { title: '数据详情' }
     }, {
       path: 'model-train',
-      component: () => import('@/views/process-manage/model-train/index'),
+      component: () => import('@/views/process-manage/model-train/model-train/index'),
       name: 'model-train',
       meta: { title: '模型训练' }
+    }, {
+      path: 'model-train/train-manage/:datasetid',
+      component: () => import('@/views/process-manage/model-train/train-manage/index'),
+      name: 'model-train-train-manage',
+      hidden: true,
+      meta: { title: '训练管理' }
     }, {
       path: 'batch-process',
       component: () => import('@/views/process-manage/batch-process/index'),
@@ -74,7 +80,7 @@ const componentsRouter = {
       meta: { title: '批处理' }
     }, {
       path: 'task-manage',
-      component: () => import('@/views/process-manage/model-train/index'),
+      component: () => import('@/views/process-manage/task-manage/task-manage/index'),
       name: 'task-manage',
       meta: { title: '任务管理' }
     }

@@ -1,15 +1,16 @@
 <template>
   <div>
-    hello world! This is model=train page.
+    <codehub-editor />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
+import CodehubEditor from './components/codehub-editor'
 
 export default {
-  name: 'Home',
-  components: { },
+  name: 'ModelCodehub',
+  components: { CodehubEditor },
   data() {
     return {
     }
