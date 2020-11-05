@@ -58,7 +58,6 @@
             </el-form>
             <span slot="reference" class="link-type">{{ row.taskName }}</span>
           </el-popover>
-
         </template>
       </el-table-column>
       <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
@@ -148,6 +147,7 @@ const taskTypeOptions = [
   { key: '情感分析/意图识别', display_name: '情感分析/意图识别' },
   { key: '实体关系抽取', display_name: '实体关系抽取' },
   { key: '文本关系分析', display_name: '文本关系分析' },
+  { key: '文本配对', display_name: '文本配对' },
   { key: '文本摘要', display_name: '文本摘要' },
   { key: '文本排序学习', display_name: '文本排序学习' }
 ]
@@ -186,7 +186,7 @@ export default {
         taskName: '',
         datasetType: '原始数据集',
         username: ['自己', '他人'],
-        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
+        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本配对', '文本排序学习'],
         analyseStatus: ['解析中', '解析完成']
       },
       searchQuery: {
@@ -206,6 +206,7 @@ export default {
         { text: '情感分析/意图识别', value: '情感分析/意图识别' },
         { text: '实体关系抽取', value: '实体关系抽取' },
         { text: '文本关系分析', value: '文本关系分析' },
+        { text: '文本配对', value: '文本配对' },
         { text: '文本摘要', value: '文本摘要' },
         { text: '文本排序学习', value: '文本排序学习' }
       ],

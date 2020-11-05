@@ -30,6 +30,7 @@ import { datasetInfoFetch, datasetVectorFetch, datasetVectorUpdate, groupVectors
 import AnnotationProgress from '@/views/process-manage/annotation/components/annotation-progress'
 
 import ExtractionVector from './components/extraction-vector'
+import MatchingVector from './components/matching-vector'
 import RelationAnalysisVector from './components/relation-analysis-vector'
 import L2rVectorListwise from './components/l2r-vector-listwise'
 import L2rVectorPointwise from './components/l2r-vector-pointwise'
@@ -42,7 +43,7 @@ import SentimentAnalysisVectorSentence from './components/sentiment-analysis-vec
 
 export default {
   name: 'DataDetail',
-  components: { AnnotationProgress, ExtractionVector, RelationAnalysisVector, L2rVectorListwise, L2rVectorPointwise, classificationVector, SummaryVectorExtractive, SummaryVectorAbstractive, SentimentAnalysisVectorAspect, SentimentAnalysisVectorText, SentimentAnalysisVectorSentence },
+  components: { AnnotationProgress, ExtractionVector, MatchingVector, RelationAnalysisVector, L2rVectorListwise, L2rVectorPointwise, classificationVector, SummaryVectorExtractive, SummaryVectorAbstractive, SentimentAnalysisVectorAspect, SentimentAnalysisVectorText, SentimentAnalysisVectorSentence },
   data() {
     return {
       taskType: '',
@@ -74,7 +75,16 @@ export default {
       })
     },
     getVector() {
-      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type)) {
+      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+        this.data = { 'group1': '', 'group2': '' }
+        groupVectorsFetch({ 'datasetid': this.listQuery.datasetid, 'group': this.listQuery.id }).then(response => {
+          this.data.group1 = response.data.vectors
+          groupVectorsFetch({ 'datasetid': this.listQuery.datasetid, 'group': Number(this.listQuery.id) + 1 }).then(response => {
+            this.data.group2 = response.data.vectors
+            this.getComponent()
+          })
+        })
+      } else if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 1) {
         groupVectorsFetch({ 'datasetid': this.listQuery.datasetid, 'group': this.listQuery.id }).then(response => {
           this.data = response.data.vectors
           this.getComponent()
@@ -104,6 +114,9 @@ export default {
         case '通用单文本分类':
           this.annotationVectorComponent = classificationVector
           break
+        case '文本配对':
+          this.annotationVectorComponent = MatchingVector
+          break
         case '文本摘要':
           if (this.annotationFormat.type === '抽取式') {
             this.annotationVectorComponent = SummaryVectorExtractive
@@ -126,7 +139,12 @@ export default {
       this.$refs.annotationVectorComponent.upload()
     },
     confirmUpload(data) {
-      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type)) {
+      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+        groupVectorsUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.id, 'vectors': data }).then(response => {
+        })
+        groupVectorsUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': Number(this.listQuery.id) + 1, 'vectors': data }).then(response => {
+        })
+      } else if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 1) {
         groupVectorsUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.id, 'vectors': data }).then(response => {
         })
       } else {

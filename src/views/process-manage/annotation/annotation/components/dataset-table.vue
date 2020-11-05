@@ -38,9 +38,26 @@
           <span>{{ row._id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务名称" width="180px" align="center">
+      <el-table-column label="任务名称" width="160px" align="center">
         <template slot-scope="{row}">
-          <span class="link-type">{{ row.taskName }}</span>
+          <el-popover
+            placement="right"
+            width="400"
+            trigger="click"
+          >
+            <el-form>
+              <el-form-item label="任务名称">
+                <el-input v-model="row.taskName" />
+              </el-form-item>
+              <el-form-item label="任务描述">
+                <el-input v-model="row.desc" type="textarea" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.taskName,row.desc)">保存</el-button>
+              </el-form-item>
+            </el-form>
+            <span slot="reference" class="link-type">{{ row.taskName }}</span>
+          </el-popover>
         </template>
       </el-table-column>
       <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
@@ -110,7 +127,6 @@
               拷贝
             </el-button>
           </div>
-
         </template>
       </el-table-column>
     </el-table>
@@ -125,7 +141,7 @@
 </template>
 
 <script>
-import { datasetListFetch } from '@/api/common/dataset'
+import { datasetListFetch, datasetInfoVerify } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -135,12 +151,14 @@ import L2rConfigDialog from '@/views/process-manage/annotation/components/l2r-co
 import SummaryConfigDialog from '@/views/process-manage/annotation/components/summary-config-dialog'
 import ClassificationConfigDialog from '@/views/process-manage/annotation/components/classification-config-dialog'
 import SentimentAnalysisConfigDialog from '@/views/process-manage/annotation/components/sentiment-analysis-config-dialog'
+import MatchingConfigDialog from '@/views/process-manage/annotation/components/matching-config-dialog'
 
 const taskTypeOptions = [
   { key: '通用单文本分类', display_name: '通用单文本分类' },
   { key: '情感分析/意图识别', display_name: '情感分析/意图识别' },
   { key: '实体关系抽取', display_name: '实体关系抽取' },
   { key: '文本关系分析', display_name: '文本关系分析' },
+  { key: '文本配对', display_name: '文本配对' },
   { key: '文本摘要', display_name: '文本摘要' },
   { key: '文本排序学习', display_name: '文本排序学习' }
 ]
@@ -152,7 +170,7 @@ const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
 
 export default {
   name: 'DatasetTable',
-  components: { Pagination, ExtractionConfigDialog, RelationAnalysisConfigDialog, L2rConfigDialog, SummaryConfigDialog, ClassificationConfigDialog, SentimentAnalysisConfigDialog },
+  components: { Pagination, ExtractionConfigDialog, RelationAnalysisConfigDialog, L2rConfigDialog, SummaryConfigDialog, ClassificationConfigDialog, SentimentAnalysisConfigDialog, MatchingConfigDialog },
   directives: { waves },
   filters: {
     statusFilter(status) {
@@ -182,7 +200,7 @@ export default {
         taskName: '',
         datasetType: '标注数据集',
         username: ['自己', '他人'],
-        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
+        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本配对', '文本摘要', '文本排序学习'],
         annotationStatus: ['未开始', '标注中', '标注完成']
       },
       searchQuery: {
@@ -203,6 +221,7 @@ export default {
         { text: '情感分析/意图识别', value: '情感分析/意图识别' },
         { text: '实体关系抽取', value: '实体关系抽取' },
         { text: '文本关系分析', value: '文本关系分析' },
+        { text: '文本配对', value: '文本配对' },
         { text: '文本摘要', value: '文本摘要' },
         { text: '文本排序学习', value: '文本排序学习' }
       ],
@@ -245,6 +264,13 @@ export default {
       }
       this.handleFilter()
     },
+    handleInfoVerity(id, taskName, desc) {
+      datasetInfoVerify({ 'datasetid': id, 'taskName': taskName, 'desc': desc }).then(response => {
+        document.body.click()
+        this.$message.success('任务信息修改成功！')
+        this.getList()
+      })
+    },
     handleSetAnnotation(row) {
       this.configDialogShow = true
       this.clickID = row._id
@@ -260,6 +286,9 @@ export default {
           break
         case '文本摘要':
           this.dialogComponent = SummaryConfigDialog
+          break
+        case '文本配对':
+          this.dialogComponent = MatchingConfigDialog
           break
         case '通用单文本分类':
           this.dialogComponent = ClassificationConfigDialog

@@ -158,7 +158,9 @@ export default {
       })
     },
     handleEdit(row) {
-      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type)) {
+      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + Math.floor(Number(row.group) / 2) * 2)
+      } else if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 1) {
         this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + row.group)
       } else {
         this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + row.vectorid)

@@ -33,15 +33,15 @@
         </template>
       </el-table-column>
 
-      <el-table-column align="center" label="操作" width="200px">
+      <el-table-column align="center" label="操作" width="160px">
         <template slot-scope="{row}">
           <el-button
-            type="danger"
+            type="success"
             size="small"
-            icon="el-icon-edit"
+            icon="el-icon-search"
             @click="handleEdit(row)"
           >
-            删除
+            标注查看
           </el-button>
         </template>
       </el-table-column>
@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { preprocessDataFetch } from '@/api/process-manage/preprocess'
+import { preprocessVectorsFetch } from '@/api/process-manage/preprocess'
 import Pagination from '@/components/Pagination'
 
 export default {
@@ -93,7 +93,7 @@ export default {
   methods: {
     async getList() {
       this.listLoading = true
-      const { data } = await preprocessDataFetch(this.listQuery)
+      const { data } = await preprocessVectorsFetch(this.listQuery)
       this.list = data.items
       this.total = data.total
       this.listLoading = false

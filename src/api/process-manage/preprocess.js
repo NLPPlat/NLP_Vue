@@ -21,10 +21,30 @@ export function preprocessAdd(data) {
   })
 }
 
-// 某个数据集预处理结果获取
+// 某个数据集预处理向量获取
+export function preprocessVectorsFetch(query) {
+  return request({
+    url: '/process-manage/pre-process/datasets/ID/preprocesses/ID/vectors',
+    method: 'get',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+// 某个数据集预处理数据获取
 export function preprocessDataFetch(query) {
   return request({
     url: '/process-manage/pre-process/datasets/ID/preprocesses/ID/data',
+    method: 'get',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+// 某个数据集导出某个预处理步骤数据
+export function preprocessDownload(query) {
+  return request({
+    url: '/process-manage/pre-process/datasets/ID/preprocesses/ID/download',
     method: 'get',
     params: query,
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }

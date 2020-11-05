@@ -9,6 +9,7 @@
               <el-option label="情感分析/意图识别" value="情感分析/意图识别" />
               <el-option label="实体关系抽取" value="实体关系抽取" />
               <el-option label="文本关系分析" value="文本关系分析" />
+              <el-option label="文本配对" value="文本配对" />
               <el-option label="文本摘要" value="文本摘要" />
               <el-option label="文本排序学习" value="文本排序学习" />
             </el-select>

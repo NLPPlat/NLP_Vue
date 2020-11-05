@@ -142,7 +142,6 @@ export default {
       this.$forceUpdate()
     },
     relationSelectChange(item) {
-      console.log({ 'entity1': this.tempRelation.entity1, 'entity2': this.tempRelation.entity2 })
       this.label.relation[item].push({ 'entity1': this.tempRelation.entity1, 'entity2': this.tempRelation.entity2 })
       this.relationDialogVisible = false
       this.tempRelation.entity1.type = null
@@ -188,7 +187,6 @@ export default {
       }
     },
     drawEntitiy(start, end) {
-      console.log(start, end)
       var textShow = this.$refs.textShow
       var textNodeList = textShow.childNodes
       var nodeLen = 0

@@ -40,25 +40,7 @@
       </el-table-column>
       <el-table-column label="任务名称" width="160px" align="center">
         <template slot-scope="{row}">
-          <el-popover
-            placement="right"
-            width="400"
-            trigger="click"
-          >
-            <el-form>
-              <el-form-item label="任务名称">
-                <el-input v-model="row.taskName" />
-              </el-form-item>
-              <el-form-item label="任务描述">
-                <el-input v-model="row.desc" type="textarea" />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.taskName,row.desc)">保存</el-button>
-              </el-form-item>
-            </el-form>
-            <span slot="reference" class="link-type">{{ row.taskName }}</span>
-          </el-popover>
-
+          <span>{{ row.taskName }}</span>
         </template>
       </el-table-column>
       <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
@@ -66,15 +48,17 @@
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="公开性" width="180px" align="center">
+      <el-table-column label="数据集ID" column-key="datasetID" width="80px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.publicity" :disabled="row.username!=$store.state.user.username">
-            <el-radio-button label="公开" />
-            <el-radio-button label="不公开" />
-          </el-radio-group>
+          <span>{{ row.datasetID }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="160px" align="center">
+      <el-table-column label="数据集名称" column-key="datasetName" width="160px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.datasetName }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="开始时间" width="160px" align="center">
         <template slot-scope="{row}">
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
@@ -84,32 +68,21 @@
           <el-tag>{{ row.taskType | typeFilter }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="任务状态" column-key="analyseStatus" :filters="statusFilter" class-name="status-col" width="120px">
+      <el-table-column label="任务状态" column-key="taskStatus" :filters="statusFilter" class-name="status-col" width="120px">
         <template slot-scope="{row}">
-          <el-tag :type="row.analyseStatus | statusFilter">
-            {{ row.analyseStatus }}
+          <el-tag :type="row.taskStatus | statusFilter">
+            {{ row.taskStatus }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" min-width="240px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <div v-if="row.username===$store.state.user.username">
-            <el-button type="primary" size="mini" @click="handleManage(row)">
-              管理数据
-            </el-button>
-            <el-button size="mini" type="success" @click="handleDataVenation(row)">
-              数据脉络
-            </el-button>
+          <div>
             <el-button type="primary" size="mini" @click="copyDataSet(row)">
-              拷贝
+              跳转
             </el-button>
             <el-button size="mini" type="danger" @click="handleDelete(row)">
-              删除
-            </el-button>
-          </div>
-          <div v-else>
-            <el-button type="primary" size="mini" @click="copyDataSet(row)">
-              拷贝
+              停止
             </el-button>
           </div>
         </template>
@@ -138,18 +111,14 @@
 </template>
 
 <script>
-import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
+import { datasetCopy, datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
+import { tasksFetch } from '@/api/process-manage/task-manage'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
 const taskTypeOptions = [
-  { key: '通用单文本分类', display_name: '通用单文本分类' },
-  { key: '情感分析/意图识别', display_name: '情感分析/意图识别' },
-  { key: '实体关系抽取', display_name: '实体关系抽取' },
-  { key: '文本关系分析', display_name: '文本关系分析' },
-  { key: '文本摘要', display_name: '文本摘要' },
-  { key: '文本排序学习', display_name: '文本排序学习' }
+  { key: '数据接入', display_name: '数据接入' }
 ]
 
 const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
@@ -164,8 +133,8 @@ export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        '解析完成': 'success',
-        '解析中': 'info'
+        '已完成': 'success',
+        '执行中': 'info'
       }
       return statusMap[status]
     },
@@ -184,34 +153,22 @@ export default {
         limit: 20,
         sort: '-id',
         taskName: '',
-        datasetType: '原始数据集',
-        username: ['自己', '他人'],
-        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
-        analyseStatus: ['解析中', '解析完成']
+        taskType: ['数据接入'],
+        taskStatus: ['执行中', '已完成']
       },
       searchQuery: {
         usernameSelect: '',
         taskTypeSelect: ''
       },
-      usernameOptions: ['自己', '他人'],
       taskTypeOptions,
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
       downloadLoading: false,
-      usernameFilter: [
-        { text: '自己', value: '自己' },
-        { text: '他人', value: '他人' }
-      ],
       taskTypeFilter: [
-        { text: '通用单文本分类', value: '通用单文本分类' },
-        { text: '情感分析/意图识别', value: '情感分析/意图识别' },
-        { text: '实体关系抽取', value: '实体关系抽取' },
-        { text: '文本关系分析', value: '文本关系分析' },
-        { text: '文本摘要', value: '文本摘要' },
-        { text: '文本排序学习', value: '文本排序学习' }
+        { text: '数据接入', value: '数据接入' }
       ],
       statusFilter: [
-        { text: '解析中', value: '解析中' },
-        { text: '解析完成', value: '解析完成' }
+        { text: '执行中', value: '执行中' },
+        { text: '已完成', value: '已完成' }
       ],
       datasetCopy: {
         copyDialogVisible: false,
@@ -226,7 +183,7 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      datasetListFetch(this.listQuery).then(response => {
+      tasksFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
         setTimeout(() => {

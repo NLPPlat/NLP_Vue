@@ -14,14 +14,17 @@ const getters = {
 
   groupModeFetch: function(state) {
     return function(taskType, annotationType) {
+      if (taskType in state.annotationSettings.twoGroupAnnotationMode) {
+        return 2
+      }
       if (taskType in state.annotationSettings.groupAnnotationMode) {
         for (var i = 0; i < state.annotationSettings.groupAnnotationMode[taskType].length; i++) {
           if (state.annotationSettings.groupAnnotationMode[taskType][i] === annotationType) {
-            return true
+            return 1
           }
         }
       }
-      return false
+      return 0
     }
   }
 }

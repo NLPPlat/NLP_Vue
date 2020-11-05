@@ -29,8 +29,8 @@
         </template>
       </el-table-column>
       <el-table-column label="执行参数" width="140px" align="center">
-        <template slot-scope="{}">
-          <el-button type="success" plain size="mini">点击查看</el-button>
+        <template slot-scope="{row}">
+          <el-button type="success" plain size="mini" @click="handleParamsShow(row)">点击查看</el-button>
         </template>
       </el-table-column>
       <el-table-column label="执行状态" column-key="preprocessStatus" :filters="statusFilter" class-name="status-col" width="120px">
@@ -51,10 +51,10 @@
             <el-button type="primary" size="mini" @click="handleManageData(row.id)">
               查看数据
             </el-button>
-            <el-button size="mini" type="success">
+            <el-button size="mini" type="success" @click="handleDownload(row.id)">
               导出
             </el-button>
-            <el-button size="mini" type="danger" @click="handleDelete(row,$index)">
+            <el-button size="mini" type="danger" @click="handleDelete(row.id)">
               删除
             </el-button>
           </div>
@@ -130,7 +130,28 @@
 
     <!-- 参数配置对话框 -->
     <el-dialog title="参数配置" :visible.sync="preprocessParams.show" width="700px">
-      <pre-process-params-dialog :key="preprocessAdd.preprocessSelect" :preprocess-name="preprocessAdd.preprocessSelect[1]" @getPreprocessParams="getPreprocessParams" />
+      <pre-process-params-set :key="preprocessAdd.preprocessSelect" :preprocess-name="preprocessAdd.preprocessSelect[1]" @getPreprocessParams="getPreprocessParams" />
+    </el-dialog>
+
+    <!-- 参数查看对话框 -->
+    <el-dialog title="参数查看" :visible.sync="preprocessParamsShow.show" width="450px">
+      <pre-process-params-show :params="preprocessParamsShow.params" />
+    </el-dialog>
+
+    <!-- 数据导出对话框 -->
+    <el-dialog title="数据导出" :visible.sync="preprocessDownload.show" width="450px">
+      <el-form ref="form" :model="form" label-width="120px">
+        <el-form-item label="导出内容">
+          <el-select v-model="preprocessDownload.content" placeholder="选择导出内容">
+            <el-option label="vectors" value="vectors" />
+            <el-option label="label_name" value="label_name" />
+            <el-option label="label" value="label" />
+            <el-option label="matrix" value="matrix" />
+            <el-option label="url" value="url" />
+          </el-select>
+        </el-form-item>
+        <el-button type="primary" style="margin-left:40%" @click="confirmDownload">确认导出</el-button>
+      </el-form>
     </el-dialog>
 
     <!-- 特征生成对话框 -->
@@ -171,7 +192,10 @@
 </template>
 
 <script>
-import PreProcessParamsDialog from './pre-process-params-dialog'
+import axios from 'axios'
+
+import PreProcessParamsSet from './pre-process-params-set'
+import PreProcessParamsShow from './pre-process-params-show'
 
 import { preprocessStatusFetch, preprocessAdd, preprocessDeal } from '@/api/process-manage/preprocess'
 import { operatorsForUserFetch } from '@/api/common/operator'
@@ -179,7 +203,7 @@ import { datasetCopy } from '@/api/common/dataset'
 
 export default {
   name: 'PreProcessManageTable',
-  components: { PreProcessParamsDialog },
+  components: { PreProcessParamsSet, PreProcessParamsShow },
   directives: { },
   filters: {
     statusFilter(status) {
@@ -211,10 +235,19 @@ export default {
         show: false,
         preprocessShow: ''
       },
+      preprocessParamsShow: {
+        show: false,
+        params: {}
+      },
       featuresConstruction: {
         show: false,
         preprocessID: '',
         columns: ['label(映射后的标签)', 'label_name(标签原名)', 'matrix(特征矩阵)']
+      },
+      preprocessDownload: {
+        show: false,
+        preprocesssid: '',
+        content: ''
       },
       timer: null
     }
@@ -280,6 +313,30 @@ export default {
     },
     handleAddOperator() {
       this.$router.push('/data-manage/operator-manage/codehub/-1')
+    },
+    handleParamsShow(row) {
+      this.preprocessParamsShow.params = row.preprocessParams
+      this.preprocessParamsShow.show = true
+    },
+    handleDownload(preprocessid) {
+      this.preprocessDownload.preprocessid = preprocessid
+      this.preprocessDownload.show = true
+    },
+    confirmDownload() {
+      axios
+        .get(process.env.VUE_APP_BASE_API + '/process-manage/pre-process/datasets/ID/preprocesses/ID/download',
+          { params: { 'datasetid': this.listQuery.datasetid, 'preprocessid': this.preprocessDownload.preprocessid, 'content': this.preprocessDownload.content },
+            headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token }})
+        .then(response => {
+          const fileName = response.headers['content-disposition']
+          var url = window.URL.createObjectURL(new Blob([response.data]))
+          const a = document.createElement('a')
+          a.href = url
+          a.setAttribute('download', fileName)
+          a.click()
+          window.URL.revokeObjectURL(url)
+        })
+      this.preprocessDownload.show = false
     },
     handleCopy() {
       datasetCopy({ 'datasetInitid': this.listQuery.datasetid, 'params': { 'preprocessid': this.featuresConstruction.preprocessID }, 'datasetInitType': '预处理数据集', 'copyDes': '特征数据集' }).then(response => {
