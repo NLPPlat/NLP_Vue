@@ -19,7 +19,7 @@
             </div>
             <el-collapse v-model="tags.activeEntityTags" @change="handleChange">
               <el-collapse-item v-for="item in tags.entityTags" :key="item" :title="item" :name="item">
-                <el-tag v-for="entityTag in label.entity[item]" :key="entityTag" :type="entityTag.type" closable effect="dark" :disable-transitions="false" style="margin:5px 10px;cursor:pointer" @close="handleCloseEntityTag(entityTag,item)" @click="handleSelectEntityTag(entityTag,item)">{{ entityTag.text }}</el-tag>
+                <el-tag v-for="entityTag in label.entities[item]" :key="entityTag" :type="entityTag.type" closable effect="dark" :disable-transitions="false" style="margin:5px 10px;cursor:pointer" @close="handleCloseEntityTag(entityTag,item)" @click="handleSelectEntityTag(entityTag,item)">{{ entityTag.text }}</el-tag>
               </el-collapse-item>
             </el-collapse>
           </el-card>
@@ -31,7 +31,7 @@
             </div>
             <el-collapse v-model="tags.activeRelationTags" @change="handleChange">
               <el-collapse-item v-for="item in tags.relationTags" :key="item" :title="item" :name="item">
-                <el-tag v-for="relationTag in label.relation[item]" :key="relationTag" type="success" closable effect="dark" :disable-transitions="false" style="margin:5px 10px;" @close="handleCloseEntityTag(entityTag,item)">{{ relationTag.entity1.text+"-"+relationTag.entity2.text }}</el-tag>
+                <el-tag v-for="relationTag in label.relations[item]" :key="relationTag" type="success" closable effect="dark" :disable-transitions="false" style="margin:5px 10px;" @close="handleCloseEntityTag(entityTag,item)">{{ relationTag.entity1.text+"-"+relationTag.entity2.text }}</el-tag>
               </el-collapse-item>
             </el-collapse>
           </el-card>
@@ -75,8 +75,8 @@ export default {
       data: {},
       text: '',
       label: {
-        entity: {},
-        relation: {}
+        entities: {},
+        relations: {}
       },
       extractionDialogVisible: false,
       relationDialogVisible: false,
@@ -103,14 +103,17 @@ export default {
     this.text = this.data.text1
     if (this.data.label === '') {
       for (var entityTag of this.tags.entityTags) {
-        this.label.entity[entityTag] = []
+        this.label.entities[entityTag] = []
       }
       for (var relationTag of this.tags.relationTags) {
-        this.label.relation[relationTag] = []
+        this.label.relations[relationTag] = []
       }
     } else {
       this.label = this.data.label
     }
+  },
+  mounted() {
+    this.drawEntities()
   },
   methods: {
     upload() {
@@ -118,14 +121,14 @@ export default {
       this.$emit('upload', this.data)
     },
     entitySelectChange(item) {
-      this.label.entity[item].push({ ...this.tempEntity })
-      this.drawEntitiy(this.tempEntity.start, this.tempEntity.end)
+      this.label.entities[item].push({ ...this.tempEntity })
+      this.drawEntitiy(this.tempEntity.start + 1, this.tempEntity.end + 1)
       var text = window.getSelection()
       text.empty()
       this.extractionDialogVisible = false
     },
     handleCloseEntityTag(entityTag, item) {
-      this.label.entity[item].splice(this.label.entity[item].indexOf(entityTag), 1)
+      this.label.entities[item].splice(this.label.entities[item].indexOf(entityTag), 1)
       this.$forceUpdate()
     },
     handleSelectEntityTag(entityTag, item) {
@@ -142,7 +145,7 @@ export default {
       this.$forceUpdate()
     },
     relationSelectChange(item) {
-      this.label.relation[item].push({ 'entity1': this.tempRelation.entity1, 'entity2': this.tempRelation.entity2 })
+      this.label.relations[item].push({ 'entity1': this.tempRelation.entity1, 'entity2': this.tempRelation.entity2 })
       this.relationDialogVisible = false
       this.tempRelation.entity1.type = null
       this.tempRelation.entity2.type = null
@@ -152,8 +155,8 @@ export default {
       var text = window.getSelection()
       var textAnchorNode = text.anchorNode
       if (text.toString() !== '') {
-        var start = text.anchorOffset
-        var end = text.focusOffset
+        var start = text.anchorOffset - 1
+        var end = text.focusOffset - 1
         if (start > end) {
           [start, end] = [end, start]
         }
@@ -162,14 +165,12 @@ export default {
         var nodeLen = 0
         for (var i = 0; i < textNodeList.length; i++) {
           var node = textNodeList[i]
-          if (node.nodeType === 3) {
-            if (node.contains(textAnchorNode)) {
-              start = start + nodeLen
-              end = end + nodeLen
-              break
-            }
-            nodeLen = nodeLen + node.length
+          if (node.contains(textAnchorNode)) {
+            start = start + nodeLen
+            end = end + nodeLen
+            break
           }
+          nodeLen = nodeLen + node.textContent.length
         }
         this.tempEntity.start = start
         this.tempEntity.end = end
@@ -180,9 +181,9 @@ export default {
     drawEntities() {
       for (var i = 0; i < this.tags.entityTags.length; i++) {
         var tag = this.tags.entityTags[i]
-        for (var j = 0; j < this.label.entity[tag].length; j++) {
-          var entity = this.label.entity[tag][j]
-          this.drawEntitiy(entity.start, entity.end)
+        for (var j = 0; j < this.label.entities[tag].length; j++) {
+          var entity = this.label.entities[tag][j]
+          this.drawEntitiy(entity.start + 1, entity.end + 1)
         }
       }
     },
@@ -192,20 +193,18 @@ export default {
       var nodeLen = 0
       for (var i = 0; i < textNodeList.length; i++) {
         var node = textNodeList[i]
-        if (node.nodeType === 3) {
-          if (nodeLen + node.textContent.length > start) {
-            var range = document.createRange()
-            range.setStart(node, start - nodeLen)
-            range.setEnd(node, end - nodeLen)
-            var selectionContents = range.extractContents()
-            var span = document.createElement('span')
-            span.style.color = 'blue'
-            span.appendChild(selectionContents)
-            range.insertNode(span)
-            break
-          }
-          nodeLen = nodeLen + node.length
+        if (nodeLen + node.textContent.length > start) {
+          var range = document.createRange()
+          range.setStart(node, start - nodeLen)
+          range.setEnd(node, end - nodeLen)
+          var selectionContents = range.extractContents()
+          var span = document.createElement('span')
+          span.style.color = 'blue'
+          span.appendChild(selectionContents)
+          range.insertNode(span)
+          break
         }
+        nodeLen = nodeLen + node.textContent.length
       }
     }
   }

@@ -85,7 +85,19 @@ const state = {
     children: [{
       value: '单标签',
       label: '单标签'
+    }, {
+      value: '多标签',
+      label: '多标签'
+    }, {
+      value: '序列BIO',
+      label: '序列BIO'
+    }, {
+      value: '序列BIOES',
+      label: '序列BIOES'
     }]
+  }, {
+    value: '自定义算子',
+    label: '自定义算子'
   }],
   分词: {
     tool: 'jieba'

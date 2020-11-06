@@ -140,9 +140,9 @@ export default {
     },
     confirmUpload(data) {
       if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
-        groupVectorsUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.id, 'vectors': data }).then(response => {
+        groupVectorsUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.id, 'vectors': data.group1 }).then(response => {
         })
-        groupVectorsUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': Number(this.listQuery.id) + 1, 'vectors': data }).then(response => {
+        groupVectorsUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': Number(this.listQuery.id) + 1, 'vectors': data.group2 }).then(response => {
         })
       } else if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 1) {
         groupVectorsUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': this.listQuery.id, 'vectors': data }).then(response => {
@@ -154,11 +154,19 @@ export default {
     },
     handleBack() {
       this.upload()
-      this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) - 1))
+      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) - 2))
+      } else {
+        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) - 1))
+      }
     },
     handleNext() {
       this.upload()
-      this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) + 1))
+      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) + 2))
+      } else {
+        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) + 1))
+      }
     },
     handleBackToDetail() {
       this.upload()

@@ -146,8 +146,8 @@
             <el-option label="vectors" value="vectors" />
             <el-option label="label_name" value="label_name" />
             <el-option label="label" value="label" />
-            <el-option label="matrix" value="matrix" />
-            <el-option label="url" value="url" />
+            <el-option label="embedding" value="embedding" />
+            <el-option label="feature" value="feature" />
           </el-select>
         </el-form-item>
         <el-button type="primary" style="margin-left:40%" @click="confirmDownload">确认导出</el-button>
@@ -171,11 +171,11 @@
             </el-form-item>
             <el-form-item label="选择特征集内容">
               <el-checkbox-group v-model="featuresConstruction.columns">
-                <el-checkbox label="label(映射后的标签)" name="type" />
-                <el-checkbox label="label_name(标签原名)" name="type" />
+                <el-checkbox label="label(映射后标签)" name="type" />
+                <el-checkbox label="label_name(映射后标签名称)" name="type" />
                 <el-checkbox label="vectors(文本向量)" name="type" />
-                <el-checkbox label="matrix(特征矩阵)" name="type" />
-                <el-checkbox label="url(模型URL)" name="type" />
+                <el-checkbox label="feature(特征)" name="type" />
+                <el-checkbox label="embedding(嵌入)" name="type" />
               </el-checkbox-group>
             </el-form-item>
           </el-form>
@@ -242,7 +242,7 @@ export default {
       featuresConstruction: {
         show: false,
         preprocessID: '',
-        columns: ['label(映射后的标签)', 'label_name(标签原名)', 'matrix(特征矩阵)']
+        columns: ['label(映射后标签)', 'label_name(映射后标签名称)', 'feature(特征)']
       },
       preprocessDownload: {
         show: false,
@@ -287,6 +287,7 @@ export default {
         for (var i = 0; i < response.data.items.length; i++) {
           operators['children'].push({ 'value': response.data.items[i].operatorName, 'label': response.data.items[i].operatorName })
         }
+        this.preprocessAdd.preprocessList.pop()
         this.preprocessAdd.preprocessList.push(operators)
       })
     },
