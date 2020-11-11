@@ -41,8 +41,11 @@ const state = {
     value: '特征生成',
     label: '特征生成',
     children: [{
-      value: 'EmbeddingMatrix',
-      label: 'EmbeddingMatrix'
+      value: '序列化',
+      label: '序列化'
+    }, {
+      value: '特征矩阵生成',
+      label: '特征矩阵生成'
     }]
   }, {
     value: '特征降维',
@@ -83,11 +86,11 @@ const state = {
     value: '标签映射',
     label: '标签映射',
     children: [{
-      value: '单标签',
-      label: '单标签'
+      value: '单标签数值映射',
+      label: '单标签数值映射'
     }, {
-      value: '多标签',
-      label: '多标签'
+      value: '多标签数值映射',
+      label: '多标签数值映射'
     }, {
       value: '序列BIO',
       label: '序列BIO'
@@ -189,6 +192,30 @@ const state = {
     sorted_vocab: 1,
     batch_words: 10000
   },
+  Doc2vec参数说明: {
+    dm: 1,
+    dm_mean: 0,
+    dm_concat: 0,
+    dbow_words: 0,
+    size: 100,
+    alpha: 0.025,
+    window: 5,
+    min_count: 5,
+    max_vocab_size: 'None',
+    sample: 1e-3,
+    seed: 1,
+    workers: 3,
+    min_alpha: 0,
+    sg: 0,
+    hs: 0,
+    negative: 5,
+    cbow_mean: 1,
+    hashfxn: 'hash',
+    iter: 5,
+    trim_rule: 'None',
+    sorted_vocab: 1,
+    batch_words: 10000
+  },
   GloVe: {
     MEMORY: 4.0,
     VOCAB_MIN_COUNT: 5,
@@ -197,14 +224,20 @@ const state = {
     WINDOW_SIZE: 15,
     NUM_THREADS: 8
   },
-  EmbeddingMatrix: {
+  序列化: {
+    maxlen: 20
+  },
+  序列化参数说明: {
+    maxlen: 20
+  },
+  特征矩阵生成: {
     method: '向量平均',
     padding: 20
   },
-  EmbeddingMatrix选项: {
+  特征矩阵生成选项: {
     method: ['向量平均', '向量求和', 'TFIDF加权']
   },
-  EmbeddingMatrix参数说明: {
+  特征矩阵生成参数说明: {
     method: '生成方式',
     padding: '截取个数'
   }

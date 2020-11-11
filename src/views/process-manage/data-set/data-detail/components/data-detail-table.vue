@@ -160,7 +160,6 @@
 <script>
 import { datasetCopy, datasetVectorsFetch, datasetInfoFetch } from '@/api/common/dataset'
 import { editDataVector, dataCut } from '@/api/process-manage/data-set'
-import { fetchAnnotationStatus } from '@/api/process-manage/annotation'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
 import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
@@ -217,7 +216,6 @@ export default {
   created() {
     this.listQuery.datasetid = this.$route.params.id
     this.getList()
-    this.getAnnotationStatus()
   },
   methods: {
     async getList() {
@@ -235,13 +233,11 @@ export default {
       datasetInfoFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
         this.taskType = response.data.taskType
         this.groupOn = response.data.groupOn
+        if (response.data.datasetType === '原始数据集') {
+          this.annotation.status = response.data.annotationStatus
+        }
       })
       this.listLoading = false
-    },
-    getAnnotationStatus() {
-      fetchAnnotationStatus({ 'datasetid': this.listQuery.datasetid }).then(response => {
-        this.annotation.status = response.data.annotationStatus
-      })
     },
     confirmEdit(row) {
       row.edit = false

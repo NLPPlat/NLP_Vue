@@ -1,5 +1,13 @@
 <template>
   <div>
+    <el-form>
+      <el-form-item label="标注方式">
+        <el-radio-group v-model="type">
+          <el-radio-button label="单标签" />
+          <el-radio-button label="多标签" />
+        </el-radio-group>
+      </el-form-item>
+    </el-form>
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <span>文本标签</span>
@@ -50,7 +58,8 @@ export default {
       annotationPublicity: '不允许',
       textTags: [],
       textInputVisible: false,
-      textInputValue: ''
+      textInputValue: '',
+      type: '单标签'
     }
   },
   created() {
@@ -81,7 +90,7 @@ export default {
       this.textInputValue = ''
     },
     handleSubmit() {
-      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'annotationFormat': { 'tags': this.textTags, 'type': '' }}).then(response => {
+      annotationConfig({ 'id': this.id, 'annotationPublicity': this.annotationPublicity, 'annotationFormat': { 'tags': this.textTags, 'type': this.type }}).then(response => {
         this.$notify({
           title: '配置成功',
           message: '可以开始进行标注。',

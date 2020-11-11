@@ -39,6 +39,16 @@ const componentsRouter = {
       name: 'model-manage-codehub',
       hidden: true,
       meta: { title: '模型编辑' }
+    }, {
+      path: 'resource-manage',
+      component: () => import('@/views/data-manage/resource-manage/resource-manage/index'),
+      name: 'resource-manage',
+      meta: { title: '资源管理' }
+    }, {
+      path: 'pipeline-manage',
+      component: () => import('@/views/data-manage/pipeline-manage/pipeline-manage/index'),
+      name: 'pipeline-manage',
+      meta: { title: '管道管理' }
     }
   ]
 }

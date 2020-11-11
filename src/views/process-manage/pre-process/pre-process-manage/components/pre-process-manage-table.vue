@@ -75,15 +75,21 @@
       </el-table-column>
     </el-table>
     <el-row type="flex" justify="space-around" style="margin-top:50px">
-      <el-col :span="9" style="text-align:right">
+      <el-col :span="3" style="text-align:center" />
+      <el-col :span="4" style="text-align:center">
         <el-button type="primary" @click="preprocessAdd.show=true">新增步骤</el-button>
       </el-col>
-      <el-col :span="6" style="text-align:center">
+      <el-col :span="4" style="text-align:center">
         <el-button type="primary">一键执行</el-button>
       </el-col>
-      <el-col :span="9" style="text-align:left">
+      <el-col :span="4" style="text-align:center">
         <el-button type="primary" @click="featuresConstruction.show=true">特征集生成</el-button>
       </el-col>
+      <el-col :span="4" style="text-align:center">
+        <el-button type="primary" @click="pipelineConstruction.show=true">管道生成</el-button>
+      </el-col>
+      <el-col :span="5" style="text-align:center" />
+
     </el-row>
 
     <!-- 新增步骤对话框 -->
@@ -176,6 +182,7 @@
                 <el-checkbox label="vectors(文本向量)" name="type" />
                 <el-checkbox label="feature(特征)" name="type" />
                 <el-checkbox label="embedding(嵌入)" name="type" />
+                <el-checkbox label="embedding_matrix(嵌入矩阵)" name="type" />
               </el-checkbox-group>
             </el-form-item>
           </el-form>
@@ -184,6 +191,40 @@
       <el-row type="flex" justify="center" style="margin-top:20px">
         <el-col :span="4" style="text-align:center">
           <el-button type="primary" @click="handleCopy()">确认</el-button>
+        </el-col>
+      </el-row>
+    </el-dialog>
+
+    <!-- 管道生成对话框 -->
+    <el-dialog title="管道生成配置" :visible.sync="pipelineConstruction.show" width="500px">
+      <el-row type="flex" justify="center">
+        <el-col :span="18" style="text-align:left">
+          <el-form :model="pipelineConstruction" label-width="120px">
+            <el-form-item label="选择步骤">
+              <el-select v-model="pipelineConstruction.preprocessid" placeholder="由哪一步骤生成特征集" style="width:200px">
+                <el-option
+                  v-for="item in list"
+                  :key="item.id"
+                  :label="'ID:'+item.id+'  '+item.preprocessName"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="管道名称" prop="pipelineName">
+              <el-input v-model="pipelineConstruction.pipelineName" placeholder="请填写管道名称" style="width:200px" />
+            </el-form-item>
+            <el-form-item label="公开性" prop="publicity">
+              <el-radio-group v-model="pipelineConstruction.publicity">
+                <el-radio label="公开" />
+                <el-radio label="不公开" />
+              </el-radio-group>
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+      <el-row type="flex" justify="center" style="margin-top:20px">
+        <el-col :span="4" style="text-align:center">
+          <el-button type="primary" @click="handlePipelineConstruction()">确认</el-button>
         </el-col>
       </el-row>
     </el-dialog>
@@ -200,6 +241,7 @@ import PreProcessParamsShow from './pre-process-params-show'
 import { preprocessStatusFetch, preprocessAdd, preprocessDeal } from '@/api/process-manage/preprocess'
 import { operatorsForUserFetch } from '@/api/common/operator'
 import { datasetCopy } from '@/api/common/dataset'
+import { pipelineUpload } from '@/api/data-manage/pipeline'
 
 export default {
   name: 'PreProcessManageTable',
@@ -249,6 +291,12 @@ export default {
         preprocesssid: '',
         content: ''
       },
+      pipelineConstruction: {
+        show: false,
+        preprocessid: '',
+        pipelineName: '',
+        publicity: '不公开'
+      },
       timer: null
     }
   },
@@ -265,12 +313,12 @@ export default {
     this.preprocessAdd.preprocessList = this.$store.state.preprocessParams.preprocessList
     this.getList()
     this.getOperators()
-    this.timeout = setInterval(() => {
+    this.timer = setInterval(() => {
       this.getList()
     }, 1000 * 2)
   },
   beforeDestroy() {
-    clearInterval(this.timeout)
+    clearInterval(this.timer)
   },
   methods: {
     getList() {
@@ -348,6 +396,11 @@ export default {
           type: 'success',
           duration: 2000
         })
+      })
+    },
+    handlePipelineConstruction() {
+      pipelineUpload({ 'datasetid': this.listQuery.datasetid, 'preprocessid': this.pipelineConstruction.preprocessid, 'pipelineName': this.pipelineConstruction.pipelineName, 'publicity': this.pipelineConstruction.publicity }).then(response => {
+
       })
     }
   }

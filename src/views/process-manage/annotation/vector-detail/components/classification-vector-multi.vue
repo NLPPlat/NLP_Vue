@@ -32,7 +32,7 @@
 <script>
 
 export default {
-  name: 'ClassificationVector',
+  name: 'ClassificationVectorMulti',
   components: { },
   props: { initData: { default: [] }, initTags: { default: {}}},
   data() {

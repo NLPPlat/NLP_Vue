@@ -1,6 +1,7 @@
 <template>
   <div class="app-container">
-    <el-card shadow="hover" style="width:100%;background-color:#f5f5f5">
+
+    <el-card v-if="datasetInfo.splitStatus==='未完成' || datasetInfo.modelStatus==='未完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-bottom:50px">
       <div style="margin-bottom:40px">
         <span style="font-size:25px">数据集配置</span>
       </div>
@@ -10,7 +11,8 @@
             <el-card shadow="never" class="feature-config">
               <div slot="header" class="clearfix" style="vertical-align:middle">
                 <span>数据切割</span>
-                <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 0" type="text" @click="handleFeaturesSplit()">确认配置</el-button>
+                <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 3px" type="text" @click="handleFeaturesSplit('不跳过')">确认配置</el-button>
+                <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 9px" type="text" @click="handleFeaturesSplit('跳过')">跳过配置</el-button>
                 <span v-else style="float: right;display:inline"><i class="el-icon-check el-icon--right" /> </span>
                 <!-- <el-button v-else type="success" icon="el-icon-check" circle size="mini" style="float: right;margin:0px" /> -->
               </div>
@@ -63,13 +65,13 @@
     </el-card>
 
     <transition name="el-zoom-in-top">
-      <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
+      <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;">
         <div style="margin-bottom:40px">
           <span style="font-size:25px">数据集信息</span>
         </div>
         <el-row type="flex" justify="space-between">
           <el-col :span="9">
-            <el-card shadow="never" class="feature-config">
+            <el-card shadow="never" class="feature-info">
               <div slot="header" class="clearfix" style="vertical-align:middle">
                 <span>基本信息</span>
               </div>
@@ -86,6 +88,45 @@
               </el-form>
             </el-card>
           </el-col>
+          <el-col :span="14">
+            <el-card shadow="never" class="feature-info">
+              <div slot="header" class="clearfix" style="vertical-align:middle">
+                <span>训练信息</span>
+              </div>
+              <el-row>
+                <el-col :span="12">
+                  <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                    <el-form-item label="训练状态">
+                      <span>{{ trainedmodel.trainStatus }}</span>
+                    </el-form-item>
+                    <el-form-item label="训练时间">
+                      <span>{{ '你猜' }}</span>
+                    </el-form-item>
+                    <el-form-item label="模型操作">
+                      <el-button :disabled="trainedmodel.trainStatus!=='已完成'" style="float:left;" type="text">下载模型</el-button>
+                    </el-form-item>
+                  </el-form>
+                </el-col>
+                <el-col :span="12">
+                  <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                    <el-form-item label="Accuracy">
+                      <span>{{ trainedmodel.evaluation['accuracy'] }}</span>
+                    </el-form-item>
+                    <el-form-item label="Precision">
+                      <span>{{ trainedmodel.evaluation['precision'] }}</span>
+                    </el-form-item>
+                    <el-form-item label="Recall">
+                      <span>{{ trainedmodel.evaluation['recall'] }}</span>
+                    </el-form-item>
+                    <el-form-item label="F1">
+                      <span>{{ trainedmodel.evaluation['f1'] }}</span>
+                    </el-form-item>
+                  </el-form>
+                </el-col>
+              </el-row>
+
+            </el-card>
+          </el-col>
         </el-row>
       </el-card>
     </transition>
@@ -98,7 +139,7 @@
         <el-row type="flex" justify="space-between">
           <el-col :span="5">
             <el-card shadow="never" class="feature-config">
-              <el-button type="primary" style="margin:30px 0px 0px 40px" @click="handleModelRun()">开始训练</el-button>
+              <el-button type="primary" style="margin:30px 0px 0px 40px" :loading="trainedmodel.trainStatus==='训练中'" @click="handleModelRun()">{{ trainedmodel.trainStatus==='训练中'?'训练中':'开始训练' }}</el-button>
               <el-button type="success" style="margin:30px 0px 0px 40px" @click="trainedmodel.codeshow=true">模型调整</el-button>
             </el-card>
           </el-col>
@@ -123,7 +164,7 @@
     </transition>
 
     <transition name="el-zoom-in-top">
-      <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
+      <el-card v-if="trainedmodel.trainStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
         <div style="margin-bottom:40px">
           <span style="font-size:25px">输出控制台</span>
         </div>
@@ -134,7 +175,7 @@
     </transition>
 
     <transition name="el-zoom-in-top">
-      <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
+      <el-card v-if="trainedmodel.trainStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
         <div style="margin-bottom:40px">
           <span style="font-size:25px">图形展示窗</span>
         </div>
@@ -221,9 +262,12 @@ export default {
         modelParams: {},
         code: '',
         codeshow: false,
+        trainStatus: '未开始',
         result: '',
-        figs: {}
-      }
+        figs: {},
+        evaluation: {}
+      },
+      timer: null
     }
   },
   watch: {
@@ -233,9 +277,13 @@ export default {
     this.getInfo()
     this.getModels()
   },
+  beforeDestroy() {
+    if (this.timer !== null) {
+      clearInterval(this.timer)
+    }
+  },
   methods: {
     handleBaseModelChange(val) {
-      alert(val)
       if (val !== '') {
         modelFetch({ 'modelid': val }).then(response => {
           this.modelConfig.code = response.data.code
@@ -250,6 +298,9 @@ export default {
         if (this.datasetInfo.modelStatus === '已完成') {
           this.trainedmodel.id = this.datasetInfo.model
           this.getTrainedModel()
+          this.timer = setInterval(() => {
+            this.getResult()
+          }, 1000 * 2)
         }
       })
     },
@@ -262,14 +313,24 @@ export default {
       trainedmodelFetch({ 'trainedmodelid': this.trainedmodel.id }).then(response => {
         this.modelConfig.modelSelect = response.data.baseModelID
         this.modelConfig.modelName = response.data.modelName
+        this.trainedmodel.trainStatus = response.data.trainStatus
         this.trainedmodel.code = response.data.code
         this.trainedmodel.modelParams = response.data.modelParams
         this.trainedmodel.result = response.data.result
         this.trainedmodel.figs = response.data.figs
+        this.trainedmodel.evaluation = response.data.evaluation
       })
     },
-    handleFeaturesSplit() {
-      featuresSplit({ 'datasetid': this.datasetid, 'stratify': this.featuresConfig.stratify, 'trainRate': (this.featuresConfig.trainRate / 100).toFixed(2) }).then(response => {
+    getResult() {
+      trainedmodelFetch({ 'trainedmodelid': this.trainedmodel.id }).then(response => {
+        this.trainedmodel.trainStatus = response.data.trainStatus
+        this.trainedmodel.result = response.data.result
+        this.trainedmodel.figs = response.data.figs
+        this.trainedmodel.evaluation = response.data.evaluation
+      })
+    },
+    handleFeaturesSplit(skip) {
+      featuresSplit({ 'datasetid': this.datasetid, 'skip': skip, 'stratify': this.featuresConfig.stratify, 'trainRate': (this.featuresConfig.trainRate / 100).toFixed(2) }).then(response => {
         this.getInfo()
         this.$notify({
           title: '切割成功',
@@ -304,7 +365,8 @@ export default {
     },
     handleModelRun() {
       trainedModelRun({ 'datasetid': this.datasetid, 'trainedmodelid': this.trainedmodel.id }).then(response => {
-
+        this.$message.info('模型开始训练')
+        this.getResult()
       })
     },
     formatTooltip(value) {
@@ -318,5 +380,9 @@ export default {
 
 .feature-config{
   height:250px
+}
+
+.feature-info{
+  height:300px
 }
 </style>

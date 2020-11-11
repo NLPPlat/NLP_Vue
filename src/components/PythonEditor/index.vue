@@ -7,17 +7,37 @@
 <script>
 import CodeMirror from 'codemirror'
 import 'codemirror/lib/codemirror.css'
-// language
+
+// 语言
 import 'codemirror/mode/python/python.js'
-// theme css
+
+// 主题
 import 'codemirror/theme/panda-syntax.css'
 import 'codemirror/theme/duotone-light.css'
-
-import 'codemirror/addon/lint/lint.css'
 import 'codemirror/theme/rubyblue.css'
-import 'codemirror/mode/javascript/javascript'
+
+// 代码折叠
+import 'codemirror/addon/fold/foldcode.js'
+import 'codemirror/addon/fold/foldgutter.js'
+import 'codemirror/addon/fold/brace-fold.js'
+import 'codemirror/addon/fold/indent-fold.js'
+import 'codemirror/addon/fold/comment-fold.js'
+
+// 快捷键风格
+import 'codemirror/keymap/sublime.js'
+
+// 匹配
+import 'codemirror/addon/edit/closebrackets.js'
+import 'codemirror/addon/edit/matchbrackets.js'
+
+// 选中行
+import 'codemirror/addon/selection/active-line.js'
+
+import 'codemirror/addon/comment/comment.js'
+import 'codemirror/addon/hint/show-hint.js'
 import 'codemirror/addon/lint/lint'
-import 'codemirror/addon/lint/json-lint'
+import 'codemirror/addon/lint/lint.css'
+
 require('script-loader!jsonlint')
 
 export default {
@@ -39,12 +59,21 @@ export default {
   },
   mounted() {
     this.pythonEditor = CodeMirror.fromTextArea(this.$refs.textarea, {
-      lineNumbers: true,
-      mode: 'python',
-      theme: 'panda-syntax',
+      mode: 'python', // 语言
+      theme: 'panda-syntax', // 主题
       // theme: 'duotone-light',
-
-      gutters: ['CodeMirror-lint-markers'],
+      // 在行槽中添加行号显示器、折叠器、语法检测器
+      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter', 'CodeMirror-lint-markers'],
+      autofocus: true, // 自动聚焦
+      foldGutter: true, // 启用行槽中的代码折叠
+      keyMap: 'sublime', // 快键键风格
+      lineNumbers: true, // 显示行号
+      smartIndent: true, // 智能缩进
+      indentUnit: 4, // 智能缩进单位为4个空格长度
+      indentWithTabs: true, // 使用制表符进行智能缩进
+      matchBrackets: true, // 匹配结束符号，比如"]、}"
+      autoCloseBrackets: true, // 自动闭合符号
+      styleActiveLine: true, // 显示选中行的样式
       lint: true
     })
 

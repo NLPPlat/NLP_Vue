@@ -34,7 +34,9 @@ import MatchingVector from './components/matching-vector'
 import RelationAnalysisVector from './components/relation-analysis-vector'
 import L2rVectorListwise from './components/l2r-vector-listwise'
 import L2rVectorPointwise from './components/l2r-vector-pointwise'
-import classificationVector from './components/classification-vector'
+import classificationVectorSingle from './components/classification-vector-single'
+import classificationVectorMulti from './components/classification-vector-multi'
+
 import SummaryVectorExtractive from './components/summary-vector-extractive'
 import SummaryVectorAbstractive from './components/summary-vector-abstractive'
 import SentimentAnalysisVectorAspect from './components/sentiment-analysis-vector-aspect'
@@ -43,7 +45,7 @@ import SentimentAnalysisVectorSentence from './components/sentiment-analysis-vec
 
 export default {
   name: 'DataDetail',
-  components: { AnnotationProgress, ExtractionVector, MatchingVector, RelationAnalysisVector, L2rVectorListwise, L2rVectorPointwise, classificationVector, SummaryVectorExtractive, SummaryVectorAbstractive, SentimentAnalysisVectorAspect, SentimentAnalysisVectorText, SentimentAnalysisVectorSentence },
+  components: { AnnotationProgress, ExtractionVector, MatchingVector, RelationAnalysisVector, L2rVectorListwise, L2rVectorPointwise, classificationVectorSingle, classificationVectorMulti, SummaryVectorExtractive, SummaryVectorAbstractive, SentimentAnalysisVectorAspect, SentimentAnalysisVectorText, SentimentAnalysisVectorSentence },
   data() {
     return {
       taskType: '',
@@ -112,7 +114,11 @@ export default {
           }
           break
         case '通用单文本分类':
-          this.annotationVectorComponent = classificationVector
+          if (this.annotationFormat.type === '单标签') {
+            this.annotationVectorComponent = classificationVectorSingle
+          } else if (this.annotationFormat.type === '多标签') {
+            this.annotationVectorComponent = classificationVectorMulti
+          }
           break
         case '文本配对':
           this.annotationVectorComponent = MatchingVector

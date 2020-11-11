@@ -4,8 +4,30 @@
       <el-tab-pane label="vectors（文本向量）">
         <data-detail-table />
       </el-tab-pane>
-      <el-tab-pane label="label_name（映射后标签名称）">\
-        {{ preprocessObj.label_name }}
+      <el-tab-pane label="label_name（映射后标签id对应关系）">
+        <el-row type="flex" class="row-bg" justify="space-around">
+          <el-col :span="10">
+            <el-card class="box-card">
+              <div slot="header" class="clearfix">
+                <span>内容/形状/URL</span>
+              </div>
+              <div>
+                {{ preprocessObj.label_name }}
+              </div>
+            </el-card>
+          </el-col>
+          <el-col :span="7">
+            <el-card class="box-card">
+              <div slot="header" class="clearfix">
+                <span>重新生成</span>
+                <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
+              </div>
+              <div>
+                违法违法
+              </div>
+            </el-card>
+          </el-col>
+        </el-row>
       </el-tab-pane>
       <el-tab-pane label="label（映射后标签）">
         {{ preprocessObj.label }}
@@ -15,6 +37,9 @@
       </el-tab-pane>
       <el-tab-pane label="embedding（嵌入）">
         {{ preprocessObj.embedding }}
+      </el-tab-pane>
+      <el-tab-pane label="embedding_matrix(嵌入矩阵)">
+        {{ preprocessObj.embedding_matrix }}
       </el-tab-pane>
     </el-tabs>
   </div>

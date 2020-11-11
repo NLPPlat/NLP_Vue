@@ -75,7 +75,7 @@ const componentsRouter = {
       meta: { title: '训练管理' }
     }, {
       path: 'batch-process',
-      component: () => import('@/views/process-manage/batch-process/index'),
+      component: () => import('@/views/process-manage/batch-process/batch-process/index'),
       name: 'batch-process',
       meta: { title: '批处理' }
     }, {

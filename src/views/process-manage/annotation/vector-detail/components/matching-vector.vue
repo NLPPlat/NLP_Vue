@@ -27,7 +27,7 @@ export default {
   data() {
     return {
       data: '',
-      relations: [['14', '16']],
+      relations: [],
       plumbIns: null,
       defaultConfig: {},
       left: null,
@@ -39,21 +39,31 @@ export default {
     this.defaultConfig = {
       // 对应上述基本概念
       anchor: ['Left', 'Right'],
-      connector: ['StateMachine'],
+      connector: ['Straight'],
       endpoint: 'Blank',
       // 添加样式
-      paintStyle: { stroke: '#909399', strokeWidth: 2 }, // connector
+      paintStyle: { stroke: '#909399', strokeWidth: 2 } // connector
       // endpointStyle: { fill: 'lightgray', outlineStroke: 'darkgray', outlineWidth: 2 } // endpoint
       // 添加 overlay，如箭头
-      overlays: [['Arrow', { width: 8, length: 8, location: 1 }]] // overlay
+      // overlays: [['Arrow', { width: 8, length: 8, location: 1 }]] // overlay
     }
     this.drawLines()
   },
   created() {
     this.data = this.initData
+    if (this.data.group1[0].label !== '') {
+      this.relations = this.data.group1[0].label
+    }
   },
   methods: {
     upload() {
+      for (var i = 0; i < this.data.group1.length; i++) {
+        this.data.group1[i].label = 'Completed'
+      }
+      for (var j = 0; j < this.data.group2.length; j++) {
+        this.data.group2[j].label = 'Completed'
+      }
+      this.data.group1[0].label = this.relations
       this.$emit('upload', this.data)
     },
     drawLines() {
@@ -65,6 +75,15 @@ export default {
             target: item[1]
           }, self.defaultConfig)
         }
+      })
+    },
+    drawLine(source, target) {
+      var self = this
+      self.plumbIns.ready(function() {
+        self.plumbIns.connect({
+          source: source,
+          target: target
+        }, self.defaultConfig)
       })
     },
     handleSelect(side, vectorid) {
@@ -83,11 +102,10 @@ export default {
       }
       if (this.left !== null && this.right !== null) {
         this.relations.push([this.left.toString(), this.right.toString()])
+        this.drawLine(this.left.toString(), this.right.toString())
         this.left = null
         this.right = null
-        this.drawLines()
       }
-      console.log(this.relations)
     }
 
   }

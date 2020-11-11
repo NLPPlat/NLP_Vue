@@ -1,13 +1,7 @@
 <template>
   <div class="app-container">
-    <div class="switch-container">
-      <el-radio-group v-model="listQuery.switchDataset">
-        <el-radio-button label="训练数据集" />
-        <el-radio-button label="批处理数据集" />
-      </el-radio-group>
-    </div>
     <div class="filter-container">
-      <el-input v-model="listQuery.taskName" placeholder="任务名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.pipelineName" placeholder="任务名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-select v-model="searchQuery.usernameSelect" placeholder="归属者" clearable style="width: 90px" class="filter-item">
         <el-option v-for="item in usernameOptions" :key="item" :label="item" :value="item" />
       </el-select>
@@ -20,11 +14,8 @@
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
       </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleDataUpload">
-        数据接入
-      </el-button>
       <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
-        数据集表格导出
+        管道列表导出
       </el-button>
     </div>
 
@@ -44,7 +35,7 @@
           <span>{{ row._id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务名称" width="160px" align="center">
+      <el-table-column label="资源名称" width="180px" align="center">
         <template slot-scope="{row}">
           <el-popover
             placement="right"
@@ -52,21 +43,21 @@
             trigger="click"
           >
             <el-form>
-              <el-form-item label="任务名称">
-                <el-input v-model="row.taskName" />
+              <el-form-item label="管道名称">
+                <el-input v-model="row.pipelineName" />
               </el-form-item>
-              <el-form-item label="任务描述">
+              <el-form-item label="资源描述">
                 <el-input v-model="row.desc" type="textarea" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.taskName,row.desc)">保存</el-button>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.pipelineName,row.desc)">保存</el-button>
               </el-form-item>
             </el-form>
-            <span slot="reference" class="link-type">{{ row.taskName }}</span>
+            <span slot="reference" class="link-type">{{ row.pipelineName }}</span>
           </el-popover>
         </template>
       </el-table-column>
-      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
+      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="120px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.username }}</span>
         </template>
@@ -79,31 +70,21 @@
           </el-radio-group>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="160px" align="center">
+      <el-table-column label="创建时间" width="180px" align="center">
         <template slot-scope="{row}">
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="160px" align="center">
+      <el-table-column label="适用任务类型" column-key="taskType" :filters="taskTypeFilter" width="180px" align="center">
         <template slot-scope="{row}">
           <el-tag>{{ row.taskType | typeFilter }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="任务状态" column-key="analyseStatus" :filters="statusFilter" class-name="status-col" width="120px">
-        <template slot-scope="{row}">
-          <el-tag :type="row.analyseStatus | statusFilter">
-            {{ row.analyseStatus }}
-          </el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <div v-if="row.username===$store.state.user.username">
             <el-button type="primary" size="mini" @click="handleManage(row)">
-              管理数据
-            </el-button>
-            <el-button size="mini" type="success" @click="handleDataVenation(row)">
-              数据脉络
+              查看管道
             </el-button>
             <el-button type="primary" size="mini" @click="copyDataSet(row)">
               拷贝
@@ -122,56 +103,14 @@
     </el-table>
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
-
-    <el-dialog
-      title="拷贝至"
-      :visible.sync="datasetCopy.copyDialogVisible"
-      width="30%"
-    >
-      <div style="text-align:center;width:100%;">
-        <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="原始数据集" border>原始数据集</el-radio>
-          <el-radio label="预处理数据集" border>预处理数据集</el-radio>
-        </el-radio-group>
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleCopy">确认</el-button>
-      </div>
-    </el-dialog>
-
-    <el-dialog
-      title="拷贝至"
-      :visible.sync="batchDatasetCopy.copyDialogVisible"
-      width="30%"
-    >
-      <div style="text-align:center;width:100%;">
-        <el-radio-group v-model="batchDatasetCopy.copyDes">
-          <el-radio label="批处理数据集" border>批处理数据集</el-radio>
-          <el-radio label="批处理特征集" border>批处理特征集</el-radio>
-        </el-radio-group>
-      </div>
-      <el-form v-if="batchDatasetCopy.copyDes==='批处理特征集'" ref="form" :model="batchDatasetCopy" label-width="120px" style="margin:40px 0px 30px 0px">
-        <el-form-item label="管道选择">
-          <el-select v-model="batchDatasetCopy.pipeline" placeholder="请选择预处理管道">
-            <el-option v-for="item in pipelines" :key="item._id" :label="item.pipelineName" :value="item._id" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleCopy">确认</el-button>
-      </div>
-    </el-dialog>
-
   </div>
 </template>
 
 <script>
-import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
-import { pipelinesForUserFetch } from '@/api/common/pipeline'
-import waves from '@/directive/waves' // waves directive
+import { pipelinesFetch } from '@/api/data-manage/pipeline'
+import waves from '@/directive/waves'
 import { parseTime } from '@/utils'
-import Pagination from '@/components/Pagination' // secondary package based on el-pagination
-
+import Pagination from '@/components/Pagination'
 const taskTypeOptions = [
   { key: '通用单文本分类', display_name: '通用单文本分类' },
   { key: '情感分析/意图识别', display_name: '情感分析/意图识别' },
@@ -188,17 +127,10 @@ const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
 }, {})
 
 export default {
-  name: 'DataSetTable',
+  name: 'PipelinesTable',
   components: { Pagination },
   directives: { waves },
   filters: {
-    statusFilter(status) {
-      const statusMap = {
-        '解析完成': 'success',
-        '解析中': 'info'
-      }
-      return statusMap[status]
-    },
     typeFilter(type) {
       return calendarTypeKeyValue[type]
     }
@@ -210,15 +142,13 @@ export default {
       total: 0,
       listLoading: true,
       listQuery: {
-        switchDataset: '训练数据集',
         page: 1,
         limit: 20,
         sort: '-id',
-        taskName: '',
+        pipelineName: '',
         datasetType: '原始数据集',
         username: ['自己', '他人'],
-        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本配对', '文本排序学习'],
-        analyseStatus: ['解析中', '解析完成']
+        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本配对', '文本排序学习']
       },
       searchQuery: {
         usernameSelect: '',
@@ -241,35 +171,14 @@ export default {
         { text: '文本摘要', value: '文本摘要' },
         { text: '文本排序学习', value: '文本排序学习' }
       ],
-      statusFilter: [
-        { text: '解析中', value: '解析中' },
-        { text: '解析完成', value: '解析完成' }
-      ],
       datasetCopy: {
         copyDialogVisible: false,
         copyDes: '',
         datasetInitid: ''
       },
-      batchDatasetCopy: {
-        copyDialogVisible: false,
-        copyDes: '',
-        datasetInitid: '',
-        pipeline: ''
-      },
-      pipelines: []
-    }
-  },
-  watch: {
-    'listQuery.switchDataset': {
-      handler(newVal, oldVal) {
-        if (newVal === '训练数据集') {
-          this.listQuery.datasetType = '原始数据集'
-        } else {
-          this.listQuery.datasetType = '批处理数据集'
-        }
-        this.getList()
-      },
-      deep: true
+      upload: {
+        show: false
+      }
     }
   },
   created() {
@@ -278,17 +187,12 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      datasetListFetch(this.listQuery).then(response => {
+      pipelinesFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
         setTimeout(() => {
           this.listLoading = false
         }, 0 * 1000)
-      })
-    },
-    pipelinesFetch(taskType) {
-      pipelinesForUserFetch({ 'taskType': taskType }).then(response => {
-        this.pipelines = response.data.items
       })
     },
     handleFilter() {
@@ -310,37 +214,16 @@ export default {
       this.handleFilter()
     },
     handleManage(row) {
-      this.$router.push('/process-manage/data-set/data-detail/' + row._id)
+      this.$router.push('/data-manage/pipeline-manage/codehub/' + row._id)
     },
     copyDataSet(row) {
-      if (this.listQuery.switchDataset === '训练数据集') {
-        this.datasetCopy.datasetInitid = row._id
-        this.datasetCopy.copyDes = ''
-        this.datasetCopy.copyDialogVisible = true
-      } else {
-        this.batchDatasetCopy.datasetInitid = row._id
-        this.batchDatasetCopy.copyDes = ''
-        this.batchDatasetCopy.copyDialogVisible = true
-        this.pipelinesFetch(row.taskType)
-      }
+      this.datasetCopy.datasetInitid = row._id
+      this.datasetCopy.copyDes = ''
+      this.datasetCopy.copyDialogVisible = true
     },
     handleDelete(row) {
-      datasetDelete({ 'datasetid': row._id, 'datasetType': '原始数据集' }).then(response => {
-        this.$notify({
-          title: '删除成功',
-          message: '已从原始数据集中移除',
-          type: 'success',
-          duration: 2000
-        })
-        this.getList()
-      })
     },
-    handleInfoVerity(id, taskName, desc) {
-      datasetInfoVerify({ 'datasetid': id, 'taskName': taskName, 'desc': desc }).then(response => {
-        document.body.click()
-        this.$message.success('任务信息修改成功！')
-        this.getList()
-      })
+    handleInfoVerity(id, pipelineName, desc) {
     },
     handleDataVenation(row) {
       this.$router.push('/data-manage/data-venation/' + row._id)
@@ -383,42 +266,14 @@ export default {
         this.listQuery.username = [this.searchQuery.usernameSelect]
       }
       if (this.searchQuery.taskTypeSelect === '') {
-        this.listQuery.taskType = ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习']
+        this.listQuery.taskType = ['停用词表', '预训练向量']
       } else {
         this.listQuery.taskType = [this.searchQuery.taskTypeSelect]
       }
       this.handleFilter()
     },
     handleCopy() {
-      if (this.listQuery.switchDataset === '训练数据集') {
-        this.datasetCopy.copyDialogVisible = false
-        datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
-          this.getList()
-          this.$notify({
-            title: '拷贝成功',
-            message: '可操作拷贝完成的数据集。',
-            type: 'success',
-            duration: 2000
-          })
-        })
-      } else {
-        this.batchDatasetCopy.copyDialogVisible = false
-        datasetCopy({ 'datasetInitType': '批处理数据集', 'datasetInitid': this.batchDatasetCopy.datasetInitid, 'copyDes': this.batchDatasetCopy.copyDes, 'params': { 'pipeline': this.batchDatasetCopy.pipeline }}).then(response => {
-          this.getList()
-          this.$notify({
-            title: '拷贝成功',
-            message: '可操作拷贝完成的数据集。',
-            type: 'success',
-            duration: 2000
-          })
-        })
-      }
-    },
-    handleBatchCopy() {
-
-    },
-    handleDataUpload() {
-
+      this.datasetCopy.copyDialogVisible = false
     },
     handleShowTest(row) {
       console.log(this.$store.state.user.username)
@@ -427,11 +282,3 @@ export default {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-.app-container {
-  .switch-container{
-    margin:0px 0px 20px 0px
-  }
-}
-</style>

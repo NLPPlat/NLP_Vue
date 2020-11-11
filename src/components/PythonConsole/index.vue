@@ -67,12 +67,12 @@ export default {
     .CodeMirror {
       height: auto;
       min-height: 300px;
-      max-height: 800px;
+      max-height: 500px;
     }
 
     .CodeMirror-scroll {
       min-height: 300px;
-      max-height: 800px;
+      max-height: 500px;
     }
 
     .cm-s-rubyblue span.cm-string {

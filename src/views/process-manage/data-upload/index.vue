@@ -24,11 +24,12 @@
 
 <script>
 // import { mapGetters } from 'vuex'
-import trainFile from './components/train-file'
+import TrainFile from './components/train-file'
+import BatchFile from './components/batch-file'
 
 export default {
   name: 'DataUpload',
-  components: { trainFile },
+  components: { TrainFile, BatchFile },
   data() {
     return {
       switchDataSet: '训练数据集',
@@ -40,10 +41,13 @@ export default {
       if (this.switchDataSet === '训练数据集') {
         switch (this.switchUploadMethod) {
           case '文件上传':
-            return 'trainFile'
+            return 'TrainFile'
         }
       } else if (this.switchDataSet === '批处理数据集') {
-        return ''
+        switch (this.switchUploadMethod) {
+          case '文件上传':
+            return 'BatchFile'
+        }
       }
       return ''
     }

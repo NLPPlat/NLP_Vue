@@ -105,7 +105,7 @@ export default {
     return {
       operatorid: '',
       codeUpload: {
-        code: 'class Operator():\ndef operator(self):',
+        code: 'class Operator():\n\tdef operator(self):',
         operatorType: '',
         operatorName: '',
         publicity: '不公开'

@@ -74,7 +74,7 @@ export default {
     return {
       modelid: '',
       codeUpload: {
-        code: 'class model():\ndef model(self):',
+        code: 'class TrainModel():\n\tdef train(self):\n\n\tdef hyperparameters(self):',
         modelType: '',
         modelName: '',
         publicity: '不公开'

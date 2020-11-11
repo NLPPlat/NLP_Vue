@@ -1,15 +1,16 @@
 <template>
   <div>
-    hello world! This is batch-process page.
+    <pipelines-table />
   </div>
 </template>
 
 <script>
 // import { mapGetters } from 'vuex'
+import PipelinesTable from './components/pipelines-table'
 
 export default {
-  name: 'Home',
-  components: { },
+  name: 'ResourceManage',
+  components: { PipelinesTable },
   data() {
     return {
     }
