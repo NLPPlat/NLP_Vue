@@ -3,7 +3,14 @@
 
     <el-row>
       <el-form :inline="true" :model="codeUpload" class="demo-form-inline">
-
+        <el-form-item label="运行平台">
+          <el-select v-model="codeUpload.plat" placeholder="请选择运行平台">
+            <el-option label="Tensorflow1.X" value="Tensorflow1.X" />
+            <el-option label="Tensorflow2.X" value="Tensorflow2.X" />
+            <el-option label="Keras" value="Keras" />
+            <el-option label="Pytorch" value="Pytorch" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="模型名称">
           <el-input v-model="codeUpload.modelName" placeholder="请填写模型名称" />
         </el-form-item>
@@ -75,7 +82,7 @@ export default {
       modelid: '',
       codeUpload: {
         code: 'class TrainModel():\n\tdef train(self):\n\n\tdef hyperparameters(self):',
-        modelType: '',
+        plat: '',
         modelName: '',
         publicity: '不公开'
       },

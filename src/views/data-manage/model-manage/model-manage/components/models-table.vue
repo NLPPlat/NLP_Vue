@@ -78,6 +78,11 @@
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="运行平台" column-key="platType" :filters="platTypeFilter" width="180px" align="center">
+        <template slot-scope="{row}">
+          <el-tag>{{ row.plat | typeFilter }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <div v-if="row.username===$store.state.user.username">
@@ -140,9 +145,11 @@ export default {
         { text: '自己', value: '自己' },
         { text: '他人', value: '他人' }
       ],
-      modelTypeFilter: [
-        { key: '数据清洗算子', display_name: '数据清洗算子' },
-        { key: '预处理算子', display_name: '预处理算子' }
+      platTypeFilter: [
+        { key: 'Tensorflow1.X', display_name: 'Tensorflow1.X' },
+        { key: 'Tensorflow2.X', display_name: 'Tensorflow2.X' },
+        { key: 'Keras', display_name: 'Keras' },
+        { key: 'Pytorch', display_name: 'Pytorch' }
       ],
       datasetCopy: {
         copyDialogVisible: false,

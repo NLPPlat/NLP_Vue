@@ -36,7 +36,7 @@ export default {
         dataNode: {
           color: '#1676A7',
           symbol: 'circle',
-          symbolSize: [115, 65]
+          symbolSize: [110, 75]
         }
       }
     }
@@ -127,44 +127,48 @@ export default {
           symbol: this.chartStyle.dataNode.symbol,
           symbolSize: this.chartStyle.dataNode.symbolSize,
           data: [{
-            name: '原始数据集',
+            name: '训练数据集',
             x: 0,
-            y: 800
+            y: 500
           }, {
             name: '预处理数据集',
             x: 500,
-            y: 600
+            y: 500
           }, {
-            name: '训练特征集',
-            x: 1000,
-            y: 400
+            name: '特征数据集',
+            x: 1500,
+            y: 500
           }, {
-            name: '预处理模型对象',
+            name: '预处理管道对象',
             x: 1000,
-            y: 800
+            y: 750
           }, {
             name: '批处理特征集',
             x: 1500,
             y: 1000
           }, {
             name: '训练集',
-            x: 1500,
-            y: 220
+            x: 2000,
+            y: 250
           }, {
             name: '验证集',
-            x: 1500,
-            y: 400
+            x: 2000,
+            y: 500
           }, {
             name: '测试集',
-            x: 1500,
-            y: 580
+            x: 2000,
+            y: 750
           }, {
             name: '训练模型对象',
-            x: 2000,
-            y: 600
-          }, {
-            name: '结果对象',
             x: 2500,
+            y: 500
+          }, {
+            name: '批处理数据集',
+            x: 0,
+            y: 1000
+          }, {
+            name: '结果数据集',
+            x: 3000,
             y: 1000
           }],
           links: [{
@@ -176,9 +180,6 @@ export default {
           }, {
             source: 1,
             target: 3
-          }, {
-            source: 0,
-            target: 4
           }, {
             source: 3,
             target: 4
@@ -202,10 +203,13 @@ export default {
             target: 8
           }, {
             source: 4,
-            target: 9
+            target: 10
           }, {
             source: 8,
-            target: 9
+            target: 10
+          }, {
+            source: 9,
+            target: 4
           }]
         }]
       })

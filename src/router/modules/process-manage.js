@@ -79,6 +79,12 @@ const componentsRouter = {
       name: 'batch-process',
       meta: { title: '批处理' }
     }, {
+      path: 'batch-process/batch-manage/:datasetid',
+      component: () => import('@/views/process-manage/batch-process/batch-manage/index'),
+      name: 'bbatch-process-batch-manage',
+      hidden: true,
+      meta: { title: '批处理管理' }
+    }, {
       path: 'task-manage',
       component: () => import('@/views/process-manage/task-manage/task-manage/index'),
       name: 'task-manage',

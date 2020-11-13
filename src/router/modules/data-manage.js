@@ -49,6 +49,11 @@ const componentsRouter = {
       component: () => import('@/views/data-manage/pipeline-manage/pipeline-manage/index'),
       name: 'pipeline-manage',
       meta: { title: '管道管理' }
+    }, {
+      path: 'trainedmodel-manage',
+      component: () => import('@/views/data-manage/trainedmodel-manage/trainedmodel-manage/index'),
+      name: 'trainedmodel-manage',
+      meta: { title: '训练模型管理' }
     }
   ]
 }

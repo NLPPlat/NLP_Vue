@@ -10,6 +10,7 @@
             <el-option label="数据清洗算子" value="数据清洗算子" />
             <el-option label="预处理算子" value="预处理算子" />
             <el-option label="数据切割算子" value="数据切割算子" />
+            <el-option label="批处理算子" value="批处理算子" />
           </el-select>
         </el-form-item>
         <el-form-item label="算子名称">

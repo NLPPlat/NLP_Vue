@@ -11,6 +11,16 @@ export function modelsForUserFetch(query) {
   })
 }
 
+// 某个人的训练模型列表获取
+export function trainedmodelsForUserFetch(query) {
+  return request({
+    url: '/common/model/trainedmodels',
+    method: 'get',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
 // 某个模型信息获取
 export function modelFetch(query) {
   return request({
