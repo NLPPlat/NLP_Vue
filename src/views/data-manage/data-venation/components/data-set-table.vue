@@ -16,42 +16,24 @@
           <span>{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务名称" width="160px" align="center">
+      <el-table-column label="名称" width="140px" align="center">
         <template slot-scope="{row}">
-          <el-popover
-            placement="right"
-            width="400"
-            trigger="click"
-          >
-            <el-form>
-              <el-form-item label="任务名称">
-                <el-input v-model="row.taskName" />
-              </el-form-item>
-              <el-form-item label="任务描述">
-                <el-input v-model="row.desc" type="textarea" />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.taskName,row.desc)">保存</el-button>
-              </el-form-item>
-            </el-form>
-            <span slot="reference" class="link-type">{{ row.taskName }}</span>
-          </el-popover>
-
+          <span>{{ row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
+      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="80px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="160px" align="center">
+      <el-table-column label="创建时间" width="225px" align="center">
         <template slot-scope="{row}">
-          <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
+          <span>{{ row.datetime }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="160px" align="center">
+      <el-table-column label="类别" column-key="type" :filters="typeFilter" width="120px" align="center">
         <template slot-scope="{row}">
-          <el-tag>{{ row.taskType | typeFilter }}</el-tag>
+          <el-tag>{{ row.type | typeFilter }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -61,7 +43,7 @@
               查看
             </el-button>
             <el-button size="mini" type="success" @click="handleDataVenation(row)">
-              API访问
+              数据脉络
             </el-button>
           </div>
         </template>
@@ -76,12 +58,14 @@ import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 
 const taskTypeOptions = [
-  { key: '通用单文本分类', display_name: '通用单文本分类' },
-  { key: '情感分析/意图识别', display_name: '情感分析/意图识别' },
-  { key: '实体关系抽取', display_name: '实体关系抽取' },
-  { key: '文本关系分析', display_name: '文本关系分析' },
-  { key: '文本摘要', display_name: '文本摘要' },
-  { key: '文本排序学习', display_name: '文本排序学习' }
+  { key: '训练数据集', display_name: '训练数据集' },
+  { key: '预处理数据集', display_name: '预处理数据集' },
+  { key: '特征数据集', display_name: '特征数据集' },
+  { key: '批处理数据集', display_name: '批处理数据集' },
+  { key: '批处理特征集', display_name: '批处理特征集' },
+  { key: '结果数据集', display_name: '结果数据集' },
+  { key: '预处理管道对象', display_name: '预处理管道对象' },
+  { key: '训练模型对象', display_name: '训练模型对象' }
 ]
 
 const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
@@ -121,18 +105,8 @@ export default {
         taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
         analyseStatus: ['解析中', '解析完成']
       },
-      searchQuery: {
-        usernameSelect: '',
-        taskTypeSelect: ''
-      },
-      usernameOptions: ['自己', '他人'],
       taskTypeOptions,
-      sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
       downloadLoading: false,
-      usernameFilter: [
-        { text: '自己', value: '自己' },
-        { text: '他人', value: '他人' }
-      ],
       taskTypeFilter: [
         { text: '通用单文本分类', value: '通用单文本分类' },
         { text: '情感分析/意图识别', value: '情感分析/意图识别' },
@@ -141,14 +115,15 @@ export default {
         { text: '文本摘要', value: '文本摘要' },
         { text: '文本排序学习', value: '文本排序学习' }
       ],
-      statusFilter: [
-        { text: '解析中', value: '解析中' },
-        { text: '解析完成', value: '解析完成' }
-      ],
-      datasetCopy: {
-        copyDialogVisible: false,
-        copyDes: '',
-        datasetInitid: ''
+      venationTypeMap: {
+        '训练数据集': 'original-dataset',
+        '预处理数据集': 'preprocess-dataset',
+        '特征数据集': 'features-dataset',
+        '训练模型对象': 'trainedmodel',
+        '批处理数据集': 'original-batch-dataset',
+        '批处理特征集': 'features-batch-dataset',
+        '预处理管道对象': 'pipeline',
+        '结果数据集': 'result-batch-dataset'
       }
     }
   },
@@ -182,7 +157,7 @@ export default {
       this.$router.push('/process-manage/data-set/data-detail/' + row._id)
     },
     handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
+      this.$router.push('/data-manage/data-venation/' + this.venationTypeMap[row.type] + '/' + row.id)
     },
     handleDownload() {
       this.downloadLoading = true

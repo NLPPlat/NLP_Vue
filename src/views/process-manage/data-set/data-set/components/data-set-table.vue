@@ -343,7 +343,11 @@ export default {
       })
     },
     handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
+      if (this.listQuery.switchDataset === '训练数据集') {
+        this.$router.push('/data-manage/data-venation/original-dataset/' + row._id)
+      } else {
+        this.$router.push('/data-manage/data-venation/original-batch-dataset/' + row._id)
+      }
     },
     handleDownload() {
       this.downloadLoading = true

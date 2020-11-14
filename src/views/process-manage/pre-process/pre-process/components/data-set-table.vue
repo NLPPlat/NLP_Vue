@@ -326,7 +326,7 @@ export default {
       })
     },
     handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
+      this.$router.push('/data-manage/data-venation/preprocess-dataset/' + row._id)
     },
     handleDataUpload() {
 

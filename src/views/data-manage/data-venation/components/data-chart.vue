@@ -7,8 +7,6 @@ import echarts from 'echarts'
 import { venationFetch } from '@/api/data-manage/venation'
 require('echarts/theme/macarons') // echarts theme
 
-// const animationDuration = 6000
-
 export default {
   name: 'DataChart',
   props: {
@@ -28,7 +26,8 @@ export default {
   data() {
     return {
       listQuery: {
-        datasetid: ''
+        type: '',
+        nodeid: ''
       },
       venation: {},
       chart: null,
@@ -38,11 +37,22 @@ export default {
           symbol: 'circle',
           symbolSize: [110, 75]
         }
+      },
+      venationTypeMap: {
+        'original-dataset': '训练数据集',
+        'preprocess-dataset': '预处理数据集',
+        'features-dataset': '特征数据集',
+        'trainedmodel': '训练模型对象',
+        'original-batch-dataset': '批处理数据集',
+        'features-batch-dataset': '批处理特征集',
+        'pipeline': '预处理管道对象',
+        'result-batch-dataset': '结果数据集'
       }
     }
   },
   created() {
-    this.listQuery.datasetid = this.$route.params.datasetid
+    this.listQuery.type = this.venationTypeMap[this.$route.params.type]
+    this.listQuery.nodeid = this.$route.params.nodeid
     this.getVenation()
   },
   mounted() {
@@ -59,14 +69,14 @@ export default {
   },
   methods: {
     getVenation() {
-      venationFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
+      venationFetch(this.listQuery).then(response => {
         this.venation = response.data.venation
       })
     },
     venationListToString(venationList) {
       var str = ''
       for (var i = 0; i < venationList.length; i++) {
-        str = str + 'ID(' + venationList[i].id + ') ' + venationList[i].taskName + ' ' + venationList[i].username + '<br>'
+        str = str + 'ID(' + venationList[i].id + ') ' + venationList[i].name + ' ' + venationList[i].datetime + '<br>'
       }
       return str
     },

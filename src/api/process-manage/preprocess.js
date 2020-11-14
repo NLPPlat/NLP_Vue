@@ -41,6 +41,16 @@ export function preprocessDataFetch(query) {
   })
 }
 
+// 某个数据集预处理数据修改
+export function preprocessUpload(query) {
+  return request({
+    url: '/process-manage/pre-process/datasets/ID/preprocesses/ID/data',
+    method: 'post',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
 // 某个数据集导出某个预处理步骤数据
 export function preprocessDownload(query) {
   return request({

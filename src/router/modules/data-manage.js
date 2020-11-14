@@ -13,7 +13,7 @@ const componentsRouter = {
   },
   children: [
     {
-      path: 'data-venation/:datasetid',
+      path: 'data-venation/:type/:nodeid',
       component: () => import('@/views/data-manage/data-venation/index'),
       name: 'data-venation',
       meta: { title: '数据脉络' }

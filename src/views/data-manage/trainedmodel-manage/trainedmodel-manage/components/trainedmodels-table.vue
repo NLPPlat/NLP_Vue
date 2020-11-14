@@ -14,8 +14,8 @@
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
       </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handlemodelAdd">
-        模型添加
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleTrainedmodelAdd">
+        已训练模型上传
       </el-button>
       <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
         模型列表导出
@@ -107,17 +107,20 @@
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
+    <trainedmodel-upload ref="TrainedmodeleUpload" />
+
   </div>
 </template>
 
 <script>
 import { trainedmodelsFetch } from '@/api/data-manage/trainedmodel'
+import TrainedmodelUpload from './trainedmodel-upload'
 import waves from '@/directive/waves'
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination'
 export default {
   name: 'TrainedmodelsTable',
-  components: { Pagination },
+  components: { Pagination, TrainedmodelUpload },
   directives: { waves },
   filters: {
   },
@@ -172,8 +175,8 @@ export default {
         }, 0 * 1000)
       })
     },
-    handlemodelAdd() {
-      this.$router.push('/data-manage/model-manage/codehub/' + '-1')
+    handleTrainedmodelAdd() {
+      this.$refs.TrainedmodeleUpload.showDialog()
     },
     handleFilter() {
       this.listQuery.page = 1

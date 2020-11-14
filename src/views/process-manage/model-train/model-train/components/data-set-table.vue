@@ -281,7 +281,7 @@ export default {
       })
     },
     handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
+      this.$router.push('/data-manage/data-venation/features-dataset/' + row._id)
     },
     handleDownload() {
       this.downloadLoading = true
