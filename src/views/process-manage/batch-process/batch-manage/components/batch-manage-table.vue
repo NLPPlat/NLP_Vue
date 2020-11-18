@@ -33,6 +33,40 @@
               </el-form>
             </el-card>
           </el-col>
+          <el-col :span="14">
+            <el-card shadow="never" class="feature-config">
+              <div slot="header" class="clearfix" style="vertical-align:middle">
+                <span>基本信息</span>
+              </div>
+              <el-row>
+                <el-col :span="12">
+                  <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                    <el-form-item label="批处理状态">
+                      <span>{{ dataStatus.batchStatus }}</span>
+                    </el-form-item>
+                    <el-form-item label="任务类型">
+                      <span>{{ dataStatus.taskType }}</span>
+                    </el-form-item>
+                    <!-- <el-form-item label="运行时间">
+                  <span>{{ getCalTime() }}</span>
+                </el-form-item> -->
+                    <el-form-item label="结果操作">
+                      <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">导出结果</el-button>
+                    </el-form-item>
+                  </el-form>
+                </el-col>
+                <el-col :span="12">
+                  <el-form ref="form" :model="dataInfo" label-width="100px" style="width:300px">
+                    <el-form-item label="拓展应用">
+                      <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">知识图谱</el-button>
+                    </el-form-item>
+                  </el-form>
+                </el-col>
+              </el-row>
+
+            </el-card>
+
+          </el-col>
         </el-row>
       </div>
     </el-card>
@@ -73,6 +107,7 @@ import { operatorsForUserFetch } from '@/api/common/operator'
 import { trainedmodelsForUserFetch } from '@/api/common/model'
 import { batchRun } from '@/api/process-manage/batch-process'
 import PythonEditor from '@/components/PythonEditor'
+import { calTime } from '@/utils'
 
 import DataDetailTable from '@/views/process-manage/batch-process/components/data-detail-table'
 
@@ -89,7 +124,9 @@ export default {
       dataStatus: {
         batchStatus: '未开始',
         resultDataset: null,
-        taskType: ''
+        taskType: '',
+        begintime: '',
+        endtime: ''
       },
       operators: [],
       trainedmodels: [],
@@ -135,6 +172,12 @@ export default {
         this.dataStatus.batchStatus = response.data.batchStatus
         this.dataStatus.resultDataset = response.data.resultDataset
         this.dataStatus.taskType = response.data.taskType
+        if (this.dataStatus.batchStatus !== '未开始') {
+          this.dataStatus.begintime = response.data.begintime.$date
+        }
+        if (this.dataStatus.batchStatus === '已完成') {
+          this.dataStatus.endtime = response.data.endtime.$date
+        }
       })
     },
     getOpreators() {
@@ -161,6 +204,15 @@ export default {
       batchRun({ 'datasetid': this.datasetid, 'trainedmodelSelect': this.batchConfig.trainedmodelSelect, 'operatorOn': this.batchConfig.operatorOn }).then(response => {
 
       })
+    },
+    getCalTime() {
+      if (this.dataStatus.batchStatus === '未开始') {
+        return '未开始计时'
+      } else if (this.dataStatus.batchStatus === '训练中') {
+        return calTime(this.dataStatus.begintime - 8 * 60 * 60 * 1000)
+      } else {
+        return calTime(this.dataStatus.begintime, this.dataStatus.endtime)
+      }
     }
   }
 }

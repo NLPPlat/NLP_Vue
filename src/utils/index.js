@@ -51,6 +51,27 @@ export function parseTime(time, cFormat) {
   return time_str
 }
 
+// 计算已运行时间
+export function calTime(time, endtime = '') {
+  console.log(time, endtime)
+  var begin = new Date(time)
+  var end
+  if (endtime === '') {
+    end = new Date()
+  } else {
+    end = new Date(endtime)
+  }
+  var dateDiff = end.getTime() - begin.getTime()
+  var dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000))
+  var leave1 = dateDiff % (24 * 3600 * 1000)
+  var hours = Math.floor(leave1 / (3600 * 1000))
+  var leave2 = leave1 % (3600 * 1000)
+  var minutes = Math.floor(leave2 / (60 * 1000))
+  // var leave3 = leave2 % (60 * 1000)
+  // var seconds = Math.round(leave3 / 1000)
+  return dayDiff + '天' + hours + '时' + minutes + '分'
+}
+
 /**
  * @param {number} time
  * @param {string} option

@@ -38,7 +38,7 @@
           <span>{{ row._id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务名称" width="160px" align="center">
+      <el-table-column label="任务名称" width="220px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.taskName }}</span>
         </template>
@@ -48,12 +48,7 @@
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="数据集ID" column-key="datasetID" width="80px" align="center">
-        <template slot-scope="{row}">
-          <span>{{ row.datasetID }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="数据集名称" column-key="datasetName" width="160px" align="center">
+      <el-table-column label="发起数据集名称" column-key="datasetName" width="160px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.datasetName }}</span>
         </template>
@@ -63,19 +58,24 @@
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="160px" align="center">
+      <el-table-column label="运行时间" width="120px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.taskStatus==='已完成'?getCalTime(row.datetime.$date,row.endtime.$date):getCalTime(row.datetime.$date-8*60*60*1000) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="120px" align="center">
         <template slot-scope="{row}">
           <el-tag>{{ row.taskType | typeFilter }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="任务状态" column-key="taskStatus" :filters="statusFilter" class-name="status-col" width="120px">
+      <el-table-column label="任务状态" column-key="taskStatus" :filters="statusFilter" class-name="status-col" width="100px">
         <template slot-scope="{row}">
           <el-tag :type="row.taskStatus | statusFilter">
             {{ row.taskStatus }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" min-width="240px" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" min-width="120px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <div>
             <el-button type="primary" size="mini" @click="copyDataSet(row)">
@@ -114,11 +114,15 @@
 import { datasetCopy, datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
 import { tasksFetch } from '@/api/process-manage/task-manage'
 import waves from '@/directive/waves' // waves directive
-import { parseTime } from '@/utils'
+import { parseTime, calTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
 const taskTypeOptions = [
-  { key: '数据接入', display_name: '数据接入' }
+  { key: '数据接入', display_name: '数据接入' },
+  { key: '数据集拷贝', display_name: '数据集拷贝' },
+  { key: '模型训练', display_name: '模型训练' },
+  { key: '批处理', display_name: '批处理' }
+
 ]
 
 const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
@@ -147,13 +151,13 @@ export default {
       tableKey: 0,
       list: null,
       total: 0,
-      listLoading: true,
+      listLoading: false,
       listQuery: {
         page: 1,
         limit: 20,
         sort: '-id',
         taskName: '',
-        taskType: ['数据接入'],
+        taskType: ['数据接入', '数据集拷贝', '模型训练', '批处理'],
         taskStatus: ['执行中', '已完成']
       },
       searchQuery: {
@@ -164,7 +168,11 @@ export default {
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
       downloadLoading: false,
       taskTypeFilter: [
-        { text: '数据接入', value: '数据接入' }
+        { text: '数据接入', value: '数据接入' },
+        { text: '数据集拷贝', value: '数据集拷贝' },
+        { text: '模型训练', value: '模型训练' },
+        { text: '批处理', value: '批处理' }
+
       ],
       statusFilter: [
         { text: '执行中', value: '执行中' },
@@ -174,21 +182,24 @@ export default {
         copyDialogVisible: false,
         copyDes: '',
         datasetInitid: ''
-      }
+      },
+      timer: null
     }
   },
   created() {
     this.getList()
+    this.timer = setInterval(() => {
+      this.getList()
+    }, 1000 * 5)
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
   },
   methods: {
     getList() {
-      this.listLoading = true
       tasksFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        setTimeout(() => {
-          this.listLoading = false
-        }, 0 * 1000)
       })
     },
     handleFilter() {
@@ -300,6 +311,9 @@ export default {
     handleShowTest(row) {
       console.log(this.$store.state.user.username)
       return true
+    },
+    getCalTime(time, endtime = '') {
+      return calTime(time, endtime)
     }
   }
 }

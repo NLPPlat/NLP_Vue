@@ -26,7 +26,7 @@
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="225px" align="center">
+      <el-table-column label="创建时间" width="235px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.datetime }}</span>
         </template>

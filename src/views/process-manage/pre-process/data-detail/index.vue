@@ -135,7 +135,9 @@ export default {
         this.$refs[nature][0].submit()
       } else {
         preprocessUpload({ 'datasetid': this.listQuery.datasetid, 'preprocessid': this.listQuery.preprocessid, 'nature': nature, 'resourceSelect': this.natureConfig.resourceSelect }).then(response => {
-
+          this.$message.success('文件导入成功！')
+          this.getResource()
+          this.getData()
         })
       }
     }

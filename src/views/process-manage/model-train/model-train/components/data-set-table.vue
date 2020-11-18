@@ -164,7 +164,7 @@ export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        '训练完成': 'success',
+        '已完成': 'success',
         '训练中': 'primary',
         '未开始': 'info'
       }
@@ -188,7 +188,7 @@ export default {
         datasetType: '特征数据集',
         username: ['自己', '他人'],
         taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
-        trainStatus: ['未开始', '训练中', '训练完成']
+        trainStatus: ['未开始', '训练中', '已完成']
       },
       searchQuery: {
         usernameSelect: '',
@@ -213,7 +213,7 @@ export default {
       statusFilter: [
         { text: '未开始', value: '未开始' },
         { text: '训练中', value: '训练中' },
-        { text: '训练完成', value: '训练完成' }
+        { text: '已完成', value: '已完成' }
       ],
       datasetCopy: {
         copyDialogVisible: false,

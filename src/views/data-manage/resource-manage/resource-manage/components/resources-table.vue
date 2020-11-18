@@ -119,7 +119,9 @@ import Pagination from '@/components/Pagination'
 import ResourceUpload from './resource-upload'
 const resourceTypeOptions = [
   { key: '停用词表', display_name: '停用词表' },
+  { key: '预训练向量', display_name: '预训练向量' },
   { key: '预训练向量', display_name: '预训练向量' }
+
 ]
 
 const calendarTypeKeyValue = resourceTypeOptions.reduce((acc, cur) => {
@@ -149,7 +151,7 @@ export default {
         resourceName: '',
         datasetType: '原始数据集',
         username: ['自己', '他人'],
-        resourceType: ['停用词表', '预训练向量']
+        resourceType: ['停用词表', '预训练向量', '通用资源']
       },
       searchQuery: {
         usernameSelect: '',
@@ -165,7 +167,9 @@ export default {
       ],
       resourceTypeFilter: [
         { key: '停用词表', display_name: '停用词表' },
-        { key: '预训练向量', display_name: '预训练向量' }
+        { key: '预训练向量', display_name: '预训练向量' },
+        { key: '通用资源', display_name: '通用资源' }
+
       ],
       datasetCopy: {
         copyDialogVisible: false,
@@ -265,7 +269,7 @@ export default {
         this.listQuery.username = [this.searchQuery.usernameSelect]
       }
       if (this.searchQuery.resourceTypeSelect === '') {
-        this.listQuery.resourceType = ['停用词表', '预训练向量']
+        this.listQuery.resourceType = ['停用词表', '预训练向量', '通用资源']
       } else {
         this.listQuery.resourceType = [this.searchQuery.resourceTypeSelect]
       }

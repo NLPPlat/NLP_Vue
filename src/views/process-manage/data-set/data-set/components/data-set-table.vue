@@ -399,7 +399,7 @@ export default {
         datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
           this.getList()
           this.$notify({
-            title: '拷贝成功',
+            title: '拷贝任务创建成功！',
             message: '可操作拷贝完成的数据集。',
             type: 'success',
             duration: 2000

@@ -56,9 +56,7 @@
             </el-card>
           </el-col>
           <el-col :span="5">
-            <el-card shadow="never" class="feature-config">
-              暂留拷贝
-            </el-card>
+            <el-card shadow="never" class="feature-config" />
           </el-col>
         </el-row>
       </div>
@@ -82,7 +80,7 @@
                 <el-form-item label="测试集Shape">
                   <span>{{ datasetInfo.testShape }}</span>
                 </el-form-item>
-                <el-form-item label="训练模型">
+                <el-form-item label="训练模型名称">
                   <span>{{ modelConfig.modelName }}</span>
                 </el-form-item>
               </el-form>
@@ -100,10 +98,10 @@
                       <span>{{ trainedmodel.trainStatus }}</span>
                     </el-form-item>
                     <el-form-item label="训练时间">
-                      <span>{{ '你猜' }}</span>
+                      <span>{{ getCalTime() }}</span>
                     </el-form-item>
                     <el-form-item label="模型操作">
-                      <el-button :disabled="trainedmodel.trainStatus!=='已完成'" style="float:left;" type="text">下载模型</el-button>
+                      <el-button :disabled="trainedmodel.trainStatus!=='已完成'" style="float:left;" type="text" @click="confirmDownload">下载模型</el-button>
                     </el-form-item>
                   </el-form>
                 </el-col>
@@ -229,12 +227,15 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 import PythonEditor from '@/components/PythonEditor'
 import PythonConsole from '@/components/PythonConsole'
 
 import { datasetInfoFetch } from '@/api/common/dataset'
 import { modelsForUserFetch, modelFetch, trainedmodelFetch } from '@/api/common/model'
 import { featuresSplit, modelUpdate, trainedModelRun, codeUpdate } from '@/api/process-manage/model-train'
+import { calTime } from '@/utils'
 
 export default {
   name: 'TrainManageTable',
@@ -265,6 +266,8 @@ export default {
         trainStatus: '未开始',
         result: '',
         figs: {},
+        datetime: '',
+        endtime: '',
         evaluation: {}
       },
       timer: null
@@ -319,6 +322,10 @@ export default {
         this.trainedmodel.result = response.data.result
         this.trainedmodel.figs = response.data.figs
         this.trainedmodel.evaluation = response.data.evaluation
+        this.trainedmodel.datetime = response.data.datetime.$date
+        if (this.trainedmodel.trainStatus === '已完成') {
+          this.trainedmodel.endtime = response.data.endtime.$date
+        }
       })
     },
     getResult() {
@@ -327,6 +334,10 @@ export default {
         this.trainedmodel.result = response.data.result
         this.trainedmodel.figs = response.data.figs
         this.trainedmodel.evaluation = response.data.evaluation
+        this.trainedmodel.datetime = response.data.datetime.$date
+        if (this.trainedmodel.trainStatus === '已完成') {
+          this.trainedmodel.endtime = response.data.endtime.$date
+        }
       })
     },
     handleFeaturesSplit(skip) {
@@ -364,13 +375,37 @@ export default {
       })
     },
     handleModelRun() {
-      trainedModelRun({ 'datasetid': this.datasetid, 'trainedmodelid': this.trainedmodel.id }).then(response => {
+      trainedModelRun({ 'datasetid': this.datasetid, 'trainedmodelid': this.trainedmodel.id, 'modelParams': this.trainedmodel.modelParams }).then(response => {
         this.$message.info('模型开始训练')
         this.getResult()
       })
     },
     formatTooltip(value) {
       return (value / 100).toFixed(2)
+    },
+    getCalTime() {
+      if (this.trainedmodel.trainStatus === '未开始') {
+        return '未开始计时'
+      } else if (this.trainedmodel.trainStatus === '训练中') {
+        return calTime(this.trainedmodel.datetime - 8 * 60 * 60 * 1000)
+      } else {
+        return calTime(this.trainedmodel.datetime, this.trainedmodel.endtime)
+      }
+    },
+    confirmDownload() {
+      axios
+        .get(process.env.VUE_APP_BASE_API + '/process-manage/model-train/trainedmodels/ID/model',
+          { params: { 'trainedmodelid': this.trainedmodel.id },
+            headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token }})
+        .then(response => {
+          const fileName = response.headers['content-disposition']
+          var url = window.URL.createObjectURL(new Blob([response.data]))
+          const a = document.createElement('a')
+          a.href = url
+          a.setAttribute('download', fileName)
+          a.click()
+          window.URL.revokeObjectURL(url)
+        })
     }
   }
 }

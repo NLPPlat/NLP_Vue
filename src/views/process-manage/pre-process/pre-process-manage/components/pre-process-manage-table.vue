@@ -400,7 +400,13 @@ export default {
     },
     handlePipelineConstruction() {
       pipelineUpload({ 'datasetid': this.listQuery.datasetid, 'preprocessid': this.pipelineConstruction.preprocessid, 'pipelineName': this.pipelineConstruction.pipelineName, 'publicity': this.pipelineConstruction.publicity }).then(response => {
-
+        this.$notify({
+          title: '管道生成成功',
+          message: '可使用生成的管道处理批处理数据集。',
+          type: 'success',
+          duration: 2000
+        })
+        this.pipelineConstruction.show = false
       })
     }
   }

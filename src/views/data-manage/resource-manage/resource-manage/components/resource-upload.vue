@@ -11,6 +11,8 @@
             <el-select v-model="uploadForm.resourceType" placeholder="请选择资源类型" style="width:400px">
               <el-option label="停用词表" value="停用词表" />
               <el-option label="预训练向量" value="预训练向量" />
+              <el-option label="通用资源" value="通用资源" />
+
             </el-select>
           </el-form-item>
           <el-form-item label="资源名称" prop="resourceName">

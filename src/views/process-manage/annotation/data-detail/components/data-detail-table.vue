@@ -69,7 +69,7 @@
 
 <script>
 import { datasetCopy, datasetVectorsFetch, datasetInfoFetch } from '@/api/common/dataset'
-import { fetchAnnotationStatus, completeAnnotationStatus } from '@/api/process-manage/annotation'
+import { completeAnnotationStatus } from '@/api/process-manage/annotation'
 import Pagination from '@/components/Pagination'
 import AnnotationProgress from '@/views/process-manage/annotation/components/annotation-progress'
 
@@ -106,7 +106,6 @@ export default {
   created() {
     this.listQuery.datasetid = this.$route.params.id
     this.getList()
-    this.getStatus()
   },
   methods: {
     async getList() {
@@ -124,13 +123,9 @@ export default {
         this.taskType = response.data.taskType
         this.groupOn = response.data.groupOn
         this.annotationFormat = response.data.annotationFormat
-      })
-      this.listLoading = false
-    },
-    getStatus() {
-      fetchAnnotationStatus({ 'datasetid': this.listQuery.datasetid }).then(response => {
         this.annotationStatus = response.data.annotationStatus
       })
+      this.listLoading = false
     },
     handleCompleteAnnotation() {
       completeAnnotationStatus({ 'datasetid': this.listQuery.datasetid }).then(response => {

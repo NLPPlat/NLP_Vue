@@ -3,12 +3,12 @@
     <div>
       <el-row type="flex" justify="space-between">
         <el-col :span="10">
-          <el-card v-for="vector in data.group1" :id="vector.vectorid" :key="vector.vectorid" style="margin-top:20px;cursor:pointer" shadow="hover" @click.native="handleSelect('left',vector.vectorid)">
+          <el-card v-for="vector in data.group1" :id="vector.vectorid" :ref="'left'+vector.vectorid" :key="vector.vectorid" style="margin-top:20px;cursor:pointer" shadow="hover" @click.native="handleSelect('left',vector.vectorid)">
             {{ vector.text1 }}
           </el-card>
         </el-col>
         <el-col :span="10">
-          <el-card v-for="vector in data.group2" :id="vector.vectorid" :key="vector.vectorid" style="margin-top:20px;cursor:pointer" shadow="hover" @click.native="handleSelect('right',vector.vectorid)">
+          <el-card v-for="vector in data.group2" :id="vector.vectorid" :ref="'right'+vector.vectorid" :key="vector.vectorid" style="margin-top:20px;cursor:pointer" shadow="hover" @click.native="handleSelect('right',vector.vectorid)">
             {{ vector.text1 }}
           </el-card>
         </el-col>
@@ -86,23 +86,53 @@ export default {
         }, self.defaultConfig)
       })
     },
+    deleteLines() {
+      var self = this
+      self.plumbIns.deleteEveryConnection()
+    },
     handleSelect(side, vectorid) {
       if (side === 'left') {
-        if (this.left !== vectorid) {
+        if (this.left === null) {
           this.left = vectorid
+          this.$refs['left' + this.left.toString()][0].shadow = 'always'
         } else if (this.left === vectorid) {
+          this.$refs['left' + this.left.toString()][0].shadow = 'hover'
           this.left = null
+        } else {
+          this.$refs['left' + this.left.toString()][0].shadow = 'hover'
+          this.left = vectorid
+          this.$refs['left' + this.left.toString()][0].shadow = 'always'
         }
       } else if (side === 'right') {
-        if (this.lerightft !== vectorid) {
+        if (this.right === null) {
           this.right = vectorid
+          this.$refs['right' + this.right.toString()][0].shadow = 'always'
         } else if (this.right === vectorid) {
+          this.$refs['right' + this.right.toString()][0].shadow = 'hover'
           this.right = null
+        } else {
+          this.$refs['right' + this.right.toString()][0].shadow = 'hover'
+          this.right = vectorid
+          this.$refs['right' + this.right.toString()][0].shadow = 'always'
         }
       }
       if (this.left !== null && this.right !== null) {
-        this.relations.push([this.left.toString(), this.right.toString()])
-        this.drawLine(this.left.toString(), this.right.toString())
+        var relation = [this.left.toString(), this.right.toString()]
+        var flag = false
+        for (var i = 0; i < this.relations.length; i++) {
+          if (relation.toString() === this.relations[i].toString()) {
+            this.relations.splice(i, 1)
+            flag = true
+            break
+          }
+        }
+        if (!flag) {
+          this.relations.push(relation)
+        }
+        this.deleteLines()
+        this.drawLines()
+        this.$refs['left' + this.left.toString()][0].shadow = 'hover'
+        this.$refs['right' + this.right.toString()][0].shadow = 'hover'
         this.left = null
         this.right = null
       }
