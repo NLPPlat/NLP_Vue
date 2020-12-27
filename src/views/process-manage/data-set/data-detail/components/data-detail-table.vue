@@ -14,7 +14,7 @@
       <el-button type="primary" @click="handleSetAnnotation()">
         数据标注
       </el-button>
-      <el-button type="primary" @click="copyDataSet(row)">
+      <el-button type="primary" @click="copyDialogShow(row)">
         拷贝
       </el-button>
     </el-row>
@@ -140,7 +140,7 @@
     >
       <div style="text-align:center;width:100%;">
         <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="原始数据集" border>原始数据集</el-radio>
+          <el-radio label="训练数据集" border>训练数据集</el-radio>
           <el-radio label="预处理数据集" border>预处理数据集</el-radio>
         </el-radio-group>
       </div>
@@ -158,8 +158,8 @@
 </template>
 
 <script>
-import { datasetCopy, datasetVectorsFetch, datasetInfoFetch } from '@/api/common/dataset'
-import { editDataVector, dataCut } from '@/api/process-manage/data-set'
+import { datasetCopy, datasetVectorsFetch, datasetInfoFetch, datasetVectorUpdate } from '@/api/common/dataset'
+import { dataCut } from '@/api/process-manage/data-set'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
 import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
@@ -233,7 +233,7 @@ export default {
       datasetInfoFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
         this.taskType = response.data.taskType
         this.groupOn = response.data.groupOn
-        if (response.data.datasetType === '原始数据集') {
+        if (response.data.datasetType === '训练数据集') {
           this.annotation.status = response.data.annotationStatus
         }
       })
@@ -241,7 +241,7 @@ export default {
     },
     confirmEdit(row) {
       row.edit = false
-      editDataVector({ 'datasetid': this.listQuery.datasetid, 'vectorid': row.vectorid, 'vector': row }).then(response => {
+      datasetVectorUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': row.vectorid, 'vector': row }).then(response => {
         this.$message({
           message: '文本编辑成功！',
           type: 'success'
@@ -251,7 +251,7 @@ export default {
     },
     handleDelete(row) {
       row.deleted = '已删除'
-      editDataVector({ 'datasetid': this.listQuery.datasetid, 'vectorid': row.vectorid, 'vector': row }).then(response => {
+      datasetVectorUpdate({ 'datasetid': this.listQuery.datasetid, 'vectorid': row.vectorid, 'vector': row }).then(response => {
         this.$message({
           message: '文本删除成功！',
           type: 'success'
@@ -269,14 +269,14 @@ export default {
     handleDataVenation() {
       this.$router.push('/data-manage/data-venation/' + this.listQuery.datasetid)
     },
-    copyDataSet(row) {
+    copyDialogShow(row) {
       this.datasetCopy.datasetInitid = this.listQuery.id
       this.datasetCopy.copyDes = ''
       this.datasetCopy.copyDialogVisible = true
     },
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false
-      datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
+      datasetCopy({ 'datasetInitType': '训练数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
         this.getList()
         this.$notify({
           title: '拷贝成功',

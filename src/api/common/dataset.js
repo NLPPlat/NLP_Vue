@@ -31,7 +31,17 @@ export function datasetInfoFetch(params) {
   })
 }
 
-// 某个数据集部分信息修改
+// 某个数据集信息更新
+export function datasetInfoUpdate(data) {
+  return request({
+    url: '/common/dataset/datasets/ID',
+    method: 'put',
+    data: data,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+// 某个数据集名称、描述信息更新
 export function datasetInfoVerify(data) {
   return request({
     url: '/common/dataset/datasets/ID',
@@ -76,6 +86,16 @@ export function datasetVectorUpdate(query) {
   return request({
     url: '/common/dataset/datasets/ID/vectors/ID',
     method: 'put',
+    params: query,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+// 某个数据集总量信息获取
+export function datasetTotalInfoFetch(query) {
+  return request({
+    url: '/common/dataset/datasets/ID/totalInfo',
+    method: 'get',
     params: query,
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })

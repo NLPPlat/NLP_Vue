@@ -12,6 +12,7 @@ const getters = {
   permission_routes: state => state.permission.routes,
   errorLogs: state => state.errorLog.logs,
 
+  // 任务类型对应模式
   groupModeFetch: function(state) {
     return function(taskType, annotationType) {
       if (taskType in state.annotationSettings.twoGroupAnnotationMode) {
@@ -27,5 +28,6 @@ const getters = {
       return 0
     }
   }
+
 }
 export default getters

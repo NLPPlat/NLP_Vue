@@ -100,7 +100,7 @@ export default {
         limit: 20,
         sort: '-id',
         taskName: '',
-        datasetType: '原始数据集',
+        datasetType: '训练数据集',
         username: ['自己', '他人'],
         taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
         analyseStatus: ['解析中', '解析完成']

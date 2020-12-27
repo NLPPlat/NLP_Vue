@@ -132,7 +132,7 @@ export default {
         switch (val) {
           case '分词分句算子':
           case '数据清洗算子':
-            this.getDatasetList('原始数据集')
+            this.getDatasetList('训练数据集')
             break
           case '预处理算子':
             this.getDatasetList('预处理数据集')

@@ -6,16 +6,13 @@
         <el-option v-for="item in usernameOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="searchQuery.taskTypeSelect" placeholder="任务类型" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="item in taskTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+        <el-option v-for="item in taskTypeOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
-      </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleDataUpload">
-        数据接入
       </el-button>
       <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
         数据集表格导出
@@ -53,21 +50,21 @@
                 <el-input v-model="row.desc" type="textarea" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.taskName,row.desc)">保存</el-button>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row)">保存</el-button>
               </el-form-item>
             </el-form>
             <span slot="reference" class="link-type">{{ row.taskName }}</span>
           </el-popover>
         </template>
       </el-table-column>
-      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
+      <el-table-column label="归属者" column-key="username" width="100px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
       <el-table-column label="共同标注" width="200px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.annotationPublicity" :disabled="row.username!=$store.state.user.username">
+          <el-radio-group v-model="row.annotationPublicity" :disabled="row.username!=$store.state.user.username" @change="handlePublicityChange(row)">
             <el-radio-button label="允许" />
             <el-radio-button label="不允许" />
           </el-radio-group>
@@ -78,12 +75,12 @@
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="160px" align="center">
+      <el-table-column label="任务类型" column-key="taskType" width="160px" align="center">
         <template slot-scope="{row}">
-          <el-tag>{{ row.taskType | typeFilter }}</el-tag>
+          <el-tag>{{ row.taskType }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="标注状态" column-key="annotationStatus" :filters="annotationStatusFilter" class-name="status-col" width="120px">
+      <el-table-column label="标注状态" column-key="annotationStatus" class-name="status-col" width="120px">
         <template slot-scope="{row}">
           <el-tag :type="row.annotationStatus | statusFilter">
             {{ row.annotationStatus }}
@@ -96,7 +93,7 @@
             <el-button type="primary" size="mini" @click="handleSetAnnotation(row)">
               配置任务
             </el-button>
-            <el-button size="mini" type="success">
+            <el-button size="mini" type="success" @click="handleDataVenation(row)">
               数据脉络
             </el-button>
           </div>
@@ -104,10 +101,10 @@
             <el-button type="primary" size="mini" @click="handleManage(row)">
               进入标注
             </el-button>
-            <el-button type="danger" size="mini" @click="handleSetAnnotation(row)">
+            <el-button type="danger" size="mini">
               取消标注
             </el-button>
-            <el-button size="mini" type="success">
+            <el-button size="mini" type="success" @click="handleDataVenation(row)">
               数据脉络
             </el-button>
           </div>
@@ -118,7 +115,7 @@
             <el-button type="primary" size="mini">
               导出标注
             </el-button>
-            <el-button size="mini" type="success">
+            <el-button size="mini" type="success" @click="handleManage(row)">
               数据脉络
             </el-button>
           </div>
@@ -141,10 +138,10 @@
 </template>
 
 <script>
-import { datasetListFetch, datasetInfoVerify } from '@/api/common/dataset'
-import waves from '@/directive/waves' // waves directive
+import { datasetListFetch, datasetInfoUpdate } from '@/api/common/dataset'
+import waves from '@/directive/waves'
 import { parseTime } from '@/utils'
-import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+import Pagination from '@/components/Pagination'
 import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
 import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
 import L2rConfigDialog from '@/views/process-manage/annotation/components/l2r-config-dialog'
@@ -152,21 +149,6 @@ import SummaryConfigDialog from '@/views/process-manage/annotation/components/su
 import ClassificationConfigDialog from '@/views/process-manage/annotation/components/classification-config-dialog'
 import SentimentAnalysisConfigDialog from '@/views/process-manage/annotation/components/sentiment-analysis-config-dialog'
 import MatchingConfigDialog from '@/views/process-manage/annotation/components/matching-config-dialog'
-
-const taskTypeOptions = [
-  { key: '通用单文本分类', display_name: '通用单文本分类' },
-  { key: '情感分析/意图识别', display_name: '情感分析/意图识别' },
-  { key: '实体关系抽取', display_name: '实体关系抽取' },
-  { key: '文本关系分析', display_name: '文本关系分析' },
-  { key: '文本配对', display_name: '文本配对' },
-  { key: '文本摘要', display_name: '文本摘要' },
-  { key: '文本排序学习', display_name: '文本排序学习' }
-]
-
-const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
-  acc[cur.key] = cur.display_name
-  return acc
-}, {})
 
 export default {
   name: 'DatasetTable',
@@ -180,9 +162,6 @@ export default {
         '未开始': 'info'
       }
       return statusMap[status]
-    },
-    typeFilter(type) {
-      return calendarTypeKeyValue[type]
     }
   },
   data() {
@@ -200,39 +179,23 @@ export default {
         taskName: '',
         datasetType: '标注数据集',
         username: ['自己', '他人'],
-        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本配对', '文本摘要', '文本排序学习'],
+        taskType: [],
         annotationStatus: ['未开始', '标注中', '标注完成']
       },
       searchQuery: {
         usernameSelect: '',
         taskTypeSelect: ''
       },
+      taskTypeOptions: [],
       usernameOptions: ['自己', '他人'],
-      taskTypeOptions,
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
       downloadLoading: false,
-      configDialogShow: false,
-      usernameFilter: [
-        { text: '自己', value: '自己' },
-        { text: '他人', value: '他人' }
-      ],
-      taskTypeFilter: [
-        { text: '通用单文本分类', value: '通用单文本分类' },
-        { text: '情感分析/意图识别', value: '情感分析/意图识别' },
-        { text: '实体关系抽取', value: '实体关系抽取' },
-        { text: '文本关系分析', value: '文本关系分析' },
-        { text: '文本配对', value: '文本配对' },
-        { text: '文本摘要', value: '文本摘要' },
-        { text: '文本排序学习', value: '文本排序学习' }
-      ],
-      annotationStatusFilter: [
-        { text: '未开始', value: '未开始' },
-        { text: '标注中', value: '标注中' },
-        { text: '标注完成', value: '标注完成' }
-      ]
+      configDialogShow: false
     }
   },
   created() {
+    this.taskTypeOptions = this.$store.state.taskTypes.taskType
+    this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
   },
   methods: {
@@ -264,8 +227,8 @@ export default {
       }
       this.handleFilter()
     },
-    handleInfoVerity(id, taskName, desc) {
-      datasetInfoVerify({ 'datasetid': id, 'taskName': taskName, 'desc': desc }).then(response => {
+    handleInfoVerity(row) {
+      datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'taskName': row.taskName, 'desc': row.desc }}).then(response => {
         document.body.click()
         this.$message.success('任务信息修改成功！')
         this.getList()
@@ -349,23 +312,23 @@ export default {
         this.listQuery.username = [this.searchQuery.usernameSelect]
       }
       if (this.searchQuery.taskTypeSelect === '') {
-        this.listQuery.taskType = ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习']
+        this.listQuery.taskType = this.$store.state.taskTypes.taskType
       } else {
         this.listQuery.taskType = [this.searchQuery.taskTypeSelect]
       }
       this.handleFilter()
     },
-    handleDataUpload() {
-
-    },
-    handleShowTest(row) {
-      // console.log(row.username)
-      console.log(this.$store.state.user.username)
-      return true
-    },
     closeConfigDialog() {
       this.configDialogShow = false
       this.getList()
+    },
+    handlePublicityChange(row) {
+      datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'annotationPublicity': row.annotationPublicity }}).then(response => {
+        this.$message.success('权限更改成功!')
+      })
+    },
+    handleDataVenation(row) {
+      this.$router.push('/data-manage/data-venation/original-dataset/' + row._id)
     }
   }
 }

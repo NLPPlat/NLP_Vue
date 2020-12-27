@@ -150,10 +150,12 @@
         <el-form-item label="导出内容">
           <el-select v-model="preprocessDownload.content" placeholder="选择导出内容">
             <el-option label="vectors" value="vectors" />
-            <el-option label="label_name" value="label_name" />
+            <el-option label="label_id" value="label_id" />
             <el-option label="label" value="label" />
             <el-option label="embedding" value="embedding" />
+            <el-option label="embedding_matrix" value="embedding_matrix" />
             <el-option label="feature" value="feature" />
+            <el-option label="vocabs" value="vocabs" />
           </el-select>
         </el-form-item>
         <el-button type="primary" style="margin-left:40%" @click="confirmDownload">确认导出</el-button>
@@ -175,14 +177,15 @@
                 />
               </el-select>
             </el-form-item>
-            <el-form-item label="选择特征集内容">
+            <el-form-item label="选择特征集属性">
               <el-checkbox-group v-model="featuresConstruction.columns">
-                <el-checkbox label="label(映射后标签)" name="type" />
-                <el-checkbox label="label_name(映射后标签名称)" name="type" />
-                <el-checkbox label="vectors(文本向量)" name="type" />
-                <el-checkbox label="feature(特征)" name="type" />
-                <el-checkbox label="embedding(嵌入)" name="type" />
-                <el-checkbox label="embedding_matrix(嵌入矩阵)" name="type" />
+                <el-checkbox label="label" />
+                <el-checkbox label="label_id" />
+                <el-checkbox label="vectors" />
+                <el-checkbox label="feature" />
+                <el-checkbox label="embedding" />
+                <el-checkbox label="embedding_matrix" />
+                <el-checkbox label="vocabs" />
               </el-checkbox-group>
             </el-form-item>
           </el-form>
@@ -284,7 +287,7 @@ export default {
       featuresConstruction: {
         show: false,
         preprocessID: '',
-        columns: ['label(映射后标签)', 'label_name(映射后标签名称)', 'feature(特征)']
+        columns: ['label', 'label_id', 'feature']
       },
       preprocessDownload: {
         show: false,
@@ -364,7 +367,11 @@ export default {
       this.$router.push('/data-manage/operator-manage/codehub/-1')
     },
     handleParamsShow(row) {
-      this.preprocessParamsShow.params = row.preprocessParams
+      if (row.preprocessParams) {
+        this.preprocessParamsShow.params = row.preprocessParams
+      } else {
+        this.preprocessParamsShow.params = []
+      }
       this.preprocessParamsShow.show = true
     },
     handleDownload(preprocessid) {
@@ -388,7 +395,7 @@ export default {
       this.preprocessDownload.show = false
     },
     handleCopy() {
-      datasetCopy({ 'datasetInitid': this.listQuery.datasetid, 'params': { 'preprocessid': this.featuresConstruction.preprocessID }, 'datasetInitType': '预处理数据集', 'copyDes': '特征数据集' }).then(response => {
+      datasetCopy({ 'datasetInitid': this.listQuery.datasetid, 'params': { 'preprocessid': this.featuresConstruction.preprocessID, 'attributes': this.featuresConstruction.columns }, 'datasetInitType': '预处理数据集', 'copyDes': '特征数据集' }).then(response => {
         this.featuresConstruction.show = false
         this.$notify({
           title: '生成成功',

@@ -25,7 +25,7 @@
 
 <script>
 
-import { datasetInfoFetch, datasetVectorFetch, datasetVectorUpdate, groupVectorsFetch, groupVectorsUpdate } from '@/api/common/dataset'
+import { datasetInfoFetch, datasetVectorFetch, datasetVectorUpdate, groupVectorsFetch, groupVectorsUpdate, datasetTotalInfoFetch } from '@/api/common/dataset'
 
 import AnnotationProgress from '@/views/process-manage/annotation/components/annotation-progress'
 
@@ -56,7 +56,9 @@ export default {
         id: ''
       },
       tags: '',
-      data: ''
+      data: '',
+      max: '',
+      min: ''
     }
   },
   computed: {
@@ -74,6 +76,7 @@ export default {
         this.taskType = response.data.taskType
         this.tags = response.data.annotationFormat['tags']
         this.getVector()
+        this.getTotalInfo()
       })
     },
     getVector() {
@@ -97,6 +100,12 @@ export default {
           this.getComponent()
         })
       }
+    },
+    getTotalInfo() {
+      datasetTotalInfoFetch({ 'datasetid': this.listQuery.datasetid, 'totalType': this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) }).then(response => {
+        this.max = Number(response.data.max)
+        this.min = Number(response.data.min)
+      })
     },
     getComponent() {
       switch (this.taskType) {
@@ -160,23 +169,55 @@ export default {
     },
     handleBack() {
       this.upload()
-      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
-        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) - 2))
+      if (this.judgeFirst()) {
+        this.$message.info('已是第一个标注任务！')
       } else {
-        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) - 1))
+        if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+          this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) - 2))
+        } else {
+          this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) - 1))
+        }
       }
     },
     handleNext() {
       this.upload()
-      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
-        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) + 2))
+      if (this.judgeLast()) {
+        this.$message.info('已完成所有标注任务！')
       } else {
-        this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) + 1))
+        if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+          this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) + 2))
+        } else {
+          this.$router.push('/process-manage/annotation/vector-detail/' + this.listQuery.datasetid + '/' + (Number(this.listQuery.id) + 1))
+        }
       }
     },
     handleBackToDetail() {
       this.upload()
       this.$router.push('/process-manage/annotation/data-detail/' + this.listQuery.datasetid)
+    },
+    judgeFirst() {
+      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+        if (Number(this.listQuery.id) - 2 < this.min) {
+          return true
+        }
+      } else {
+        if (Number(this.listQuery.id) - 1 < this.min) {
+          return true
+        }
+      }
+      return false
+    },
+    judgeLast() {
+      if (this.$store.getters.groupModeFetch(this.taskType, this.annotationFormat.type) === 2) {
+        if (Number(this.listQuery.id) + 2 > this.max) {
+          return true
+        }
+      } else {
+        if (Number(this.listQuery.id) + 1 > this.max) {
+          return true
+        }
+      }
+      return false
     }
   }
 }

@@ -51,7 +51,7 @@ export function parseTime(time, cFormat) {
   return time_str
 }
 
-// 计算已运行时间
+// 计算已经过时间
 export function calTime(time, endtime = '') {
   console.log(time, endtime)
   var begin = new Date(time)

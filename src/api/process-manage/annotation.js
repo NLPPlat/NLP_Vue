@@ -11,7 +11,7 @@ export function fetchTags(query) {
   })
 }
 
-// 某个数据集标注任务配置
+// 某个数据集标注任务配置创建
 export function annotationConfig(data) {
   return request({
     url: '/process-manage/annotation/datasets/ID/annotation/config',
@@ -21,45 +21,20 @@ export function annotationConfig(data) {
   })
 }
 
-export function fetchVector(query) {
-  return request({
-    url: '/process-manage/annotation/detail/vector',
-    method: 'get',
-    params: query,
-    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
-  })
-}
-
-export function uploadAnnotationTags(data) {
-  return request({
-    url: '/process-manage/annotation/detail/tags',
-    method: 'post',
-    data: data,
-    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
-  })
-}
-
-export function fetchAnnotationStatus(query) {
-  return request({
-    url: '/process-manage/annotation/status/ID',
-    method: 'get',
-    params: query,
-    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
-  })
-}
-
+// 某个数据集标注状态更新
 export function completeAnnotationStatus(data) {
   return request({
-    url: '/process-manage/annotation/status/ID',
-    method: 'post',
+    url: '/process-manage/annotation/datasets/ID/annotation/status',
+    method: 'put',
     data: data,
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })
 }
 
+// 某个数据集标注进度获取
 export function fetchAnnotationProgress(query) {
   return request({
-    url: '/process-manage/annotation/datasets/ID/progress',
+    url: '/process-manage/annotation/datasets/ID/annotation/progress',
     method: 'get',
     params: query,
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }

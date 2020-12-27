@@ -89,7 +89,7 @@ export default {
           if (params.seriesType === 'graph') {
             if (params.dataType === 'node') {
               switch (params.name) {
-                case '原始数据集':
+                case '训练数据集':
                   break
                 case '预处理数据集':
                   break

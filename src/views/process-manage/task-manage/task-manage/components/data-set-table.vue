@@ -78,7 +78,7 @@
       <el-table-column label="操作" align="center" min-width="120px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <div>
-            <el-button type="primary" size="mini" @click="copyDataSet(row)">
+            <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               跳转
             </el-button>
             <el-button size="mini" type="danger" @click="handleDelete(row)">
@@ -98,7 +98,7 @@
     >
       <div style="text-align:center;width:100%;">
         <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="原始数据集" border>原始数据集</el-radio>
+          <el-radio label="训练数据集" border>训练数据集</el-radio>
           <el-radio label="预处理数据集" border>预处理数据集</el-radio>
         </el-radio-group>
       </div>
@@ -223,16 +223,16 @@ export default {
     handleManage(row) {
       this.$router.push('/process-manage/data-set/data-detail/' + row._id)
     },
-    copyDataSet(row) {
+    copyDialogShow(row) {
       this.datasetCopy.datasetInitid = row._id
       this.datasetCopy.copyDes = ''
       this.datasetCopy.copyDialogVisible = true
     },
     handleDelete(row) {
-      datasetDelete({ 'datasetid': row._id, 'datasetType': '原始数据集' }).then(response => {
+      datasetDelete({ 'datasetid': row._id, 'datasetType': '训练数据集' }).then(response => {
         this.$notify({
           title: '删除成功',
-          message: '已从原始数据集中移除',
+          message: '已从训练数据集中移除',
           type: 'success',
           duration: 2000
         })
@@ -295,7 +295,7 @@ export default {
     },
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false
-      datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
+      datasetCopy({ 'datasetInitType': '训练数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
         this.getList()
         this.$notify({
           title: '拷贝成功',

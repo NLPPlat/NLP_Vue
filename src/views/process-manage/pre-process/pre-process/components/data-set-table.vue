@@ -6,16 +6,13 @@
         <el-option v-for="item in usernameOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="searchQuery.taskTypeSelect" placeholder="任务类型" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="item in taskTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+        <el-option v-for="item in taskTypeOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
-      </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleDataUpload">
-        数据接入
       </el-button>
       <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
         数据集表格导出
@@ -53,7 +50,7 @@
                 <el-input v-model="row.desc" type="textarea" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.taskName,row.desc)">保存</el-button>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row)">保存</el-button>
               </el-form-item>
             </el-form>
             <span slot="reference" class="link-type">{{ row.taskName }}</span>
@@ -61,14 +58,14 @@
 
         </template>
       </el-table-column>
-      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
+      <el-table-column label="归属者" column-key="username" width="100px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
       <el-table-column label="公开性" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.publicity">
+          <el-radio-group v-model="row.publicity" :disabled="row.username!=$store.state.user.username" @change="handlePublicityChange(row)">
             <el-radio-button label="公开" />
             <el-radio-button label="不公开" />
           </el-radio-group>
@@ -79,9 +76,9 @@
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="160px" align="center">
+      <el-table-column label="任务类型" column-key="taskType" width="160px" align="center">
         <template slot-scope="{row}">
-          <el-tag>{{ row.taskType | typeFilter }}</el-tag>
+          <el-tag>{{ row.taskType }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
@@ -93,7 +90,7 @@
             <el-button v-if="row.analyseStatus!='published'" size="mini" type="success" @click="handleDataVenation(row)">
               数据脉络
             </el-button>
-            <el-button type="primary" size="mini" @click="copyDataSet(row)">
+            <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               拷贝
             </el-button>
             <el-button v-if="row.analyseStatus!='deleted'" size="mini" type="danger" @click="handleDelete(row,$index)">
@@ -101,7 +98,10 @@
             </el-button>
           </div>
           <div v-else>
-            <el-button type="primary" size="mini" @click="copyDataSet(row)">
+            <el-button type="primary" size="mini" @click="handleManage(row)">
+              查看预处理步骤
+            </el-button>
+            <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               拷贝
             </el-button>
           </div>
@@ -125,7 +125,6 @@
       </div>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="handleCopy">确认</el-button>
-
       </div>
     </el-dialog>
 
@@ -133,24 +132,10 @@
 </template>
 
 <script>
-import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
+import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoUpdate } from '@/api/common/dataset'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
-
-const taskTypeOptions = [
-  { key: '通用单文本分类', display_name: '通用单文本分类' },
-  { key: '情感分析/意图识别', display_name: '情感分析/意图识别' },
-  { key: '实体关系抽取', display_name: '实体关系抽取' },
-  { key: '文本关系分析', display_name: '文本关系分析' },
-  { key: '文本摘要', display_name: '文本摘要' },
-  { key: '文本排序学习', display_name: '文本排序学习' }
-]
-
-const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
-  acc[cur.key] = cur.display_name
-  return acc
-}, {})
 
 export default {
   name: 'DataSetTable',
@@ -163,9 +148,6 @@ export default {
         '解析中': 'info'
       }
       return statusMap[status]
-    },
-    typeFilter(type) {
-      return calendarTypeKeyValue[type]
     }
   },
   data() {
@@ -181,33 +163,17 @@ export default {
         taskName: '',
         datasetType: '预处理数据集',
         username: ['自己', '他人'],
-        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习'],
+        taskType: [],
         analyseStatus: ['解析中', '解析完成']
       },
       searchQuery: {
         usernameSelect: '',
         taskTypeSelect: ''
       },
+      taskTypeOptions: [],
       usernameOptions: ['自己', '他人'],
-      taskTypeOptions,
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
       downloadLoading: false,
-      usernameFilter: [
-        { text: '自己', value: '自己' },
-        { text: '他人', value: '他人' }
-      ],
-      taskTypeFilter: [
-        { text: '通用单文本分类', value: '通用单文本分类' },
-        { text: '情感分析/意图识别', value: '情感分析/意图识别' },
-        { text: '实体关系抽取', value: '实体关系抽取' },
-        { text: '文本关系分析', value: '文本关系分析' },
-        { text: '文本摘要', value: '文本摘要' },
-        { text: '文本排序学习', value: '文本排序学习' }
-      ],
-      statusFilter: [
-        { text: '解析中', value: '解析中' },
-        { text: '解析完成', value: '解析完成' }
-      ],
       datasetCopy: {
         copyDialogVisible: false,
         copyDes: '',
@@ -217,6 +183,8 @@ export default {
     }
   },
   created() {
+    this.taskTypeOptions = this.$store.state.taskTypes.taskType
+    this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
   },
   methods: {
@@ -225,7 +193,6 @@ export default {
       datasetListFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        // Just to simulate the time of the request
         setTimeout(() => {
           this.listLoading = false
         }, 0 * 1000)
@@ -252,7 +219,7 @@ export default {
     handleManage(row) {
       this.$router.push('/process-manage/pre-process/pre-process-manage/' + row._id)
     },
-    copyDataSet(row) {
+    copyDialogShow(row) {
       this.datasetCopy.datasetInitid = row._id
       this.datasetCopy.copyDes = ''
       this.datasetCopy.copyDialogVisible = true
@@ -282,8 +249,8 @@ export default {
         this.downloadLoading = false
       })
     },
-    handleInfoVerity(id, taskName, desc) {
-      datasetInfoVerify({ 'datasetid': id, 'taskName': taskName, 'desc': desc }).then(response => {
+    handleInfoVerity(row) {
+      datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'taskName': row.taskName, 'desc': row.desc }}).then(response => {
         document.body.click()
         this.$message.success('任务信息修改成功！')
         this.getList()
@@ -313,7 +280,7 @@ export default {
         this.listQuery.username = [this.searchQuery.usernameSelect]
       }
       if (this.searchQuery.taskTypeSelect === '') {
-        this.listQuery.taskType = ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习']
+        this.listQuery.taskType = this.$store.state.taskTypes.taskType
       } else {
         this.listQuery.taskType = [this.searchQuery.taskTypeSelect]
       }
@@ -321,19 +288,23 @@ export default {
     },
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false
-      datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
+      datasetCopy({ 'datasetInitType': '预处理数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
         this.getList()
+        this.$notify({
+          title: '拷贝任务创建成功！',
+          message: '即将拷贝至ID为' + response.data.datasetDesID + '的数据集中',
+          type: 'success',
+          duration: 2000
+        })
       })
     },
     handleDataVenation(row) {
       this.$router.push('/data-manage/data-venation/preprocess-dataset/' + row._id)
     },
-    handleDataUpload() {
-
-    },
-    handleShowTest(row) {
-      console.log(this.$store.state.user.username)
-      return true
+    handlePublicityChange(row) {
+      datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'publicity': row.publicity }}).then(response => {
+        this.$message.success('权限更改成功!')
+      })
     }
   }
 }

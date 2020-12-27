@@ -86,7 +86,7 @@
             <el-button type="primary" size="mini" @click="handleManage(row)">
               查看管道
             </el-button>
-            <el-button type="primary" size="mini" @click="copyDataSet(row)">
+            <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               拷贝
             </el-button>
             <el-button size="mini" type="danger" @click="handleDelete(row)">
@@ -94,7 +94,7 @@
             </el-button>
           </div>
           <div v-else>
-            <el-button type="primary" size="mini" @click="copyDataSet(row)">
+            <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               拷贝
             </el-button>
           </div>
@@ -146,7 +146,7 @@ export default {
         limit: 20,
         sort: '-id',
         pipelineName: '',
-        datasetType: '原始数据集',
+        datasetType: '训练数据集',
         username: ['自己', '他人'],
         taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本配对', '文本排序学习']
       },
@@ -216,7 +216,7 @@ export default {
     handleManage(row) {
       this.$router.push('/data-manage/pipeline-manage/codehub/' + row._id)
     },
-    copyDataSet(row) {
+    copyDialogShow(row) {
       this.datasetCopy.datasetInitid = row._id
       this.datasetCopy.copyDes = ''
       this.datasetCopy.copyDialogVisible = true

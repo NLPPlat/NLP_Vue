@@ -7,7 +7,7 @@
           完成标注
         </el-button>
         <el-button v-if="annotationStatus==='标注完成'" type="primary" @click="handleCopy()">
-          拷贝
+          拷贝至预处理
         </el-button>
       </el-col>
       <el-col :span="8">
@@ -48,7 +48,13 @@
         </template>
       </el-table-column>
 
-      <el-table-column align="center" label="操作" width="200px">
+      <el-table-column label="标注已完成" :show-overflow-tooltip="true" width="100px" align="center">
+        <template slot-scope="{row}">
+          <el-button v-if="row.label!==''" type="success" icon="el-icon-check" circle style="cursor:default" />
+        </template>
+      </el-table-column>
+
+      <el-table-column align="center" label="操作" width="120px">
         <template slot-scope="{row}">
           <el-button
             type="primary"
@@ -106,6 +112,7 @@ export default {
   created() {
     this.listQuery.datasetid = this.$route.params.id
     this.getList()
+    this.getInfo()
   },
   methods: {
     async getList() {
@@ -119,29 +126,31 @@ export default {
         return v
       })
       this.total = data.total
+
+      this.listLoading = false
+    },
+    getInfo() {
       datasetInfoFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
         this.taskType = response.data.taskType
         this.groupOn = response.data.groupOn
         this.annotationFormat = response.data.annotationFormat
         this.annotationStatus = response.data.annotationStatus
       })
-      this.listLoading = false
     },
     handleCompleteAnnotation() {
       completeAnnotationStatus({ 'datasetid': this.listQuery.datasetid }).then(response => {
         this.$message.success('标注任务提交成功！')
-        this.getStatus()
+        this.getInfo()
       })
     },
     handleCopy() {
-      datasetCopy({ 'datasetInitType': '原始数据集', 'datasetInitid': this.listQuery.datasetid, 'copyDes': '预处理数据集' }).then(response => {
+      datasetCopy({ 'datasetInitType': '训练数据集', 'datasetInitid': this.listQuery.datasetid, 'copyDes': '预处理数据集' }).then(response => {
         this.$notify({
-          title: '拷贝成功',
-          message: '已自动拷贝至预处理数据集。',
+          title: '拷贝任务创建成功',
+          message: '即将拷贝至ID为' + response.data.datasetDesID + '的数据集中',
           type: 'success',
           duration: 2000
         })
-        this.$router.push('/process-manage/pre-process/pre-process-manage/' + response.data.datasetid)
       })
     },
     cancelEdit(row) {

@@ -35,6 +35,7 @@
                       :limit="1"
                       :auto-upload="false"
                       style="height:60px"
+                      :on-success="handleUploadSuccess"
                     >
                       <el-button type="primary">上传<i class="el-icon-upload el-icon--right" /></el-button>
                     </el-upload>
@@ -107,7 +108,7 @@ export default {
         headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token }
       },
       resources: [],
-      natures: { 'feature': '特征', 'label': 'label映射后标签', 'label_name': '映射后标签id对应关系', 'embedding': '嵌入', 'embedding_matrix': '嵌入矩阵' },
+      natures: { 'feature': '特征', 'label': 'label映射后标签', 'label_id': '映射后标签id对应关系', 'embedding': '嵌入', 'embedding_matrix': '嵌入矩阵', 'vocabs': '字典/词典' },
       preprocessObj: {}
     }
   },
@@ -140,6 +141,17 @@ export default {
           this.getData()
         })
       }
+    },
+    handleUploadSuccess(response, file, fileList) {
+      console.log(response)
+      if (response.code === 200) {
+        this.$message.success('上传成功！')
+      } else {
+        this.$message.error(response.message)
+      }
+      this.natureConfig.filelist = []
+      this.getResource()
+      this.getData()
     }
   }
 }
