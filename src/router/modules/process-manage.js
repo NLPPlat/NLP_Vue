@@ -21,7 +21,7 @@ const componentsRouter = {
       path: 'data-set',
       component: () => import('@/views/process-manage/data-set/data-set/index'),
       name: 'data-set',
-      meta: { title: '数据集' }
+      meta: { title: '数据查看' }
     }, {
       path: 'data-set/data-detail/:id',
       component: () => import('@/views/process-manage/data-set/data-detail/index'),

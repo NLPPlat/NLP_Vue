@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div>
     <batch-manage-table />
   </div>
 </template>

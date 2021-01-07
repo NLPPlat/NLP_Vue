@@ -1,24 +1,21 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.modelName" placeholder="任务名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.modelName" placeholder="模型名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-select v-model="searchQuery.usernameSelect" placeholder="归属者" clearable style="width: 90px" class="filter-item">
         <el-option v-for="item in usernameOptions" :key="item" :label="item" :value="item" />
       </el-select>
-      <el-select v-model="searchQuery.modelTypeSelect" placeholder="任务类型" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="item in modelTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+      <el-select v-model="searchQuery.platTypeSelect" placeholder="运行平台" clearable class="filter-item" style="width: 130px">
+        <el-option v-for="item in platTypeOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
       </el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handlemodelAdd">
         模型添加
-      </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
-        模型列表导出
       </el-button>
     </div>
 
@@ -53,7 +50,7 @@
                 <el-input v-model="row.desc" type="textarea" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.modelName,row.desc)">保存</el-button>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row)">保存</el-button>
               </el-form-item>
             </el-form>
             <span slot="reference" class="link-type">{{ row.modelName }}</span>
@@ -67,7 +64,7 @@
       </el-table-column>
       <el-table-column label="公开性" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.publicity" :disabled="row.username!=$store.state.user.username">
+          <el-radio-group v-model="row.publicity" :disabled="!permissionCheck(row.username)" @change="handlePublicityChange(row)">
             <el-radio-button label="公开" />
             <el-radio-button label="不公开" />
           </el-radio-group>
@@ -80,12 +77,12 @@
       </el-table-column>
       <el-table-column label="运行平台" column-key="platType" :filters="platTypeFilter" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-tag>{{ row.plat | typeFilter }}</el-tag>
+          <el-tag>{{ row.platType | typeFilter }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <div v-if="row.username===$store.state.user.username">
+          <div v-if="permissionCheck(row.username)">
             <el-button type="primary" size="mini" @click="handleManage(row)">
               查看模型
             </el-button>
@@ -111,14 +108,15 @@
 </template>
 
 <script>
-import { modelsFetch } from '@/api/data-manage/model'
-import waves from '@/directive/waves'
-import { parseTime } from '@/utils'
+import { datafileInfoUpdate } from '@/api/common/datafile'
+import { modelsFetch } from '@/api/common/model'
+import { writePerssion } from '@/utils/permission'
+
 import Pagination from '@/components/Pagination'
+
 export default {
   name: 'ModelsTable',
   components: { Pagination },
-  directives: { waves },
   filters: {
   },
   data() {
@@ -130,38 +128,37 @@ export default {
       listQuery: {
         page: 1,
         limit: 20,
+        type: 'part',
         sort: '-id',
         modelName: '',
         datasetType: '训练数据集',
-        username: ['自己', '他人']
+        username: ['自己', '他人'],
+        platType: ['Tensorflow1.X', 'Tensorflow2.X', 'Keras', 'Pytorch']
       },
       searchQuery: {
-        usernameSelect: ''
+        usernameSelect: '',
+        platTypeSelect: ''
       },
       usernameOptions: ['自己', '他人'],
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
-      downloadLoading: false,
+      platTypeOptions: ['Tensorflow1.X', 'Tensorflow2.X', 'Keras', 'Pytorch'],
       usernameFilter: [
         { text: '自己', value: '自己' },
         { text: '他人', value: '他人' }
       ],
       platTypeFilter: [
-        { key: 'Tensorflow1.X', display_name: 'Tensorflow1.X' },
-        { key: 'Tensorflow2.X', display_name: 'Tensorflow2.X' },
-        { key: 'Keras', display_name: 'Keras' },
-        { key: 'Pytorch', display_name: 'Pytorch' }
-      ],
-      datasetCopy: {
-        copyDialogVisible: false,
-        copyDes: '',
-        datasetInitid: ''
-      }
+        { text: 'Tensorflow1.X', value: 'Tensorflow1.X' },
+        { text: 'Tensorflow2.X', value: 'Tensorflow2.X' },
+        { text: 'Keras', value: 'Keras' },
+        { text: 'Pytorch', value: 'Pytorch' }
+      ]
     }
   },
   created() {
     this.getList()
   },
   methods: {
+    // 数据获取系列函数
     getList() {
       this.listLoading = true
       modelsFetch(this.listQuery).then(response => {
@@ -172,9 +169,7 @@ export default {
         }, 0 * 1000)
       })
     },
-    handlemodelAdd() {
-      this.$router.push('/data-manage/model-manage/codehub/' + '-1')
-    },
+    // 数据筛选系列函数
     handleFilter() {
       this.listQuery.page = 1
       this.getList()
@@ -193,50 +188,16 @@ export default {
       }
       this.handleFilter()
     },
-    handleManage(row) {
-      this.$router.push('/data-manage/model-manage/codehub/' + row._id)
-    },
-    copyDialogShow(row) {
-      this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
-      this.datasetCopy.copyDialogVisible = true
-    },
-    handleDelete(row) {
-    },
-    handleInfoVerity(id, modelName, desc) {
-    },
-    handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
-    },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['timestamp', 'title', 'type', 'importance', 'status']
-        const filterVal = ['timestamp', 'title', 'type', 'importance', 'status']
-        const data = this.formatJson(filterVal)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'table-list'
-        })
-        this.downloadLoading = false
-      })
-    },
-    formatJson(filterVal) {
-      return this.list.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
-        }
-      }))
-    },
     getSortClass: function(key) {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     },
     filterChange(obj) {
-      this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      if (obj[Object.keys(obj)[0]].length === 0) {
+        this.listQuery[Object.keys(obj)[0]] = this[Object.keys(obj)[0] + 'Options']
+      } else {
+        this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      }
       this.getList()
     },
     handleSearch() {
@@ -245,14 +206,39 @@ export default {
       } else {
         this.listQuery.username = [this.searchQuery.usernameSelect]
       }
+      if (this.searchQuery.platTypeSelect === '') {
+        this.listQuery.platType = ['Tensorflow1.X', 'Tensorflow2.X', 'Keras', 'Pytorch']
+      } else {
+        this.listQuery.platType = [this.searchQuery.platTypeSelect]
+      }
       this.handleFilter()
+    },
+    // 资源管理系列函数
+    handlemodelAdd() {
+      this.$router.push('/data-manage/model-manage/codehub/' + '-1')
+    },
+    handleManage(row) {
+      this.$router.push('/data-manage/model-manage/codehub/' + row._id)
+    },
+    handleDelete(row) {
+    },
+    handleInfoVerity(row) {
+      datafileInfoUpdate({ 'datafileid': row._id, 'datafileType': '模型文件', 'infos': { 'modelName': row.modelName, 'desc': row.desc }}).then(response => {
+        document.body.click()
+        this.$message.success('资源文件信息修改成功！')
+      })
     },
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false
     },
-    handleShowTest(row) {
-      console.log(this.$store.state.user.username)
-      return true
+    handlePublicityChange(row) {
+      datafileInfoUpdate({ 'datafileid': row._id, 'datafileType': '模型文件', 'infos': { 'publicity': row.publicity }}).then(response => {
+        this.$message.success('权限更改成功!')
+      })
+    },
+    // 工具系列函数
+    permissionCheck(username) {
+      return writePerssion(username)
     }
   }
 }

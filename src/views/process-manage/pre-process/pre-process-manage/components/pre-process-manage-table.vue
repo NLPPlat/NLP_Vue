@@ -147,8 +147,8 @@
     <!-- 数据导出对话框 -->
     <el-dialog title="数据导出" :visible.sync="preprocessDownload.show" width="450px">
       <el-form ref="form" :model="form" label-width="120px">
-        <el-form-item label="导出内容">
-          <el-select v-model="preprocessDownload.content" placeholder="选择导出内容">
+        <el-form-item label="导出属性">
+          <el-select v-model="preprocessDownload.content" placeholder="选择需要导出的属性">
             <el-option label="vectors" value="vectors" />
             <el-option label="label_id" value="label_id" />
             <el-option label="label" value="label" />
@@ -236,20 +236,20 @@
 </template>
 
 <script>
-import axios from 'axios'
-
-import PreProcessParamsSet from './pre-process-params-set'
-import PreProcessParamsShow from './pre-process-params-show'
 
 import { preprocessStatusFetch, preprocessAdd, preprocessDeal } from '@/api/process-manage/preprocess'
 import { operatorsForUserFetch } from '@/api/common/operator'
 import { datasetCopy } from '@/api/common/dataset'
 import { pipelineUpload } from '@/api/data-manage/pipeline'
 
+import PreProcessParamsSet from './pre-process-params-set'
+import PreProcessParamsShow from './pre-process-params-show'
+
+import axios from 'axios'
+
 export default {
   name: 'PreProcessManageTable',
   components: { PreProcessParamsSet, PreProcessParamsShow },
-  directives: { },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -318,12 +318,13 @@ export default {
     this.getOperators()
     this.timer = setInterval(() => {
       this.getList()
-    }, 1000 * 2)
+    }, 1000)
   },
   beforeDestroy() {
     clearInterval(this.timer)
   },
   methods: {
+    // 信息获取系列函数
     getList() {
       preprocessStatusFetch(this.listQuery).then(response => {
         this.list = response.data.items
@@ -342,6 +343,8 @@ export default {
         this.preprocessAdd.preprocessList.push(operators)
       })
     },
+
+    // 预处理管理系列函数
     handlePreprocessAdd() {
       preprocessAdd({ 'datasetid': this.listQuery.datasetid, 'preprocessAdd': this.preprocessAdd.preprocessSelect, 'previousProcessID': this.preprocessAdd.previousProcessID, 'sparkSupport': this.preprocessAdd.sparkSwitch, 'preprocessParams': this.preprocessParams.params }).then(response => {
         this.getList()

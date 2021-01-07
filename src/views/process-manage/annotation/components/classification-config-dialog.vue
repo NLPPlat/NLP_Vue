@@ -97,7 +97,7 @@ export default {
           type: 'success',
           duration: 2000
         })
-        this.$emit('closeConfigDialog')
+        this.$emit('configDialogClose')
       })
     }
 

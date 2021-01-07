@@ -1,80 +1,71 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" style="background-color:#f0f3f5;">
 
-    <el-card shadow="hover" style="width:100%;background-color:#f5f5f5;margin-bottom:50px">
-      <div style="margin-bottom:40px">
-        <span style="font-size:25px">批处理管理</span>
-      </div>
-      <div>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="9">
-            <el-card shadow="never" class="feature-config">
-              <div slot="header" class="clearfix">
-                <span>执行设置</span>
-              </div>
-              <el-form ref="form" :model="batchConfig" label-width="100px" style="width:300px">
-                <el-form-item label="训练模型">
-                  <el-select v-model="batchConfig.trainedmodelSelect" placeholder="选择已有的模型">
-                    <el-option v-for="model in trainedmodels" :key="model" :label="model.modelName" :value="model._id" />
-                  </el-select>
+    <el-row type="flex" justify="space-between" :gutter="20">
+      <el-col :span="9">
+        <el-card shadow="hover" class="feature-config">
+          <div slot="header" class="clearfix">
+            <span>执行设置</span>
+          </div>
+          <el-form ref="form" :model="batchConfig" label-width="100px" style="width:300px">
+            <el-form-item label="训练模型">
+              <el-select v-model="batchConfig.trainedmodelSelect" placeholder="选择已有的模型">
+                <el-option v-for="model in trainedmodels" :key="model" :label="model.modelName" :value="model._id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="自定义批处理">
+              <el-switch v-model="batchConfig.operatorOn" />
+            </el-form-item>
+            <el-form-item v-if="batchConfig.operatorOn===true" label="算子选择">
+              <el-select v-model="batchConfig.operatorSelect" placeholder="选择批处理算子" @change="handleOperatorChange">
+                <el-option v-for="operator in operators" :key="operator" :label="operator.operatorName" :value="operator._id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item v-if="batchConfig.operatorOn===true" label="算子调整">
+              <el-button type="success" round size="small" @click="batchConfig.show=true">点击调整</el-button>
+            </el-form-item>
+            <el-button type="primary" style="margin:10px 0px 0px 120px" :loading="dataStatus.batchStatus==='处理中'" @click="handleBatchRun()">{{ dataStatus.batchStatus==='处理中'?'处理中':'开始处理' }}</el-button>
+          </el-form>
+        </el-card>
+      </el-col>
+      <el-col :span="15">
+        <el-card shadow="hover" class="feature-config">
+          <div slot="header" class="clearfix" style="vertical-align:middle">
+            <span>基本信息</span>
+          </div>
+          <el-row>
+            <el-col :span="12">
+              <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                <el-form-item label="批处理状态">
+                  <span>{{ dataStatus.batchStatus }}</span>
                 </el-form-item>
-                <el-form-item label="自定义批处理">
-                  <el-switch v-model="batchConfig.operatorOn" />
+                <el-form-item label="任务类型">
+                  <span>{{ dataStatus.taskType }}</span>
                 </el-form-item>
-                <el-form-item v-if="batchConfig.operatorOn===true" label="算子选择">
-                  <el-select v-model="batchConfig.operatorSelect" placeholder="选择批处理算子" @change="handleOperatorChange">
-                    <el-option v-for="operator in operators" :key="operator" :label="operator.operatorName" :value="operator._id" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item v-if="batchConfig.operatorOn===true" label="算子调整">
-                  <el-button type="success" round size="small" @click="batchConfig.show=true">点击调整</el-button>
-                </el-form-item>
-                <el-button type="primary" style="margin:10px 0px 0px 120px" :loading="dataStatus.batchStatus==='处理中'" @click="handleBatchRun()">{{ dataStatus.batchStatus==='处理中'?'处理中':'开始处理' }}</el-button>
-              </el-form>
-            </el-card>
-          </el-col>
-          <el-col :span="14">
-            <el-card shadow="never" class="feature-config">
-              <div slot="header" class="clearfix" style="vertical-align:middle">
-                <span>基本信息</span>
-              </div>
-              <el-row>
-                <el-col :span="12">
-                  <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
-                    <el-form-item label="批处理状态">
-                      <span>{{ dataStatus.batchStatus }}</span>
-                    </el-form-item>
-                    <el-form-item label="任务类型">
-                      <span>{{ dataStatus.taskType }}</span>
-                    </el-form-item>
-                    <!-- <el-form-item label="运行时间">
+                <!-- <el-form-item label="运行时间">
                   <span>{{ getCalTime() }}</span>
                 </el-form-item> -->
-                    <el-form-item label="结果操作">
-                      <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">导出结果</el-button>
-                    </el-form-item>
-                  </el-form>
-                </el-col>
-                <el-col :span="12">
-                  <el-form ref="form" :model="dataInfo" label-width="100px" style="width:300px">
-                    <el-form-item label="拓展应用">
-                      <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">知识图谱</el-button>
-                    </el-form-item>
-                  </el-form>
-                </el-col>
-              </el-row>
-
-            </el-card>
-
-          </el-col>
-        </el-row>
-      </div>
-    </el-card>
+                <el-form-item label="结果操作">
+                  <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">导出结果</el-button>
+                </el-form-item>
+              </el-form>
+            </el-col>
+            <el-col :span="12">
+              <el-form ref="form" :model="dataInfo" label-width="100px" style="width:300px">
+                <el-form-item label="拓展应用">
+                  <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">知识图谱</el-button>
+                </el-form-item>
+              </el-form>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-col>
+    </el-row>
 
     <transition name="el-zoom-in-top">
-      <el-card v-if="dataStatus.batchStatus==='处理完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
-        <div style="margin-bottom:40px">
-          <span style="font-size:25px">批处理结果</span>
+      <el-card v-if="dataStatus.batchStatus==='处理完成'" shadow="hover" style="margin-top:30px">
+        <div slot="header" class="clearfix" style="vertical-align:middle">
+          <span>批处理结果</span>
         </div>
         <data-detail-table ref="result" :datasetid="dataStatus.resultDataset" :task-type="dataStatus.taskType" />
       </el-card>

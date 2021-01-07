@@ -151,7 +151,7 @@
 
     <!-- 数据标注对话框 -->
     <el-dialog title="标注任务配置" :visible.sync="annotation.configDialogShow">
-      <component :is="annotation.dialogComponent" ref="annotationDialogComponent" :clickid="annotation.clickID" @closeConfigDialog="closeConfigDialog" />
+      <component :is="annotation.dialogComponent" ref="annotationDialogComponent" :clickid="annotation.clickID" @configDialogClose="configDialogClose" />
     </el-dialog>
 
   </div>
@@ -286,7 +286,7 @@ export default {
         })
       })
     },
-    closeConfigDialog() {
+    configDialogClose() {
       this.annotation.configDialogShow = false
       this.$router.push('/process-manage/annotation/data-detail/' + this.listQuery.id)
     },
@@ -316,7 +316,7 @@ export default {
         }
         this.$refs.annotationDialogComponent.init()
       } else {
-        this.closeConfigDialog()
+        this.configDialogClose()
       }
     }
   }

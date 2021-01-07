@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div>
     <train-manage-table />
   </div>
 </template>

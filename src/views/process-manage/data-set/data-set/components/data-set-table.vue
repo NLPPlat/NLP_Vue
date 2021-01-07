@@ -64,7 +64,7 @@
           </el-popover>
         </template>
       </el-table-column>
-      <el-table-column label="归属者" column-key="username" width="100px" align="center">
+      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.username }}</span>
         </template>
@@ -82,12 +82,12 @@
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务类型" column-key="taskType" width="160px" align="center">
+      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="160px" align="center">
         <template slot-scope="{row}">
           <el-tag>{{ row.taskType }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="任务状态" column-key="analyseStatus" class-name="status-col" width="120px">
+      <el-table-column label="任务状态" column-key="analyseStatus" :filters="statusFilter" class-name="status-col" width="120px">
         <template slot-scope="{row}">
           <el-tag :type="row.analyseStatus | statusFilter">
             {{ row.analyseStatus }}
@@ -171,7 +171,8 @@
 <script>
 import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoUpdate } from '@/api/common/dataset'
 import { pipelinesForUserFetch } from '@/api/common/pipeline'
-import { datasetWritePermission } from '@/utils/permission'
+import { writePerssion } from '@/utils/permission'
+
 import Pagination from '@/components/Pagination'
 
 export default {
@@ -209,7 +210,17 @@ export default {
       },
       taskTypeOptions: [],
       usernameOptions: ['自己', '他人'],
+      analyseStatusOptions: ['解析中', '解析完成'],
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
+      taskTypeFilter: [],
+      statusFilter: [
+        { text: '解析中', value: '解析中' },
+        { text: '解析完成', value: '解析完成' }
+      ],
+      usernameFilter: [
+        { text: '自己', value: '自己' },
+        { text: '他人', value: '他人' }
+      ],
       downloadLoading: false,
       datasetCopy: {
         copyDialogVisible: false,
@@ -240,6 +251,7 @@ export default {
   },
   created() {
     this.taskTypeOptions = this.$store.state.taskTypes.taskType
+    this.taskTypeFilter = this.$store.state.taskTypes.taskTypeFilter
     this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
   },
@@ -284,12 +296,16 @@ export default {
       return sort === `+${key}` ? 'ascending' : 'descending'
     },
     filterChange(obj) {
-      this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      if (obj[Object.keys(obj)[0]].length === 0) {
+        this.listQuery[Object.keys(obj)[0]] = this[Object.keys(obj)[0] + 'Options']
+      } else {
+        this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      }
       this.getList()
     },
     handleSearch() {
       if (this.searchQuery.usernameSelect === '') {
-        this.listQuery.username = ['自己', '他人']
+        this.listQuery.username = this.usernameOptions
       } else {
         this.listQuery.username = [this.searchQuery.usernameSelect]
       }
@@ -358,6 +374,7 @@ export default {
         this.$message.success('权限更改成功!')
       })
     },
+    // 工具系列函数
     // 数据集拷贝对话框弹出
     copyDialogShow(row) {
       if (this.listQuery.switchDataset === '训练数据集') {
@@ -371,12 +388,11 @@ export default {
         this.pipelinesFetch(row.taskType)
       }
     },
-    // 工具函数
     handleDataUpload() {
       this.$router.push('/process-manage/data-upload')
     },
     permissionCheck(username) {
-      return datasetWritePermission(username)
+      return writePerssion(username)
     }
   }
 }

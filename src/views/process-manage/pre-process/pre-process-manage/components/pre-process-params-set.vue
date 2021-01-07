@@ -32,6 +32,7 @@
 </template>
 
 <script>
+import { resourcesFetch } from '@/api/common/resource'
 
 export default {
   name: 'PreProcessParamsDialog',
@@ -52,11 +53,21 @@ export default {
         preprocessParamsIntroduction: {},
         preprocessParamsTools: {},
         preprocessParamsSelect: ''
+      },
+      resourcesListQuery: {
+        type: 'all',
+        sort: '-id',
+        resourceName: '',
+        username: ['自己', '他人'],
+        resourceType: ['停用词表']
       }
     }
   },
   created() {
     this.getParams()
+    if (this.preprocessName === '去停用词') {
+      this.getStopwordsList()
+    }
   },
   methods: {
     getParams() {
@@ -65,6 +76,14 @@ export default {
       if ((this.preprocessName + '选项') in this.$store.state.preprocessParams) {
         this.preprocessDialog.preprocessParamsTools = this.$store.state.preprocessParams[this.preprocessName + '选项']
       }
+    },
+    getStopwordsList() {
+      resourcesFetch(this.resourcesListQuery).then(response => {
+        this.preprocessDialog.preprocessParamsTools['list'] = []
+        for (var i = 0; i < response.data.items.length; i++) {
+          this.preprocessDialog.preprocessParamsTools['list'].push(response.data.items[i]['resourceName'])
+        }
+      })
     },
     confirmParams() {
       this.$emit('getPreprocessParams', this.preprocessDialog.preprocessParams)

@@ -1,191 +1,227 @@
 <template>
-  <div class="app-container">
+  <div ref="container" class="app-container" style="background-color:#f0f3f5;">
 
-    <el-card v-if="datasetInfo.splitStatus==='未完成' || datasetInfo.modelStatus==='未完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-bottom:50px">
-      <div style="margin-bottom:40px">
-        <span style="font-size:25px">数据集配置</span>
-      </div>
-      <div>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="9">
-            <el-card shadow="never" class="feature-config">
-              <div slot="header" class="clearfix" style="vertical-align:middle">
-                <span>数据切割</span>
-                <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 3px" type="text" @click="handleFeaturesSplit('不跳过')">确认配置</el-button>
-                <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 9px" type="text" @click="handleFeaturesSplit('跳过')">跳过配置</el-button>
-                <span v-else style="float: right;display:inline"><i class="el-icon-check el-icon--right" /> </span>
-                <!-- <el-button v-else type="success" icon="el-icon-check" circle size="mini" style="float: right;margin:0px" /> -->
-              </div>
-              <el-form ref="form" :model="featuresConfig" label-width="100px" style="width:300px">
-                <el-form-item label="Shape">
-                  <span>{{ datasetInfo.featuresShape }}</span>
-                </el-form-item>
-                <el-form-item label="Stratify">
-                  <el-select v-model="featuresConfig.stratify" placeholder="选择参数值" :disabled="datasetInfo.splitStatus==='已完成'">
-                    <el-option label="None" value="None" />
-                    <el-option label="x" value="x" />
-                    <el-option label="y" value="y" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="训练集比例">
-                  <el-slider v-model="featuresConfig.trainRate" :format-tooltip="formatTooltip" :disabled="datasetInfo.splitStatus==='已完成'" />
-                </el-form-item>
-              </el-form>
-            </el-card>
-          </el-col>
-          <el-col :span="9">
-            <el-card shadow="never" class="feature-config">
-              <div slot="header" class="clearfix">
-                <span>模型载入</span>
-                <el-button v-if="datasetInfo.modelStatus==='未完成'" style="float: right; padding: 3px 0" type="text" @click="handleModelUpdate()">确认配置</el-button>
-                <span v-else style="float: right;display:inline"><i class="el-icon-check el-icon--right" /> </span>
-              </div>
-              <el-form ref="form" :model="modelConfig" label-width="100px" style="width:300px">
-                <el-form-item label="基础模型">
-                  <el-select v-model="modelConfig.modelSelect" placeholder="选择已有的模型" :disabled="datasetInfo.modelStatus==='已完成'" @change="handleBaseModelChange">
-                    <el-option v-for="model in models" :key="model._id" :label="model.modelName" :value="model._id" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="模型命名">
-                  <el-input v-model="modelConfig.modelName" placeholder="请输入名称" :disabled="datasetInfo.modelStatus==='已完成'" />
-                </el-form-item>
-                <el-form-item label="模型调整">
-                  <el-button type="success" round size="small" :disabled="datasetInfo.modelStatus==='已完成'" @click="modelConfig.show=true">点击调整</el-button>
-                </el-form-item>
-              </el-form>
-            </el-card>
-          </el-col>
-          <el-col :span="5">
-            <el-card shadow="never" class="feature-config" />
-          </el-col>
-        </el-row>
-      </div>
-    </el-card>
+    <!-- 第一行：任务配置行 -->
+    <el-row type="flex" justify="space-between" :gutter="20">
 
+      <el-col :span="8">
+        <el-card shadow="hover" class="feature-config">
+          <div slot="header" class="clearfix" style="vertical-align:middle">
+            <span>任务信息</span>
+          </div>
+          <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+            <el-form-item label="任务ID">
+              <span>{{ datasetid }}</span>
+            </el-form-item>
+            <el-form-item label="任务名称">
+              <span>{{ taskName }}</span>
+            </el-form-item>
+            <el-form-item label="任务类型">
+              <span>{{ taskType }}</span>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-col>
+
+      <el-col :span="8">
+        <el-card shadow="hover" class="feature-config">
+          <div slot="header" class="clearfix" style="vertical-align:middle">
+            <span>训练集/测试集切割</span>
+            <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 3px" type="text" @click="handleFeaturesSplit('不跳过')">确认配置</el-button>
+            <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 9px" type="text" @click="handleFeaturesSplit('跳过')">跳过配置</el-button>
+            <span v-else style="float: right;display:inline"><i class="el-icon-check el-icon--right" /> </span>
+          </div>
+          <el-form ref="form" :model="featuresConfig" label-width="100px" style="width:300px">
+            <el-form-item label="Shape">
+              <span>{{ datasetInfo.featuresShape }}</span>
+            </el-form-item>
+            <el-form-item label="Stratify">
+              <el-select v-model="featuresConfig.stratify" placeholder="选择参数值" :disabled="datasetInfo.splitStatus==='已完成'">
+                <el-option label="None" value="None" />
+                <el-option label="x" value="x" />
+                <el-option label="y" value="y" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="训练集比例">
+              <el-slider v-model="featuresConfig.trainRate" :format-tooltip="formatTooltip" :disabled="datasetInfo.splitStatus==='已完成'" />
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-col>
+
+      <el-col :span="8">
+        <el-card shadow="hover" class="feature-config">
+          <div slot="header" class="clearfix">
+            <span>模型载入</span>
+            <el-button v-if="datasetInfo.modelStatus==='未完成'" style="float: right; padding: 3px 0" type="text" @click="handleModelUpdate()">确认配置</el-button>
+            <span v-else style="float: right;display:inline"><i class="el-icon-check el-icon--right" /> </span>
+          </div>
+          <el-form ref="form" :model="modelConfig" label-width="100px" style="width:300px">
+            <el-form-item label="基础模型">
+              <el-select v-model="modelConfig.modelSelect" placeholder="选择已有的模型代码" :disabled="datasetInfo.modelStatus==='已完成'" @change="handleBaseModelChange">
+                <el-option v-for="model in models" :key="model._id" :label="model.modelName" :value="model._id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="模型命名">
+              <el-input v-model="modelConfig.modelName" placeholder="输入要训练的模型名称" :disabled="datasetInfo.modelStatus==='已完成'" />
+            </el-form-item>
+            <el-form-item label="模型调整">
+              <el-button type="success" round size="small" :disabled="datasetInfo.modelStatus==='已完成'" @click="modelConfig.show=true">点击调整</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-col>
+
+    </el-row>
+
+    <!-- 第二行：训练信息行 -->
     <transition name="el-zoom-in-top">
-      <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;">
-        <div style="margin-bottom:40px">
-          <span style="font-size:25px">数据集信息</span>
-        </div>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="9">
-            <el-card shadow="never" class="feature-info">
-              <div slot="header" class="clearfix" style="vertical-align:middle">
-                <span>基本信息</span>
-              </div>
-              <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
-                <el-form-item label="训练集Shape">
-                  <span>{{ datasetInfo.trainShape }}</span>
-                </el-form-item>
-                <el-form-item label="测试集Shape">
-                  <span>{{ datasetInfo.testShape }}</span>
-                </el-form-item>
-                <el-form-item label="训练模型名称">
-                  <span>{{ modelConfig.modelName }}</span>
-                </el-form-item>
-              </el-form>
-            </el-card>
-          </el-col>
-          <el-col :span="14">
-            <el-card shadow="never" class="feature-info">
-              <div slot="header" class="clearfix" style="vertical-align:middle">
-                <span>训练信息</span>
-              </div>
+      <el-row type="flex" justify="space-between" style="margin-top:20px" :gutter="20">
+
+        <el-col :span="12">
+          <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" class="feature-info" shadow="hover">
+            <div slot="header" class="clearfix" style="vertical-align:middle">
+              <span>数据集与模型信息</span>
+            </div>
+            <el-row>
+              <el-col :span="12">
+                <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                  <el-form-item label="数据集Shape">
+                    <span>{{ datasetInfo.featuresShape }}</span>
+                  </el-form-item>
+                  <el-form-item label="训练集Shape">
+                    <span>{{ datasetInfo.trainShape }}</span>
+                  </el-form-item>
+                  <el-form-item label="测试集Shape">
+                    <span>{{ datasetInfo.testShape }}</span>
+                  </el-form-item>
+
+                </el-form>
+              </el-col>
+              <el-col :span="12">
+                <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                  <el-form-item label="训练模型名称">
+                    <span>{{ modelConfig.modelName }}</span>
+                  </el-form-item>
+                  <el-form-item label="模型运行平台">
+                    <span>Keras</span>
+                  </el-form-item>
+                </el-form>
+              </el-col>
+            </el-row>
+
+          </el-card>
+        </el-col>
+
+        <el-col :span="12">
+          <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" class="feature-info" shadow="hover">
+            <div slot="header" class="clearfix" style="vertical-align:middle">
+              <span>训练状态与结果</span>
+            </div>
+            <el-row>
+              <el-col :span="12">
+                <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                  <el-form-item label="训练状态">
+                    <span>{{ trainedmodel.trainStatus }}</span>
+                  </el-form-item>
+                  <el-form-item label="训练时间">
+                    <span>{{ getCalTime() }}</span>
+                  </el-form-item>
+                  <el-form-item label="模型操作">
+                    <el-button :disabled="trainedmodel.trainStatus!=='已完成'" style="float:left;" type="text" @click="confirmDownload">下载模型</el-button>
+                  </el-form-item>
+                </el-form>
+              </el-col>
+              <el-col :span="12">
+                <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                  <el-form-item label="Accuracy">
+                    <span>{{ trainedmodel.evaluation['accuracy'] }}</span>
+                  </el-form-item>
+                  <el-form-item label="Precision">
+                    <span>{{ trainedmodel.evaluation['precision'] }}</span>
+                  </el-form-item>
+                  <el-form-item label="Recall">
+                    <span>{{ trainedmodel.evaluation['recall'] }}</span>
+                  </el-form-item>
+                  <el-form-item label="F1">
+                    <span>{{ trainedmodel.evaluation['f1'] }}</span>
+                  </el-form-item>
+                </el-form>
+              </el-col>
+            </el-row>
+          </el-card>
+        </el-col>
+
+      </el-row>
+    </transition>
+
+    <!-- 第三行：训练控制与超参数调整 -->
+    <transition name="el-zoom-in-top">
+      <el-row type="flex" justify="space-between" style="margin-top:20px" :gutter="20">
+
+        <el-col :span="8">
+          <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" class="feature-config" shadow="hover">
+            <div slot="header" class="clearfix" style="vertical-align:middle">
+              <span>训练控制项</span>
+            </div>
+            <el-button type="primary" style="margin:30px 0px 0px 40px" :loading="trainedmodel.trainStatus==='训练中'" @click="handleModelRun()">{{ trainedmodel.trainStatus==='训练中'?'训练中':'开始训练' }}</el-button>
+            <el-button type="success" style="margin:30px 0px 0px 40px" @click="trainedmodel.codeshow=true">模型调整</el-button>
+            <el-button type="danger" style="margin:30px 0px 0px 40px">停止训练</el-button>
+            <el-button type="success" style="margin:30px 0px 0px 40px" :disabled="trainedmodel.trainStatus!=='已完成'">模型导出</el-button>
+
+          </el-card>
+        </el-col>
+
+        <el-col :span="16">
+          <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" class="feature-config" shadow="hover">
+            <div slot="header" class="clearfix" style="vertical-align:middle">
+              <span>超参数调整</span>
+            </div>
+            <el-form ref="form" :model="trainedmodel.modelParams" label-width="100px" style="width:100%">
               <el-row>
-                <el-col :span="12">
-                  <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
-                    <el-form-item label="训练状态">
-                      <span>{{ trainedmodel.trainStatus }}</span>
-                    </el-form-item>
-                    <el-form-item label="训练时间">
-                      <span>{{ getCalTime() }}</span>
-                    </el-form-item>
-                    <el-form-item label="模型操作">
-                      <el-button :disabled="trainedmodel.trainStatus!=='已完成'" style="float:left;" type="text" @click="confirmDownload">下载模型</el-button>
-                    </el-form-item>
-                  </el-form>
-                </el-col>
-                <el-col :span="12">
-                  <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
-                    <el-form-item label="Accuracy">
-                      <span>{{ trainedmodel.evaluation['accuracy'] }}</span>
-                    </el-form-item>
-                    <el-form-item label="Precision">
-                      <span>{{ trainedmodel.evaluation['precision'] }}</span>
-                    </el-form-item>
-                    <el-form-item label="Recall">
-                      <span>{{ trainedmodel.evaluation['recall'] }}</span>
-                    </el-form-item>
-                    <el-form-item label="F1">
-                      <span>{{ trainedmodel.evaluation['f1'] }}</span>
-                    </el-form-item>
-                  </el-form>
+                <el-col v-for="key in Object.keys(trainedmodel.modelParams)" :key="key" :span="8">
+                  <el-form-item :label="key">
+                    <el-input v-model="trainedmodel.modelParams[key]" />
+                  </el-form-item>
                 </el-col>
               </el-row>
+            </el-form>
+          </el-card>
+        </el-col>
 
-            </el-card>
-          </el-col>
-        </el-row>
-      </el-card>
+      </el-row>
     </transition>
 
+    <!-- 第四行：结果展示 -->
     <transition name="el-zoom-in-top">
-      <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
-        <div style="margin-bottom:40px">
-          <span style="font-size:25px">训练控制台</span>
-        </div>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="5">
-            <el-card shadow="never" class="feature-config">
-              <el-button type="primary" style="margin:30px 0px 0px 40px" :loading="trainedmodel.trainStatus==='训练中'" @click="handleModelRun()">{{ trainedmodel.trainStatus==='训练中'?'训练中':'开始训练' }}</el-button>
-              <el-button type="success" style="margin:30px 0px 0px 40px" @click="trainedmodel.codeshow=true">模型调整</el-button>
-            </el-card>
-          </el-col>
-          <el-col :span="18">
-            <el-card shadow="never" class="feature-config">
-              <div slot="header" class="clearfix" style="vertical-align:middle">
-                <span>超参数调整</span>
-              </div>
-              <el-form ref="form" :model="trainedmodel.modelParams" label-width="100px" style="width:100%">
-                <el-row>
-                  <el-col v-for="key in Object.keys(trainedmodel.modelParams)" :key="key" :span="8">
-                    <el-form-item :label="key">
-                      <el-input v-model="trainedmodel.modelParams[key]" />
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-              </el-form>
-            </el-card>
-          </el-col>
-        </el-row>
-      </el-card>
-    </transition>
+      <el-row type="flex" justify="space-between" style="margin-top:20px" :gutter="20">
 
-    <transition name="el-zoom-in-top">
-      <el-card v-if="trainedmodel.trainStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
-        <div style="margin-bottom:40px">
-          <span style="font-size:25px">输出控制台</span>
-        </div>
-        <div class="editor-container">
-          <python-console ref="pythonConsole" v-model="trainedmodel.result" />
-        </div>
-      </el-card>
-    </transition>
+        <el-col :span="12">
+          <el-card v-if="trainedmodel.trainStatus==='已完成'" shadow="hover" class="feature-result">
 
-    <transition name="el-zoom-in-top">
-      <el-card v-if="trainedmodel.trainStatus==='已完成'" shadow="hover" style="width:100%;background-color:#f5f5f5;margin-top:50px">
-        <div style="margin-bottom:40px">
-          <span style="font-size:25px">图形展示窗</span>
-        </div>
-        <el-tabs type="border-card">
-          <el-tab-pane v-for="key in Object.keys(trainedmodel.figs)" :key="key" :label="key">
-            <el-image
-              :src="trainedmodel.figs[key]"
-              :fit="fit"
-            />
-          </el-tab-pane>
-        </el-tabs>
-      </el-card>
+            <el-tabs>
+              <el-tab-pane v-for="key in Object.keys(trainedmodel.figs)" :key="key" :label="key">
+                <el-image
+                  :src="trainedmodel.figs[key]"
+                  :fit="fit"
+                />
+              </el-tab-pane>
+            </el-tabs>
+          </el-card>
+        </el-col>
+
+        <el-col :span="12">
+          <el-card v-if="trainedmodel.trainStatus==='已完成'" shadow="hover" class="feature-result">
+            <div slot="header" class="clearfix">
+              <span>输出控制台</span>
+            </div>
+            <div class="editor-container">
+              <python-console ref="pythonConsole" v-model="trainedmodel.result" />
+            </div>
+          </el-card>
+        </el-col>
+
+      </el-row>
     </transition>
 
     <el-dialog
@@ -227,15 +263,15 @@
 </template>
 
 <script>
-import axios from 'axios'
 
-import PythonEditor from '@/components/PythonEditor'
-import PythonConsole from '@/components/PythonConsole'
-
-import { datasetInfoFetch } from '@/api/common/dataset'
 import { modelsForUserFetch, modelFetch, trainedmodelFetch } from '@/api/common/model'
 import { featuresSplit, modelUpdate, trainedModelRun, codeUpdate } from '@/api/process-manage/model-train'
+import { datasetInfoFetch } from '@/api/common/dataset'
 import { calTime } from '@/utils'
+
+import axios from 'axios'
+import PythonEditor from '@/components/PythonEditor'
+import PythonConsole from '@/components/PythonConsole'
 
 export default {
   name: 'TrainManageTable',
@@ -246,6 +282,8 @@ export default {
   data() {
     return {
       datasetid: '',
+      taskName: '',
+      taskType: '',
       datasetInfo: {},
       featuresConfig: {
         stratify: 'None',
@@ -296,6 +334,8 @@ export default {
     getInfo() {
       datasetInfoFetch({ 'datasetid': this.datasetid }).then(response => {
         this.datasetInfo = response.data
+        this.taskName = response.data.taskName
+        this.taskType = response.data.taskType
         this.featuresConfig.stratify = this.datasetInfo.splitStratify
         this.featuresConfig.trainRate = Math.round(this.datasetInfo.trainRate * 100)
         if (this.datasetInfo.modelStatus === '已完成') {
@@ -414,10 +454,14 @@ export default {
 <style scoped>
 
 .feature-config{
-  height:250px
+  height:280px
 }
 
 .feature-info{
   height:300px
+}
+
+.feature-result{
+  height:530px
 }
 </style>

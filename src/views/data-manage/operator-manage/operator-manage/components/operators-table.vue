@@ -1,24 +1,21 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.operatorName" placeholder="任务名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.operatorName" placeholder="算子名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-select v-model="searchQuery.usernameSelect" placeholder="归属者" clearable style="width: 90px" class="filter-item">
         <el-option v-for="item in usernameOptions" :key="item" :label="item" :value="item" />
       </el-select>
-      <el-select v-model="searchQuery.operatorTypeSelect" placeholder="任务类型" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="item in operatorTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+      <el-select v-model="searchQuery.operatorTypeSelect" placeholder="算子类型" clearable class="filter-item" style="width: 130px">
+        <el-option v-for="item in operatorTypeOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
       </el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleOperatorAdd">
         算子添加
-      </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
-        算子列表导出
       </el-button>
     </div>
 
@@ -53,7 +50,7 @@
                 <el-input v-model="row.desc" type="textarea" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.operatorName,row.desc)">保存</el-button>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row)">保存</el-button>
               </el-form-item>
             </el-form>
             <span slot="reference" class="link-type">{{ row.operatorName }}</span>
@@ -67,7 +64,7 @@
       </el-table-column>
       <el-table-column label="公开性" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.publicity" :disabled="row.username!=$store.state.user.username">
+          <el-radio-group v-model="row.publicity" :disabled="!permissionCheck(row.username)" @change="handlePublicityChange(row)">
             <el-radio-button label="公开" />
             <el-radio-button label="不公开" />
           </el-radio-group>
@@ -80,14 +77,14 @@
       </el-table-column>
       <el-table-column label="算子类型" column-key="operatorType" :filters="operatorTypeFilter" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-tag>{{ row.operatorType | typeFilter }}</el-tag>
+          <el-tag>{{ row.operatorType }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <div v-if="row.username===$store.state.user.username">
+          <div v-if="permissionCheck(row.username)">
             <el-button type="primary" size="mini" @click="handleManage(row)">
-              查看算子
+              进入算子
             </el-button>
             <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               拷贝
@@ -111,29 +108,15 @@
 </template>
 
 <script>
-import { operatorsFetch } from '@/api/data-manage/operator'
-import waves from '@/directive/waves'
-import { parseTime } from '@/utils'
-import Pagination from '@/components/Pagination'
-const operatorTypeOptions = [
-  { key: '数据清洗算子', display_name: '数据清洗算子' },
-  { key: '预处理算子', display_name: '预处理算子' }
-]
+import { datafileInfoUpdate } from '@/api/common/datafile'
+import { operatorsFetch } from '@/api/common/operator'
+import { writePerssion } from '@/utils/permission'
 
-const calendarTypeKeyValue = operatorTypeOptions.reduce((acc, cur) => {
-  acc[cur.key] = cur.display_name
-  return acc
-}, {})
+import Pagination from '@/components/Pagination'
 
 export default {
   name: 'OperatorsTable',
   components: { Pagination },
-  directives: { waves },
-  filters: {
-    typeFilter(type) {
-      return calendarTypeKeyValue[type]
-    }
-  },
   data() {
     return {
       tableKey: 0,
@@ -145,25 +128,24 @@ export default {
         limit: 20,
         sort: '-id',
         operatorName: '',
-        datasetType: '训练数据集',
         username: ['自己', '他人'],
-        operatorType: ['数据清洗算子', '预处理算子']
+        operatorType: ['数据清洗算子', '预处理算子', '批处理算子']
       },
       searchQuery: {
         usernameSelect: '',
         operatorTypeSelect: ''
       },
       usernameOptions: ['自己', '他人'],
-      operatorTypeOptions,
+      operatorTypeOptions: ['数据清洗算子', '预处理算子', '批处理算子'],
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
-      downloadLoading: false,
       usernameFilter: [
         { text: '自己', value: '自己' },
         { text: '他人', value: '他人' }
       ],
       operatorTypeFilter: [
-        { key: '数据清洗算子', display_name: '数据清洗算子' },
-        { key: '预处理算子', display_name: '预处理算子' }
+        { text: '数据清洗算子', value: '数据清洗算子' },
+        { text: '预处理算子', value: '预处理算子' },
+        { text: '批处理算子', value: '批处理算子' }
       ],
       datasetCopy: {
         copyDialogVisible: false,
@@ -176,7 +158,9 @@ export default {
     this.getList()
   },
   methods: {
+    // 数据获取系列函数
     getList() {
+      console.log(this.listQuery)
       this.listLoading = true
       operatorsFetch(this.listQuery).then(response => {
         this.list = response.data.items
@@ -186,9 +170,7 @@ export default {
         }, 0 * 1000)
       })
     },
-    handleOperatorAdd() {
-      this.$router.push('/data-manage/operator-manage/codehub/' + '-1')
-    },
+    // 数据筛选系列函数
     handleFilter() {
       this.listQuery.page = 1
       this.getList()
@@ -207,71 +189,65 @@ export default {
       }
       this.handleFilter()
     },
-    handleManage(row) {
-      this.$router.push('/data-manage/operator-manage/codehub/' + row._id)
-    },
-    copyDialogShow(row) {
-      this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
-      this.datasetCopy.copyDialogVisible = true
-    },
-    handleDelete(row) {
-    },
-    handleInfoVerity(id, operatorName, desc) {
-    },
-    handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
-    },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['timestamp', 'title', 'type', 'importance', 'status']
-        const filterVal = ['timestamp', 'title', 'type', 'importance', 'status']
-        const data = this.formatJson(filterVal)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'table-list'
-        })
-        this.downloadLoading = false
-      })
-    },
-    formatJson(filterVal) {
-      return this.list.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
-        }
-      }))
-    },
     getSortClass: function(key) {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     },
     filterChange(obj) {
-      this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      if (obj[Object.keys(obj)[0]].length === 0) {
+        this.listQuery[Object.keys(obj)[0]] = this[Object.keys(obj)[0] + 'Options']
+      } else {
+        this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      }
       this.getList()
     },
     handleSearch() {
       if (this.searchQuery.usernameSelect === '') {
-        this.listQuery.username = ['自己', '他人']
+        this.listQuery.username = this.usernameOptions
       } else {
         this.listQuery.username = [this.searchQuery.usernameSelect]
       }
       if (this.searchQuery.operatorTypeSelect === '') {
-        this.listQuery.operatorType = ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本排序学习']
+        this.listQuery.operatorType = this.operatorTypeOptions
       } else {
         this.listQuery.operatorType = [this.searchQuery.operatorTypeSelect]
       }
       this.handleFilter()
     },
+    // 资源管理系列函数
+    handleManage(row) {
+      this.$router.push('/data-manage/operator-manage/codehub/' + row._id)
+    },
+    handleOperatorAdd() {
+      this.$router.push('/data-manage/operator-manage/codehub/' + '-1')
+    },
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false
     },
-    handleShowTest(row) {
-      console.log(this.$store.state.user.username)
-      return true
+    handleDelete(row) {
+    },
+    handlePublicityChange(row) {
+      datafileInfoUpdate({ 'datafileid': row._id, 'datafileType': '算子文件', 'infos': { 'publicity': row.publicity }}).then(response => {
+        this.$message.success('权限更改成功!')
+      })
+    },
+    handleInfoVerity(row) {
+      datafileInfoUpdate({ 'datafileid': row._id, 'datafileType': '算子文件', 'infos': { 'operatorName': row.operatorName, 'desc': row.desc }}).then(response => {
+        document.body.click()
+        this.$message.success('资源文件信息修改成功！')
+      })
+    },
+    handleDataVenation(row) {
+      this.$router.push('/data-manage/data-venation/' + row._id)
+    },
+    // 工具系列函数
+    copyDialogShow(row) {
+      this.datasetCopy.datasetInitid = row._id
+      this.datasetCopy.copyDes = ''
+      this.datasetCopy.copyDialogVisible = true
+    },
+    permissionCheck(username) {
+      return writePerssion(username)
     }
   }
 }

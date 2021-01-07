@@ -11,6 +11,8 @@ import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/python/python.js'
 // theme css
 import 'codemirror/theme/base16-light.css'
+import 'codemirror/theme/ttcn.css'
+import 'codemirror/theme/neo.css'
 
 import 'codemirror/addon/lint/lint.css'
 import 'codemirror/theme/rubyblue.css'
@@ -39,7 +41,7 @@ export default {
   mounted() {
     this.pythonEditor = CodeMirror.fromTextArea(this.$refs.textarea, {
       mode: 'python',
-      theme: 'base16-light',
+      theme: 'neo',
       gutters: ['CodeMirror-lint-markers'],
       lint: true
     })
@@ -67,12 +69,12 @@ export default {
     .CodeMirror {
       height: auto;
       min-height: 300px;
-      max-height: 500px;
+      max-height: 450px;
     }
 
     .CodeMirror-scroll {
       min-height: 300px;
-      max-height: 500px;
+      max-height: 450px;
     }
 
     .cm-s-rubyblue span.cm-string {

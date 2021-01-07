@@ -11,11 +11,8 @@
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
-      </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
-        数据集表格导出
       </el-button>
     </div>
 
@@ -58,14 +55,14 @@
 
         </template>
       </el-table-column>
-      <el-table-column label="归属者" column-key="username" width="100px" align="center">
+      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
       <el-table-column label="公开性" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.publicity" :disabled="row.username!=$store.state.user.username" @change="handlePublicityChange(row)">
+          <el-radio-group v-model="row.publicity" :disabled="!permissionCheck(row.username)" @change="handlePublicityChange(row)">
             <el-radio-button label="公开" />
             <el-radio-button label="不公开" />
           </el-radio-group>
@@ -76,14 +73,14 @@
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务类型" column-key="taskType" width="160px" align="center">
+      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="160px" align="center">
         <template slot-scope="{row}">
           <el-tag>{{ row.taskType }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row,$index}">
-          <div v-if="row.username===$store.state.user.username">
+          <div v-if="permissionCheck(row.username)">
             <el-button type="primary" size="mini" @click="handleManage(row)">
               进入预处理
             </el-button>
@@ -112,6 +109,7 @@
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
+    <!-- 数据集拷贝对话框 -->
     <el-dialog
       title="拷贝至"
       :visible.sync="datasetCopy.copyDialogVisible"
@@ -133,19 +131,18 @@
 
 <script>
 import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoUpdate } from '@/api/common/dataset'
-import waves from '@/directive/waves' // waves directive
-import { parseTime } from '@/utils'
-import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+import { writePerssion } from '@/utils/permission'
+
+import Pagination from '@/components/Pagination'
 
 export default {
   name: 'DataSetTable',
   components: { Pagination },
-  directives: { waves },
   filters: {
     statusFilter(status) {
       const statusMap = {
         '解析完成': 'success',
-        '解析中': 'info'
+        '解析中': 'primary'
       }
       return statusMap[status]
     }
@@ -173,6 +170,11 @@ export default {
       taskTypeOptions: [],
       usernameOptions: ['自己', '他人'],
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
+      taskTypeFilter: [],
+      usernameFilter: [
+        { text: '自己', value: '自己' },
+        { text: '他人', value: '他人' }
+      ],
       downloadLoading: false,
       datasetCopy: {
         copyDialogVisible: false,
@@ -184,10 +186,12 @@ export default {
   },
   created() {
     this.taskTypeOptions = this.$store.state.taskTypes.taskType
+    this.taskTypeFilter = this.$store.state.taskTypes.taskTypeFilter
     this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
   },
   methods: {
+    // 数据获取系列函数
     getList() {
       this.listLoading = true
       datasetListFetch(this.listQuery).then(response => {
@@ -198,6 +202,7 @@ export default {
         }, 0 * 1000)
       })
     },
+    // 数据筛选系列函数
     handleFilter() {
       this.listQuery.page = 1
       this.getList()
@@ -216,61 +221,16 @@ export default {
       }
       this.handleFilter()
     },
-    handleManage(row) {
-      this.$router.push('/process-manage/pre-process/pre-process-manage/' + row._id)
-    },
-    copyDialogShow(row) {
-      this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
-      this.datasetCopy.copyDialogVisible = true
-    },
-    handleDelete(row, index) {
-      datasetDelete({ 'datasetid': row._id, 'datasetType': '预处理数据集' }).then(response => {
-        this.$notify({
-          title: '删除成功',
-          message: '已从预处理数据集中移除',
-          type: 'success',
-          duration: 2000
-        })
-        this.getList()
-      })
-    },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['timestamp', 'title', 'type', 'importance', 'status']
-        const filterVal = ['timestamp', 'title', 'type', 'importance', 'status']
-        const data = this.formatJson(filterVal)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'table-list'
-        })
-        this.downloadLoading = false
-      })
-    },
-    handleInfoVerity(row) {
-      datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'taskName': row.taskName, 'desc': row.desc }}).then(response => {
-        document.body.click()
-        this.$message.success('任务信息修改成功！')
-        this.getList()
-      })
-    },
-    formatJson(filterVal) {
-      return this.list.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
-        }
-      }))
-    },
     getSortClass: function(key) {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     },
     filterChange(obj) {
-      this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      if (obj[Object.keys(obj)[0]].length === 0) {
+        this.listQuery[Object.keys(obj)[0]] = this[Object.keys(obj)[0] + 'Options']
+      } else {
+        this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      }
       this.getList()
     },
     handleSearch() {
@@ -285,6 +245,28 @@ export default {
         this.listQuery.taskType = [this.searchQuery.taskTypeSelect]
       }
       this.handleFilter()
+    },
+    // 数据集管理系列函数
+    handleManage(row) {
+      this.$router.push('/process-manage/pre-process/pre-process-manage/' + row._id)
+    },
+    handleDelete(row, index) {
+      datasetDelete({ 'datasetid': row._id, 'datasetType': '预处理数据集' }).then(response => {
+        this.$notify({
+          title: '删除成功',
+          message: '已从预处理数据集中移除',
+          type: 'success',
+          duration: 2000
+        })
+        this.getList()
+      })
+    },
+    handleInfoVerity(row) {
+      datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'taskName': row.taskName, 'desc': row.desc }}).then(response => {
+        document.body.click()
+        this.$message.success('任务信息修改成功！')
+        this.getList()
+      })
     },
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false
@@ -305,6 +287,15 @@ export default {
       datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'publicity': row.publicity }}).then(response => {
         this.$message.success('权限更改成功!')
       })
+    },
+    // 工具系列函数
+    copyDialogShow(row) {
+      this.datasetCopy.datasetInitid = row._id
+      this.datasetCopy.copyDes = ''
+      this.datasetCopy.copyDialogVisible = true
+    },
+    permissionCheck(username) {
+      return writePerssion(username)
     }
   }
 }

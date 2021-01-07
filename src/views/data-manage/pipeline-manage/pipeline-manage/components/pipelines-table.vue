@@ -1,21 +1,18 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.pipelineName" placeholder="任务名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.pipelineName" placeholder="管道名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-select v-model="searchQuery.usernameSelect" placeholder="归属者" clearable style="width: 90px" class="filter-item">
         <el-option v-for="item in usernameOptions" :key="item" :label="item" :value="item" />
       </el-select>
-      <el-select v-model="searchQuery.taskTypeSelect" placeholder="任务类型" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="item in taskTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+      <el-select v-model="searchQuery.taskTypeSelect" placeholder="适用类型" clearable class="filter-item" style="width: 130px">
+        <el-option v-for="item in taskTypeOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
-      </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
-        管道列表导出
       </el-button>
     </div>
 
@@ -50,7 +47,7 @@
                 <el-input v-model="row.desc" type="textarea" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.pipelineName,row.desc)">保存</el-button>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row)">保存</el-button>
               </el-form-item>
             </el-form>
             <span slot="reference" class="link-type">{{ row.pipelineName }}</span>
@@ -64,7 +61,7 @@
       </el-table-column>
       <el-table-column label="公开性" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.publicity" :disabled="row.username!=$store.state.user.username">
+          <el-radio-group v-model="row.publicity" :disabled="!permissionCheck(row.username)" @change="handlePublicityChange(row)">
             <el-radio-button label="公开" />
             <el-radio-button label="不公开" />
           </el-radio-group>
@@ -82,7 +79,7 @@
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <div v-if="row.username===$store.state.user.username">
+          <div v-if="permissionCheck(row.username)">
             <el-button type="primary" size="mini" @click="handleManage(row)">
               查看管道
             </el-button>
@@ -107,34 +104,15 @@
 </template>
 
 <script>
-import { pipelinesFetch } from '@/api/data-manage/pipeline'
-import waves from '@/directive/waves'
-import { parseTime } from '@/utils'
-import Pagination from '@/components/Pagination'
-const taskTypeOptions = [
-  { key: '通用单文本分类', display_name: '通用单文本分类' },
-  { key: '情感分析/意图识别', display_name: '情感分析/意图识别' },
-  { key: '实体关系抽取', display_name: '实体关系抽取' },
-  { key: '文本关系分析', display_name: '文本关系分析' },
-  { key: '文本配对', display_name: '文本配对' },
-  { key: '文本摘要', display_name: '文本摘要' },
-  { key: '文本排序学习', display_name: '文本排序学习' }
-]
+import { datafileInfoUpdate } from '@/api/common/datafile'
+import { pipelinesFetch } from '@/api/common/pipeline'
+import { writePerssion } from '@/utils/permission'
 
-const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
-  acc[cur.key] = cur.display_name
-  return acc
-}, {})
+import Pagination from '@/components/Pagination'
 
 export default {
   name: 'PipelinesTable',
   components: { Pagination },
-  directives: { waves },
-  filters: {
-    typeFilter(type) {
-      return calendarTypeKeyValue[type]
-    }
-  },
   data() {
     return {
       tableKey: 0,
@@ -144,47 +122,34 @@ export default {
       listQuery: {
         page: 1,
         limit: 20,
+        type: 'part',
         sort: '-id',
         pipelineName: '',
-        datasetType: '训练数据集',
         username: ['自己', '他人'],
-        taskType: ['通用单文本分类', '情感分析/意图识别', '实体关系抽取', '文本关系分析', '文本摘要', '文本配对', '文本排序学习']
+        taskType: []
       },
       searchQuery: {
         usernameSelect: '',
         taskTypeSelect: ''
       },
       usernameOptions: ['自己', '他人'],
-      taskTypeOptions,
+      taskTypeOptions: [],
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
-      downloadLoading: false,
       usernameFilter: [
         { text: '自己', value: '自己' },
         { text: '他人', value: '他人' }
       ],
-      taskTypeFilter: [
-        { text: '通用单文本分类', value: '通用单文本分类' },
-        { text: '情感分析/意图识别', value: '情感分析/意图识别' },
-        { text: '实体关系抽取', value: '实体关系抽取' },
-        { text: '文本关系分析', value: '文本关系分析' },
-        { text: '文本配对', value: '文本配对' },
-        { text: '文本摘要', value: '文本摘要' },
-        { text: '文本排序学习', value: '文本排序学习' }
-      ],
-      datasetCopy: {
-        copyDialogVisible: false,
-        copyDes: '',
-        datasetInitid: ''
-      },
-      upload: {
-        show: false
-      }
+      taskTypeFilter: []
     }
   },
   created() {
+    this.taskTypeOptions = this.$store.state.taskTypes.taskType
+    this.taskTypeFilter = this.$store.state.taskTypes.taskTypeFilter
+    this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
   },
   methods: {
+    // 数据获取系列函数
     getList() {
       this.listLoading = true
       pipelinesFetch(this.listQuery).then(response => {
@@ -195,6 +160,7 @@ export default {
         }, 0 * 1000)
       })
     },
+    // 数据筛选系列函数
     handleFilter() {
       this.listQuery.page = 1
       this.getList()
@@ -213,50 +179,16 @@ export default {
       }
       this.handleFilter()
     },
-    handleManage(row) {
-      this.$router.push('/data-manage/pipeline-manage/codehub/' + row._id)
-    },
-    copyDialogShow(row) {
-      this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
-      this.datasetCopy.copyDialogVisible = true
-    },
-    handleDelete(row) {
-    },
-    handleInfoVerity(id, pipelineName, desc) {
-    },
-    handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
-    },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['timestamp', 'title', 'type', 'importance', 'status']
-        const filterVal = ['timestamp', 'title', 'type', 'importance', 'status']
-        const data = this.formatJson(filterVal)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'table-list'
-        })
-        this.downloadLoading = false
-      })
-    },
-    formatJson(filterVal) {
-      return this.list.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
-        }
-      }))
-    },
     getSortClass: function(key) {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     },
     filterChange(obj) {
-      this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      if (obj[Object.keys(obj)[0]].length === 0) {
+        this.listQuery[Object.keys(obj)[0]] = this[Object.keys(obj)[0] + 'Options']
+      } else {
+        this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      }
       this.getList()
     },
     handleSearch() {
@@ -266,18 +198,38 @@ export default {
         this.listQuery.username = [this.searchQuery.usernameSelect]
       }
       if (this.searchQuery.taskTypeSelect === '') {
-        this.listQuery.taskType = ['停用词表', '预训练向量']
+        this.listQuery.taskType = this.taskTypeOptions
       } else {
         this.listQuery.taskType = [this.searchQuery.taskTypeSelect]
       }
       this.handleFilter()
     },
+    // 资源管理系列函数
+    handleManage(row) {
+      this.$router.push('/data-manage/pipeline-manage/codehub/' + row._id)
+    },
+    handleDelete(row) {
+    },
+    handleInfoVerity(row) {
+      datafileInfoUpdate({ 'datafileid': row._id, 'datafileType': '管道文件', 'infos': { 'pipelineName': row.pipelineName, 'desc': row.desc }}).then(response => {
+        document.body.click()
+        this.$message.success('资源文件信息修改成功！')
+      })
+    },
+    handlePublicityChange(row) {
+      datafileInfoUpdate({ 'datafileid': row._id, 'datafileType': '管道文件', 'infos': { 'publicity': row.publicity }}).then(response => {
+        this.$message.success('权限更改成功!')
+      })
+    },
+    handleDataVenation(row) {
+      this.$router.push('/data-manage/data-venation/' + row._id)
+    },
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false
     },
-    handleShowTest(row) {
-      console.log(this.$store.state.user.username)
-      return true
+    // 工具系列函数
+    permissionCheck(username) {
+      return writePerssion(username)
     }
   }
 }

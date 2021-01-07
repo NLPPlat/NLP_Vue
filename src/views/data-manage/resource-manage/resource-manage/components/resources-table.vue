@@ -1,24 +1,21 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.resourceName" placeholder="任务名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.resourceName" placeholder="资源名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-select v-model="searchQuery.usernameSelect" placeholder="归属者" clearable style="width: 90px" class="filter-item">
         <el-option v-for="item in usernameOptions" :key="item" :label="item" :value="item" />
       </el-select>
-      <el-select v-model="searchQuery.resourceTypeSelect" placeholder="任务类型" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="item in resourceTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+      <el-select v-model="searchQuery.resourceTypeSelect" placeholder="资源类型" clearable class="filter-item" style="width: 130px">
+        <el-option v-for="item in resourceTypeOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
       </el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleResourceAdd">
         资源添加
-      </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
-        资源列表导出
       </el-button>
     </div>
 
@@ -53,7 +50,7 @@
                 <el-input v-model="row.desc" type="textarea" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row._id,row.resourceName,row.desc)">保存</el-button>
+                <el-button type="primary" style="margin-left:150px" @click="handleInfoVerity(row)">保存</el-button>
               </el-form-item>
             </el-form>
             <span slot="reference" class="link-type">{{ row.resourceName }}</span>
@@ -67,7 +64,7 @@
       </el-table-column>
       <el-table-column label="公开性" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.publicity" :disabled="row.username!=$store.state.user.username">
+          <el-radio-group v-model="row.publicity" :disabled="!permissionCheck(row.username)" @change="handlePublicityChange(row)">
             <el-radio-button label="公开" />
             <el-radio-button label="不公开" />
           </el-radio-group>
@@ -80,12 +77,12 @@
       </el-table-column>
       <el-table-column label="资源类型" column-key="resourceType" :filters="resourceTypeFilter" width="180px" align="center">
         <template slot-scope="{row}">
-          <el-tag>{{ row.resourceType | typeFilter }}</el-tag>
+          <el-tag>{{ row.resourceType }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <div v-if="row.username===$store.state.user.username">
+          <div v-if="permissionCheck(row.username)">
             <el-button type="primary" size="mini" @click="handleManage(row)">
               查看资源
             </el-button>
@@ -112,32 +109,17 @@
 </template>
 
 <script>
-import { resourcesFetch } from '@/api/data-manage/resource'
-import waves from '@/directive/waves'
-import { parseTime } from '@/utils'
-import Pagination from '@/components/Pagination'
+import { datafileInfoUpdate } from '@/api/common/datafile'
+import { resourcesFetch } from '@/api/common/resource'
+import { writePerssion } from '@/utils/permission'
+
 import ResourceUpload from './resource-upload'
-const resourceTypeOptions = [
-  { key: '停用词表', display_name: '停用词表' },
-  { key: '预训练向量', display_name: '预训练向量' },
-  { key: '预训练向量', display_name: '预训练向量' }
 
-]
-
-const calendarTypeKeyValue = resourceTypeOptions.reduce((acc, cur) => {
-  acc[cur.key] = cur.display_name
-  return acc
-}, {})
+import Pagination from '@/components/Pagination'
 
 export default {
   name: 'ResourcesTable',
   components: { Pagination, ResourceUpload },
-  directives: { waves },
-  filters: {
-    typeFilter(type) {
-      return calendarTypeKeyValue[type]
-    }
-  },
   data() {
     return {
       tableKey: 0,
@@ -147,9 +129,9 @@ export default {
       listQuery: {
         page: 1,
         limit: 20,
+        type: 'part',
         sort: '-id',
         resourceName: '',
-        datasetType: '训练数据集',
         username: ['自己', '他人'],
         resourceType: ['停用词表', '预训练向量', '通用资源']
       },
@@ -157,34 +139,25 @@ export default {
         usernameSelect: '',
         resourceTypeSelect: ''
       },
+      resourceTypeOptions: ['停用词表', '预训练向量', '通用资源'],
       usernameOptions: ['自己', '他人'],
-      resourceTypeOptions,
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
-      downloadLoading: false,
       usernameFilter: [
         { text: '自己', value: '自己' },
         { text: '他人', value: '他人' }
       ],
       resourceTypeFilter: [
-        { key: '停用词表', display_name: '停用词表' },
-        { key: '预训练向量', display_name: '预训练向量' },
-        { key: '通用资源', display_name: '通用资源' }
-
-      ],
-      datasetCopy: {
-        copyDialogVisible: false,
-        copyDes: '',
-        datasetInitid: ''
-      },
-      upload: {
-        show: false
-      }
+        { text: '停用词表', value: '停用词表' },
+        { text: '预训练向量', value: '预训练向量' },
+        { text: '通用资源', value: '通用资源' }
+      ]
     }
   },
   created() {
     this.getList()
   },
   methods: {
+    // 数据获取系列函数
     getList() {
       this.listLoading = true
       resourcesFetch(this.listQuery).then(response => {
@@ -195,9 +168,7 @@ export default {
         }, 0 * 1000)
       })
     },
-    handleResourceAdd() {
-      this.$refs.ResourceUpload.showDialog()
-    },
+    // 数据筛选系列函数
     handleFilter() {
       this.listQuery.page = 1
       this.getList()
@@ -216,50 +187,16 @@ export default {
       }
       this.handleFilter()
     },
-    handleManage(row) {
-      this.$router.push('/data-manage/resource-manage/codehub/' + row._id)
-    },
-    copyDialogShow(row) {
-      this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
-      this.datasetCopy.copyDialogVisible = true
-    },
-    handleDelete(row) {
-    },
-    handleInfoVerity(id, resourceName, desc) {
-    },
-    handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
-    },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['timestamp', 'title', 'type', 'importance', 'status']
-        const filterVal = ['timestamp', 'title', 'type', 'importance', 'status']
-        const data = this.formatJson(filterVal)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'table-list'
-        })
-        this.downloadLoading = false
-      })
-    },
-    formatJson(filterVal) {
-      return this.list.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
-        }
-      }))
-    },
     getSortClass: function(key) {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     },
     filterChange(obj) {
-      this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      if (obj[Object.keys(obj)[0]].length === 0) {
+        this.listQuery[Object.keys(obj)[0]] = this[Object.keys(obj)[0] + 'Options']
+      } else {
+        this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      }
       this.getList()
     },
     handleSearch() {
@@ -275,12 +212,28 @@ export default {
       }
       this.handleFilter()
     },
-    handleCopy() {
-      this.datasetCopy.copyDialogVisible = false
+    // 资源管理系列函数
+    handleResourceAdd() {
+      this.$refs.ResourceUpload.showDialog()
     },
-    handleShowTest(row) {
-      console.log(this.$store.state.user.username)
-      return true
+    handleManage(row) {
+    },
+    handleDelete(row) {
+    },
+    handlePublicityChange(row) {
+      datafileInfoUpdate({ 'datafileid': row._id, 'datafileType': '资源文件', 'infos': { 'publicity': row.publicity }}).then(response => {
+        this.$message.success('权限更改成功!')
+      })
+    },
+    handleInfoVerity(row) {
+      datafileInfoUpdate({ 'datafileid': row._id, 'datafileType': '资源文件', 'infos': { 'resourceName': row.resourceName, 'desc': row.desc }}).then(response => {
+        document.body.click()
+        this.$message.success('资源文件信息修改成功！')
+      })
+    },
+    // 工具系列函数
+    permissionCheck(username) {
+      return writePerssion(username)
     }
   }
 }

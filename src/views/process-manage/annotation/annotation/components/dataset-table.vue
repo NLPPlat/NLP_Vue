@@ -11,11 +11,8 @@
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
-      </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
-        数据集表格导出
       </el-button>
     </div>
 
@@ -57,14 +54,14 @@
           </el-popover>
         </template>
       </el-table-column>
-      <el-table-column label="归属者" column-key="username" width="100px" align="center">
+      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
       <el-table-column label="共同标注" width="200px" align="center">
         <template slot-scope="{row}">
-          <el-radio-group v-model="row.annotationPublicity" :disabled="row.username!=$store.state.user.username" @change="handlePublicityChange(row)">
+          <el-radio-group v-model="row.annotationPublicity" :disabled="!permissionCheck(row.username)" @change="handlePublicityChange(row)">
             <el-radio-button label="允许" />
             <el-radio-button label="不允许" />
           </el-radio-group>
@@ -75,12 +72,12 @@
           <span>{{ (row.datetime.$date-8*60*60*1000) | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="任务类型" column-key="taskType" width="160px" align="center">
+      <el-table-column label="任务类型" column-key="taskType" :filters="taskTypeFilter" width="160px" align="center">
         <template slot-scope="{row}">
           <el-tag>{{ row.taskType }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="标注状态" column-key="annotationStatus" class-name="status-col" width="120px">
+      <el-table-column label="标注状态" column-key="annotationStatus" :filters="statusFilter" class-name="status-col" width="120px">
         <template slot-scope="{row}">
           <el-tag :type="row.annotationStatus | statusFilter">
             {{ row.annotationStatus }}
@@ -89,7 +86,7 @@
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="280px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <div v-if="row.username===$store.state.user.username&&row.annotationStatus==='未开始'">
+          <div v-if="permissionCheck(row.username)&&row.annotationStatus==='未开始'">
             <el-button type="primary" size="mini" @click="handleSetAnnotation(row)">
               配置任务
             </el-button>
@@ -120,8 +117,8 @@
             </el-button>
           </div>
           <div v-else>
-            <el-button type="primary" size="mini">
-              拷贝
+            <el-button size="mini" type="success" @click="handleManage(row)">
+              数据脉络
             </el-button>
           </div>
         </template>
@@ -130,8 +127,9 @@
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
+    <!-- 标注任务配置对话框 -->
     <el-dialog title="标注任务配置" :visible.sync="configDialogShow">
-      <component :is="dialogComponent" ref="dialogComponent" :clickid="clickID" @closeConfigDialog="closeConfigDialog" />
+      <component :is="dialogComponent" ref="dialogComponent" :clickid="clickID" @configDialogClose="configDialogClose" />
     </el-dialog>
 
   </div>
@@ -139,9 +137,8 @@
 
 <script>
 import { datasetListFetch, datasetInfoUpdate } from '@/api/common/dataset'
-import waves from '@/directive/waves'
-import { parseTime } from '@/utils'
-import Pagination from '@/components/Pagination'
+import { writePerssion } from '@/utils/permission'
+
 import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
 import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
 import L2rConfigDialog from '@/views/process-manage/annotation/components/l2r-config-dialog'
@@ -150,10 +147,11 @@ import ClassificationConfigDialog from '@/views/process-manage/annotation/compon
 import SentimentAnalysisConfigDialog from '@/views/process-manage/annotation/components/sentiment-analysis-config-dialog'
 import MatchingConfigDialog from '@/views/process-manage/annotation/components/matching-config-dialog'
 
+import Pagination from '@/components/Pagination'
+
 export default {
   name: 'DatasetTable',
   components: { Pagination, ExtractionConfigDialog, RelationAnalysisConfigDialog, L2rConfigDialog, SummaryConfigDialog, ClassificationConfigDialog, SentimentAnalysisConfigDialog, MatchingConfigDialog },
-  directives: { waves },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -189,16 +187,29 @@ export default {
       taskTypeOptions: [],
       usernameOptions: ['自己', '他人'],
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
+      annotationStatusOptions: ['未开始', '标注中', '标注完成'],
+      taskTypeFilter: [],
+      statusFilter: [
+        { text: '标注完成', value: '标注完成' },
+        { text: '标注中', value: '标注中' },
+        { text: '未开始', value: '未开始' }
+      ],
+      usernameFilter: [
+        { text: '自己', value: '自己' },
+        { text: '他人', value: '他人' }
+      ],
       downloadLoading: false,
       configDialogShow: false
     }
   },
   created() {
     this.taskTypeOptions = this.$store.state.taskTypes.taskType
+    this.taskTypeFilter = this.$store.state.taskTypes.taskTypeFilter
     this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
   },
   methods: {
+    // 数据获取系列函数
     getList() {
       this.listLoading = true
       datasetListFetch(this.listQuery).then(response => {
@@ -209,6 +220,7 @@ export default {
         }, 0 * 1000)
       })
     },
+    // 数据筛选系列函数
     handleFilter() {
       this.listQuery.page = 1
       this.getList()
@@ -227,6 +239,32 @@ export default {
       }
       this.handleFilter()
     },
+    getSortClass: function(key) {
+      const sort = this.listQuery.sort
+      return sort === `+${key}` ? 'ascending' : 'descending'
+    },
+    filterChange(obj) {
+      if (obj[Object.keys(obj)[0]].length === 0) {
+        this.listQuery[Object.keys(obj)[0]] = this[Object.keys(obj)[0] + 'Options']
+      } else {
+        this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
+      }
+      this.getList()
+    },
+    handleSearch() {
+      if (this.searchQuery.usernameSelect === '') {
+        this.listQuery.username = ['自己', '他人']
+      } else {
+        this.listQuery.username = [this.searchQuery.usernameSelect]
+      }
+      if (this.searchQuery.taskTypeSelect === '') {
+        this.listQuery.taskType = this.$store.state.taskTypes.taskType
+      } else {
+        this.listQuery.taskType = [this.searchQuery.taskTypeSelect]
+      }
+      this.handleFilter()
+    },
+    // 数据集管理系列函数
     handleInfoVerity(row) {
       datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'taskName': row.taskName, 'desc': row.desc }}).then(response => {
         document.body.click()
@@ -265,63 +303,6 @@ export default {
     handleManage(row) {
       this.$router.push('/process-manage/annotation/data-detail/' + row._id)
     },
-    handleDelete(row, index) {
-      this.$notify({
-        title: 'Success',
-        message: 'Delete Successfully',
-        type: 'success',
-        duration: 2000
-      })
-      this.list.splice(index, 1)
-    },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['timestamp', 'title', 'type', 'importance', 'status']
-        const filterVal = ['timestamp', 'title', 'type', 'importance', 'status']
-        const data = this.formatJson(filterVal)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'table-list'
-        })
-        this.downloadLoading = false
-      })
-    },
-    formatJson(filterVal) {
-      return this.list.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
-        }
-      }))
-    },
-    getSortClass: function(key) {
-      const sort = this.listQuery.sort
-      return sort === `+${key}` ? 'ascending' : 'descending'
-    },
-    filterChange(obj) {
-      this.listQuery[Object.keys(obj)[0]] = obj[Object.keys(obj)[0]]
-      this.getList()
-    },
-    handleSearch() {
-      if (this.searchQuery.usernameSelect === '') {
-        this.listQuery.username = ['自己', '他人']
-      } else {
-        this.listQuery.username = [this.searchQuery.usernameSelect]
-      }
-      if (this.searchQuery.taskTypeSelect === '') {
-        this.listQuery.taskType = this.$store.state.taskTypes.taskType
-      } else {
-        this.listQuery.taskType = [this.searchQuery.taskTypeSelect]
-      }
-      this.handleFilter()
-    },
-    closeConfigDialog() {
-      this.configDialogShow = false
-      this.getList()
-    },
     handlePublicityChange(row) {
       datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'annotationPublicity': row.annotationPublicity }}).then(response => {
         this.$message.success('权限更改成功!')
@@ -329,6 +310,14 @@ export default {
     },
     handleDataVenation(row) {
       this.$router.push('/data-manage/data-venation/original-dataset/' + row._id)
+    },
+    // 工具系列函数
+    configDialogClose() {
+      this.configDialogShow = false
+      this.getList()
+    },
+    permissionCheck(username) {
+      return writePerssion(username)
     }
   }
 }

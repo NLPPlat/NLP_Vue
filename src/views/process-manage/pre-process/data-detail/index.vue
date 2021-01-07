@@ -90,7 +90,7 @@
 import DataDetailTable from './components/data-detail-table'
 
 import { preprocessDataFetch, preprocessUpload } from '@/api/process-manage/preprocess'
-import { resourcesForUserFetch } from '@/api/common/resource'
+import { resourcesFetch } from '@/api/common/resource'
 
 export default {
   name: 'PreprocessDataDetail',
@@ -100,6 +100,13 @@ export default {
       listQuery: {
         datasetid: null,
         preprocessid: null
+      },
+      resourcesListQuery: {
+        type: 'all',
+        sort: '-id',
+        resourceName: '',
+        username: ['自己', '他人'],
+        resourceType: ['停用词表', '预训练向量', '通用资源']
       },
       natureConfig: {
         resourceSelect: '',
@@ -127,7 +134,7 @@ export default {
       })
     },
     getResource() {
-      resourcesForUserFetch().then(response => {
+      resourcesFetch(this.resourcesListQuery).then(response => {
         this.resources = response.data.items
       })
     },
