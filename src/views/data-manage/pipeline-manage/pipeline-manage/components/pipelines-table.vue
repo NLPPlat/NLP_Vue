@@ -81,7 +81,7 @@
         <template slot-scope="{row}">
           <div v-if="permissionCheck(row.username)">
             <el-button type="primary" size="mini" @click="handleManage(row)">
-              查看管道
+              进入管道
             </el-button>
             <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               拷贝
@@ -106,7 +106,7 @@
 <script>
 import { datafileInfoUpdate } from '@/api/common/datafile'
 import { pipelinesFetch } from '@/api/common/pipeline'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import Pagination from '@/components/Pagination'
 
@@ -206,7 +206,7 @@ export default {
     },
     // 资源管理系列函数
     handleManage(row) {
-      this.$router.push('/data-manage/pipeline-manage/codehub/' + row._id)
+      this.$router.push('/data-manage/pipeline-manage/pipeline-detail/' + row._id)
     },
     handleDelete(row) {
     },
@@ -229,7 +229,7 @@ export default {
     },
     // 工具系列函数
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }

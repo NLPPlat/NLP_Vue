@@ -14,9 +14,6 @@
       <el-button type="primary" @click="handleSetAnnotation()">
         数据标注
       </el-button>
-      <el-button type="primary" @click="copyDialogShow(row)">
-        拷贝
-      </el-button>
     </el-row>
 
     <el-table v-loading="listLoading" :data="list" border fit style="width: 100%">
@@ -132,23 +129,6 @@
       </el-row>
     </el-dialog>
 
-    <!-- 数据拷贝对话框 -->
-    <el-dialog
-      title="拷贝至"
-      :visible.sync="datasetCopy.copyDialogVisible"
-      width="30%"
-    >
-      <div style="text-align:center;width:100%;">
-        <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="训练数据集" border>训练数据集</el-radio>
-          <el-radio label="预处理数据集" border>预处理数据集</el-radio>
-        </el-radio-group>
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleCopy">确认</el-button>
-      </div>
-    </el-dialog>
-
     <!-- 数据标注对话框 -->
     <el-dialog title="标注任务配置" :visible.sync="annotation.configDialogShow">
       <component :is="annotation.dialogComponent" ref="annotationDialogComponent" :clickid="annotation.clickID" @configDialogClose="configDialogClose" />
@@ -158,7 +138,7 @@
 </template>
 
 <script>
-import { datasetCopy, datasetVectorsFetch, datasetInfoFetch, datasetVectorUpdate } from '@/api/common/dataset'
+import { datasetVectorsFetch, datasetInfoFetch, datasetVectorUpdate } from '@/api/common/dataset'
 import { dataCut } from '@/api/process-manage/data-set'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
@@ -187,6 +167,7 @@ export default {
       listLoading: true,
       total: 0,
       taskType: null,
+      datasetType: '',
       groupOn: 'off',
       titleContain: false,
       annotation: {
@@ -205,11 +186,6 @@ export default {
         show: false,
         level: '句子',
         tool: ''
-      },
-      datasetCopy: {
-        copyDialogVisible: false,
-        copyDes: '',
-        datasetInitid: ''
       }
     }
   },
@@ -233,6 +209,7 @@ export default {
       datasetInfoFetch({ 'datasetid': this.listQuery.datasetid }).then(response => {
         this.taskType = response.data.taskType
         this.groupOn = response.data.groupOn
+        this.datasetType = response.data.datasetType
         if (response.data.datasetType === '训练数据集') {
           this.annotation.status = response.data.annotationStatus
         }
@@ -267,33 +244,20 @@ export default {
       })
     },
     handleDataVenation() {
-      this.$router.push('/data-manage/data-venation/' + this.listQuery.datasetid)
-    },
-    copyDialogShow(row) {
-      this.datasetCopy.datasetInitid = this.listQuery.id
-      this.datasetCopy.copyDes = ''
-      this.datasetCopy.copyDialogVisible = true
-    },
-    handleCopy() {
-      this.datasetCopy.copyDialogVisible = false
-      datasetCopy({ 'datasetInitType': '训练数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
-        this.getList()
-        this.$notify({
-          title: '拷贝成功',
-          message: '可操作拷贝完成的数据集。',
-          type: 'success',
-          duration: 2000
-        })
-      })
+      if (this.datasetType === '训练数据集') {
+        this.$router.push('/data-manage/data-venation/original-dataset/' + this.listQuery.datasetid)
+      } else {
+        this.$router.push('/data-manage/data-venation/original-batch-dataset/' + this.listQuery.datasetid)
+      }
     },
     configDialogClose() {
       this.annotation.configDialogShow = false
-      this.$router.push('/process-manage/annotation/data-detail/' + this.listQuery.id)
+      this.$router.push('/process-manage/annotation/data-detail/' + this.listQuery.datasetid)
     },
     handleSetAnnotation() {
       if (this.annotation.status === '未开始') {
         this.annotation.configDialogShow = true
-        this.annotation.clickID = this.listQuery.id
+        this.annotation.clickID = this.listQuery.datasetid
         switch (this.taskType) {
           case '实体关系抽取':
             this.annotation.dialogComponent = ExtractionConfigDialog

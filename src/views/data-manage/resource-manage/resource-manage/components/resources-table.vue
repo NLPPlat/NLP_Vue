@@ -83,8 +83,8 @@
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <div v-if="permissionCheck(row.username)">
-            <el-button type="primary" size="mini" @click="handleManage(row)">
-              查看资源
+            <el-button type="success" size="mini" @click="handleDownload(row)">
+              导出资源
             </el-button>
             <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               拷贝
@@ -111,7 +111,7 @@
 <script>
 import { datafileInfoUpdate } from '@/api/common/datafile'
 import { resourcesFetch } from '@/api/common/resource'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import ResourceUpload from './resource-upload'
 
@@ -216,7 +216,7 @@ export default {
     handleResourceAdd() {
       this.$refs.ResourceUpload.showDialog()
     },
-    handleManage(row) {
+    handleDownload(row) {
     },
     handleDelete(row) {
     },
@@ -233,7 +233,7 @@ export default {
     },
     // 工具系列函数
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }

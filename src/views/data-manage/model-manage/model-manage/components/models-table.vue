@@ -84,7 +84,7 @@
         <template slot-scope="{row}">
           <div v-if="permissionCheck(row.username)">
             <el-button type="primary" size="mini" @click="handleManage(row)">
-              查看模型
+              进入模型
             </el-button>
             <el-button type="primary" size="mini" @click="copyDialogShow(row)">
               拷贝
@@ -110,7 +110,7 @@
 <script>
 import { datafileInfoUpdate } from '@/api/common/datafile'
 import { modelsFetch } from '@/api/common/model'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import Pagination from '@/components/Pagination'
 
@@ -238,7 +238,7 @@ export default {
     },
     // 工具系列函数
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }

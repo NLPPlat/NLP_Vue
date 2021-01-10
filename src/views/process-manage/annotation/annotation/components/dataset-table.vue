@@ -137,7 +137,7 @@
 
 <script>
 import { datasetListFetch, datasetInfoUpdate } from '@/api/common/dataset'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
 import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
@@ -317,7 +317,7 @@ export default {
       this.getList()
     },
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }

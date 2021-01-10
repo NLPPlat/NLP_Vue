@@ -89,15 +89,14 @@
         <el-button type="primary" @click="pipelineConstruction.show=true">管道生成</el-button>
       </el-col>
       <el-col :span="5" style="text-align:center" />
-
     </el-row>
 
     <!-- 新增步骤对话框 -->
     <el-dialog title="新增步骤" :visible.sync="preprocessAdd.show" width="500px">
       <el-row type="flex" justify="center">
         <el-col :span="18" style="text-align:left">
-          <el-form :model="preprocessAdd" label-width="100px">
-            <el-form-item label="选择步骤">
+          <el-form ref="preprocessAddForm" :model="preprocessAdd" label-width="100px">
+            <el-form-item label="选择步骤" prop="preprocessSelect" :rules="[{ required: true, message: '请选择新增的步骤', trigger: 'blur' }]">
               <el-cascader
                 v-model="preprocessAdd.preprocessSelect"
                 :options="preprocessAdd.preprocessList"
@@ -105,7 +104,12 @@
                 placeholder="下一步需要执行的步骤"
               />
             </el-form-item>
-            <el-form-item label="承接步骤">
+            <el-form-item>
+              <el-tooltip class="item" effect="dark" :content="preprocessAdd.preprocessTooltip" placement="right">
+                <span style="cursor:pointer">移至此处查看描述</span>
+              </el-tooltip>
+            </el-form-item>
+            <el-form-item label="承接步骤" prop="previousProcessID" :rules="[{ required: true, message: '请选择承接的步骤', trigger: 'blur' }]">
               <el-select v-model="preprocessAdd.previousProcessID" placeholder="从哪一步骤开始执行">
                 <el-option
                   v-for="item in list"
@@ -146,8 +150,8 @@
 
     <!-- 数据导出对话框 -->
     <el-dialog title="数据导出" :visible.sync="preprocessDownload.show" width="450px">
-      <el-form ref="form" :model="form" label-width="120px">
-        <el-form-item label="导出属性">
+      <el-form ref="preprocessDownloadForm" :model="preprocessDownload" label-width="120px">
+        <el-form-item label="导出属性" prop="content" :rules="[{ required: true, message: '请选择需要导出的属性', trigger: 'blur' }]">
           <el-select v-model="preprocessDownload.content" placeholder="选择需要导出的属性">
             <el-option label="vectors" value="vectors" />
             <el-option label="label_id" value="label_id" />
@@ -166,8 +170,8 @@
     <el-dialog title="特征集生成配置" :visible.sync="featuresConstruction.show" width="500px">
       <el-row type="flex" justify="center">
         <el-col :span="18" style="text-align:left">
-          <el-form :model="featuresConstruction" label-width="120px">
-            <el-form-item label="选择步骤">
+          <el-form ref="featuresConstructionForm" :model="featuresConstruction" label-width="120px">
+            <el-form-item label="选择步骤" prop="preprocessID" :rules="[{ required: true, message: '请选择预处理步骤', trigger: 'blur' }]">
               <el-select v-model="featuresConstruction.preprocessID" placeholder="由哪一步骤生成特征集">
                 <el-option
                   v-for="item in list"
@@ -202,8 +206,8 @@
     <el-dialog title="管道生成配置" :visible.sync="pipelineConstruction.show" width="500px">
       <el-row type="flex" justify="center">
         <el-col :span="18" style="text-align:left">
-          <el-form :model="pipelineConstruction" label-width="120px">
-            <el-form-item label="选择步骤">
+          <el-form ref="pipelineConstruction" :model="pipelineConstruction" label-width="120px">
+            <el-form-item label="选择步骤" prop="preprocessid" :rules="[{ required: true, message: '请选择预处理步骤', trigger: 'blur' }]">
               <el-select v-model="pipelineConstruction.preprocessid" placeholder="由哪一步骤生成特征集" style="width:200px">
                 <el-option
                   v-for="item in list"
@@ -213,7 +217,7 @@
                 />
               </el-select>
             </el-form-item>
-            <el-form-item label="管道名称" prop="pipelineName">
+            <el-form-item label="管道名称" prop="pipelineName" :rules="[{ required: true, message: '请填写管道名称', trigger: 'blur' }]">
               <el-input v-model="pipelineConstruction.pipelineName" placeholder="请填写管道名称" style="width:200px" />
             </el-form-item>
             <el-form-item label="公开性" prop="publicity">
@@ -238,7 +242,7 @@
 <script>
 
 import { preprocessStatusFetch, preprocessAdd, preprocessDeal } from '@/api/process-manage/preprocess'
-import { operatorsForUserFetch } from '@/api/common/operator'
+import { operatorsFetch } from '@/api/common/operator'
 import { datasetCopy } from '@/api/common/dataset'
 import { pipelineUpload } from '@/api/data-manage/pipeline'
 
@@ -274,7 +278,8 @@ export default {
         previousProcessID: '',
         sparkSwitch: false,
         sparkMaster: 'local[4]',
-        preprocessList: []
+        preprocessList: [],
+        preprocessTooltip: '暂未选择步骤'
       },
       preprocessParams: {
         show: false,
@@ -308,6 +313,7 @@ export default {
       deep: true,
       handler(newVal, oldVal) {
         this.preprocessParams.params = this.$store.state.preprocessParams[newVal[1]]
+        this.preprocessAdd.preprocessTooltip = this.$store.state.preprocessParams[newVal[1] + '描述']
       }
     }
   },
@@ -331,7 +337,7 @@ export default {
       })
     },
     getOperators() {
-      operatorsForUserFetch({ 'operatorType': '预处理算子' }).then(response => {
+      operatorsFetch({ 'type': 'all', 'operatorType': ['预处理算子'], 'operatorName': '', 'username': ['自己'], 'sort': '-id' }).then(response => {
         var operators = {}
         operators['value'] = '自定义算子'
         operators['label'] = '自定义算子'
@@ -346,9 +352,13 @@ export default {
 
     // 预处理管理系列函数
     handlePreprocessAdd() {
-      preprocessAdd({ 'datasetid': this.listQuery.datasetid, 'preprocessAdd': this.preprocessAdd.preprocessSelect, 'previousProcessID': this.preprocessAdd.previousProcessID, 'sparkSupport': this.preprocessAdd.sparkSwitch, 'preprocessParams': this.preprocessParams.params }).then(response => {
-        this.getList()
-        this.preprocessAdd.show = false
+      this.$refs.preprocessAddForm.validate((valid) => {
+        if (valid) {
+          preprocessAdd({ 'datasetid': this.listQuery.datasetid, 'preprocessAdd': this.preprocessAdd.preprocessSelect, 'previousProcessID': this.preprocessAdd.previousProcessID, 'sparkSupport': this.preprocessAdd.sparkSwitch, 'preprocessParams': this.preprocessParams.params }).then(response => {
+            this.getList()
+            this.preprocessAdd.show = false
+          })
+        }
       })
     },
     getPreprocessParams(params) {
@@ -382,41 +392,53 @@ export default {
       this.preprocessDownload.show = true
     },
     confirmDownload() {
-      axios
-        .get(process.env.VUE_APP_BASE_API + '/process-manage/pre-process/datasets/ID/preprocesses/ID/download',
-          { params: { 'datasetid': this.listQuery.datasetid, 'preprocessid': this.preprocessDownload.preprocessid, 'content': this.preprocessDownload.content },
-            headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token }})
-        .then(response => {
-          const fileName = response.headers['content-disposition']
-          var url = window.URL.createObjectURL(new Blob([response.data]))
-          const a = document.createElement('a')
-          a.href = url
-          a.setAttribute('download', fileName)
-          a.click()
-          window.URL.revokeObjectURL(url)
-        })
-      this.preprocessDownload.show = false
+      this.$refs.preprocessDownloadForm.validate((valid) => {
+        if (valid) {
+          axios
+            .get(process.env.VUE_APP_BASE_API + '/process-manage/pre-process/datasets/ID/preprocesses/ID/download',
+              { params: { 'datasetid': this.listQuery.datasetid, 'preprocessid': this.preprocessDownload.preprocessid, 'content': this.preprocessDownload.content },
+                headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token }})
+            .then(response => {
+              const fileName = response.headers['content-disposition']
+              var url = window.URL.createObjectURL(new Blob([response.data]))
+              const a = document.createElement('a')
+              a.href = url
+              a.setAttribute('download', fileName)
+              a.click()
+              window.URL.revokeObjectURL(url)
+            })
+          this.preprocessDownload.show = false
+        }
+      })
     },
     handleCopy() {
       datasetCopy({ 'datasetInitid': this.listQuery.datasetid, 'params': { 'preprocessid': this.featuresConstruction.preprocessID, 'attributes': this.featuresConstruction.columns }, 'datasetInitType': '预处理数据集', 'copyDes': '特征数据集' }).then(response => {
-        this.featuresConstruction.show = false
-        this.$notify({
-          title: '生成成功',
-          message: '可对生成的特征集进行训练。',
-          type: 'success',
-          duration: 2000
+        this.$refs.featuresConstructionForm.validate((valid) => {
+          if (valid) {
+            this.featuresConstruction.show = false
+            this.$notify({
+              title: '生成成功',
+              message: '可对生成的特征集进行训练。',
+              type: 'success',
+              duration: 2000
+            })
+          }
         })
       })
     },
     handlePipelineConstruction() {
-      pipelineUpload({ 'datasetid': this.listQuery.datasetid, 'preprocessid': this.pipelineConstruction.preprocessid, 'pipelineName': this.pipelineConstruction.pipelineName, 'publicity': this.pipelineConstruction.publicity }).then(response => {
-        this.$notify({
-          title: '管道生成成功',
-          message: '可使用生成的管道处理批处理数据集。',
-          type: 'success',
-          duration: 2000
-        })
-        this.pipelineConstruction.show = false
+      this.$refs.pipelineConstruction.validate((valid) => {
+        if (valid) {
+          pipelineUpload({ 'datasetid': this.listQuery.datasetid, 'preprocessid': this.pipelineConstruction.preprocessid, 'pipelineName': this.pipelineConstruction.pipelineName, 'publicity': this.pipelineConstruction.publicity }).then(response => {
+            this.$notify({
+              title: '管道生成成功',
+              message: '可使用生成的管道处理批处理数据集。',
+              type: 'success',
+              duration: 2000
+            })
+            this.pipelineConstruction.show = false
+          })
+        }
       })
     }
   }

@@ -6,10 +6,8 @@
 
         <el-form-item label="算子类型">
           <el-select v-model="codeUpload.operatorType" placeholder="请选择算子类型">
-            <el-option label="分词分句算子" value="分词分句算子" />
             <el-option label="数据清洗算子" value="数据清洗算子" />
             <el-option label="预处理算子" value="预处理算子" />
-            <el-option label="数据切割算子" value="数据切割算子" />
             <el-option label="批处理算子" value="批处理算子" />
           </el-select>
         </el-form-item>
@@ -44,7 +42,13 @@
     </div>
     <el-row style="margin:20px 0px" />
     <div class="editor-container">
-      <python-console ref="pythonConsole" v-model="console.code" />
+      <el-card>
+        <div slot="header" class="clearfix">
+          <span>输出控制台</span>
+        </div>
+        <python-console ref="pythonConsole" v-model="console.code" />
+
+      </el-card>
     </div>
 
     <el-dialog
@@ -94,7 +98,7 @@
 
 <script>
 import PythonEditor from '@/components/PythonEditor'
-import PythonConsole from '@/components/PythonConsole'
+import PythonConsole from '@/components/PythonConsoleForWhite'
 
 import { operatorUpload, operatorFetch, codeRun } from '@/api/data-manage/operator'
 import { datasetIDListFetch } from '@/api/common/dataset'
@@ -112,7 +116,7 @@ export default {
         publicity: '不公开'
       },
       console: {
-        code: 'console'
+        code: '此处查看测试输出'
       },
       APIDrawer: false,
       datasetSelect: {
@@ -164,6 +168,9 @@ export default {
     },
     handleOperatorUpload() {
       operatorUpload(Object.assign({ 'operatorid': this.operatorid }, this.codeUpload)).then(response => {
+        if (this.operatorid === '-1') {
+          this.$router.push('/data-manage/operator-manage/codehub/' + response.data['operatorid'])
+        }
         this.$notify({
           title: '算子保存成功',
           message: '可在各个模块调用算子',

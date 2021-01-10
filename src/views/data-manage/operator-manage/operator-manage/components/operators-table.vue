@@ -110,7 +110,7 @@
 <script>
 import { datafileInfoUpdate } from '@/api/common/datafile'
 import { operatorsFetch } from '@/api/common/operator'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import Pagination from '@/components/Pagination'
 
@@ -247,7 +247,7 @@ export default {
       this.datasetCopy.copyDialogVisible = true
     },
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }

@@ -132,8 +132,8 @@
     >
       <div style="text-align:center;width:100%;">
         <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="训练数据集" border>训练数据集</el-radio>
-          <el-radio label="预处理数据集" border>预处理数据集</el-radio>
+          <el-radio label="训练数据集" border>当前步骤</el-radio>
+          <el-radio label="预处理数据集" border>下一步骤（预处理）</el-radio>
         </el-radio-group>
       </div>
       <div slot="footer" class="dialog-footer">
@@ -149,12 +149,12 @@
     >
       <div style="text-align:center;width:100%;">
         <el-radio-group v-model="batchDatasetCopy.copyDes">
-          <el-radio label="批处理数据集" border>批处理数据集</el-radio>
-          <el-radio label="批处理特征集" border>批处理特征集</el-radio>
+          <el-radio label="批处理数据集" border>当前步骤</el-radio>
+          <el-radio label="批处理特征集" border>下一步骤（批处理）</el-radio>
         </el-radio-group>
       </div>
-      <el-form v-if="batchDatasetCopy.copyDes==='批处理特征集'" ref="form" :model="batchDatasetCopy" label-width="120px" style="margin:40px 0px 30px 0px">
-        <el-form-item label="管道选择">
+      <el-form v-if="batchDatasetCopy.copyDes==='批处理特征集'" ref="batchDatasetCopyForm" :model="batchDatasetCopy" label-width="120px" style="margin:40px 0px 30px 0px">
+        <el-form-item label="管道选择" prop="pipeline" :rules="[{ required: true, message: '请选择预处理管道', trigger: 'blur' }]">
           <el-select v-model="batchDatasetCopy.pipeline" placeholder="请选择预处理管道">
             <el-option v-for="item in pipelines" :key="item._id" :label="item.pipelineName" :value="item._id" />
           </el-select>
@@ -171,7 +171,7 @@
 <script>
 import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoUpdate } from '@/api/common/dataset'
 import { pipelinesForUserFetch } from '@/api/common/pipeline'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import Pagination from '@/components/Pagination'
 
@@ -224,12 +224,12 @@ export default {
       downloadLoading: false,
       datasetCopy: {
         copyDialogVisible: false,
-        copyDes: '',
+        copyDes: '训练数据集',
         datasetInitid: ''
       },
       batchDatasetCopy: {
         copyDialogVisible: false,
-        copyDes: '',
+        copyDes: '批处理数据集',
         datasetInitid: '',
         pipeline: ''
       },
@@ -268,7 +268,7 @@ export default {
       })
     },
     pipelinesFetch(taskType) {
-      pipelinesForUserFetch({ 'taskType': taskType }).then(response => {
+      pipelinesForUserFetch({ 'taskType': [taskType], 'type': 'all', 'username': ['自己'], 'pipelineName': '' }).then(response => {
         this.pipelines = response.data.items
       })
     },
@@ -357,16 +357,26 @@ export default {
           })
         })
       } else {
-        this.batchDatasetCopy.copyDialogVisible = false
-        datasetCopy({ 'datasetInitType': '批处理数据集', 'datasetInitid': this.batchDatasetCopy.datasetInitid, 'copyDes': this.batchDatasetCopy.copyDes, 'params': { 'pipeline': this.batchDatasetCopy.pipeline }}).then(response => {
-          this.getList()
-          this.$notify({
-            title: '拷贝任务创建成功！',
-            message: '即将拷贝至ID为' + response.data.datasetDesID + '的数据集中',
-            type: 'success',
-            duration: 2000
+        var flag = true
+        if (this.batchDatasetCopy.copyDes === '批处理特征集') {
+          this.$refs.batchDatasetCopyForm.validate((valid) => {
+            if (!valid) {
+              flag = false
+            }
           })
-        })
+        }
+        if (flag) {
+          this.batchDatasetCopy.copyDialogVisible = false
+          datasetCopy({ 'datasetInitType': '批处理数据集', 'datasetInitid': this.batchDatasetCopy.datasetInitid, 'copyDes': this.batchDatasetCopy.copyDes, 'params': { 'pipeline': this.batchDatasetCopy.pipeline }}).then(response => {
+            this.getList()
+            this.$notify({
+              title: '拷贝任务创建成功！',
+              message: '即将拷贝至ID为' + response.data.datasetDesID + '的数据集中',
+              type: 'success',
+              duration: 2000
+            })
+          })
+        }
       }
     },
     handlePublicityChange(row) {
@@ -379,11 +389,9 @@ export default {
     copyDialogShow(row) {
       if (this.listQuery.switchDataset === '训练数据集') {
         this.datasetCopy.datasetInitid = row._id
-        this.datasetCopy.copyDes = ''
         this.datasetCopy.copyDialogVisible = true
       } else {
         this.batchDatasetCopy.datasetInitid = row._id
-        this.batchDatasetCopy.copyDes = ''
         this.batchDatasetCopy.copyDialogVisible = true
         this.pipelinesFetch(row.taskType)
       }
@@ -392,7 +400,7 @@ export default {
       this.$router.push('/process-manage/data-upload')
     },
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }

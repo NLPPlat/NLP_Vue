@@ -41,7 +41,7 @@ export default {
   mounted() {
     this.pythonEditor = CodeMirror.fromTextArea(this.$refs.textarea, {
       mode: 'python',
-      theme: 'base16-light',
+      theme: 'neo',
       gutters: ['CodeMirror-lint-markers'],
       lint: true
     })

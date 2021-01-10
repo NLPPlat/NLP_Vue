@@ -84,7 +84,7 @@
               <span>数据集与模型信息</span>
             </div>
             <el-row>
-              <el-col :span="12">
+              <el-col :span="8">
                 <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
                   <el-form-item label="数据集Shape">
                     <span>{{ datasetInfo.featuresShape }}</span>
@@ -95,16 +95,28 @@
                   <el-form-item label="测试集Shape">
                     <span>{{ datasetInfo.testShape }}</span>
                   </el-form-item>
-
                 </el-form>
               </el-col>
-              <el-col :span="12">
+              <el-col :span="8">
                 <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
                   <el-form-item label="训练模型名称">
                     <span>{{ modelConfig.modelName }}</span>
                   </el-form-item>
                   <el-form-item label="模型运行平台">
                     <span>Keras</span>
+                  </el-form-item>
+                </el-form>
+              </el-col>
+              <el-col :span="8">
+                <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                  <el-form-item label="训练状态">
+                    <span>{{ trainedmodel.trainStatus }}</span>
+                  </el-form-item>
+                  <el-form-item label="训练时间">
+                    <span>{{ getCalTime() }}</span>
+                  </el-form-item>
+                  <el-form-item label="模型操作">
+                    <el-button :disabled="trainedmodel.trainStatus!=='已完成'" style="float:left;" type="text" @click="confirmDownload">下载模型</el-button>
                   </el-form-item>
                 </el-form>
               </el-col>
@@ -264,14 +276,14 @@
 
 <script>
 
-import { modelsForUserFetch, modelFetch, trainedmodelFetch } from '@/api/common/model'
+import { modelsFetch, modelFetch, trainedmodelFetch } from '@/api/common/model'
 import { featuresSplit, modelUpdate, trainedModelRun, codeUpdate } from '@/api/process-manage/model-train'
 import { datasetInfoFetch } from '@/api/common/dataset'
 import { calTime } from '@/utils'
 
 import axios from 'axios'
 import PythonEditor from '@/components/PythonEditor'
-import PythonConsole from '@/components/PythonConsole'
+import PythonConsole from '@/components/PythonConsoleForWhite'
 
 export default {
   name: 'TrainManageTable',
@@ -318,6 +330,10 @@ export default {
     this.getInfo()
     this.getModels()
   },
+  mounted() {
+    var height = document.documentElement.clientHeight
+    this.$refs.container.style['min-height'] = height - 50 + 'px'
+  },
   beforeDestroy() {
     if (this.timer !== null) {
       clearInterval(this.timer)
@@ -348,7 +364,7 @@ export default {
       })
     },
     getModels() {
-      modelsForUserFetch().then(response => {
+      modelsFetch({ 'type': 'all', 'platType': ['Keras'], 'modelName': '', 'username': ['自己'], 'sort': '-id' }).then(response => {
         this.models = response.data.items
       })
     },

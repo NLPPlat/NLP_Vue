@@ -105,6 +105,7 @@ const state = {
   分词: {
     tool: 'jieba'
   },
+  分词描述: '使用vectors属性的数据生成分词结果，并覆盖vectors属性',
   分词选项: {
     tool: ['jieba', 'SnowNLP', 'THULAC', 'HanLP']
   },
@@ -114,6 +115,7 @@ const state = {
   去停用词: {
     list: ''
   },
+  去停用词描述: '使用vectors属性的数据生成去停用词结果，并覆盖vectors属性',
   去停用词选项: {
     list: []
   },
@@ -123,6 +125,7 @@ const state = {
   词性标注: {
     tool: 'jieba'
   },
+  词性标注描述: '使用vectors属性的数据生成去词性标注结果，并覆盖vectors属性',
   词性标注选项: {
     tool: ['jieba', 'SnowNLP', 'THULAC', 'HanLP']
   },
@@ -130,6 +133,7 @@ const state = {
     tool: '词性标注工具'
   },
   关键词提取: {},
+  关键词提取描述: '使用vectors属性的数据生成关键词提取结果，并覆盖vectors属性',
   TFIDF: {},
   Word2vec: {
     size: 100,
@@ -151,6 +155,7 @@ const state = {
     sorted_vocab: 1,
     batch_words: 10000
   },
+  Word2vec描述: '使用vectors属性的数据训练向量，向量文件存储至vectors属性',
   Word2vec参数说明: {
     size: 100,
     alpha: 0.025,

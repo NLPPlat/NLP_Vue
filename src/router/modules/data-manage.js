@@ -50,6 +50,12 @@ const componentsRouter = {
       name: 'pipeline-manage',
       meta: { title: '管道管理' }
     }, {
+      path: 'pipeline-manage/pipeline-detail/:pipelineid',
+      component: () => import('@/views/data-manage/pipeline-manage/pipeline-detail/index'),
+      name: 'pipeline-detail',
+      hidden: true,
+      meta: { title: '管道详情' }
+    }, {
       path: 'trainedmodel-manage',
       component: () => import('@/views/data-manage/trainedmodel-manage/trainedmodel-manage/index'),
       name: 'trainedmodel-manage',

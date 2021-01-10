@@ -15,6 +15,7 @@ import 'codemirror/mode/python/python.js'
 import 'codemirror/theme/panda-syntax.css'
 import 'codemirror/theme/duotone-light.css'
 import 'codemirror/theme/rubyblue.css'
+import 'codemirror/theme/idea.css'
 
 // 代码折叠
 import 'codemirror/addon/fold/foldcode.js'
@@ -38,6 +39,8 @@ import 'codemirror/addon/hint/show-hint.js'
 import 'codemirror/addon/lint/lint'
 import 'codemirror/addon/lint/lint.css'
 
+import 'codemirror/keymap/sublime.js'
+
 require('script-loader!jsonlint')
 
 export default {
@@ -60,7 +63,7 @@ export default {
   mounted() {
     this.pythonEditor = CodeMirror.fromTextArea(this.$refs.textarea, {
       mode: 'python', // 语言
-      theme: 'panda-syntax', // 主题
+      theme: 'idea', // 主题
       // theme: 'duotone-light',
       // 在行槽中添加行号显示器、折叠器、语法检测器
       gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter', 'CodeMirror-lint-markers'],
@@ -71,9 +74,10 @@ export default {
       smartIndent: true, // 智能缩进
       indentUnit: 4, // 智能缩进单位为4个空格长度
       indentWithTabs: true, // 使用制表符进行智能缩进
+      lineWrapping: true,
       matchBrackets: true, // 匹配结束符号，比如"]、}"
       autoCloseBrackets: true, // 自动闭合符号
-      styleActiveLine: true, // 显示选中行的样式
+      // styleActiveLine: true, // 显示选中行的样式
       lint: true
     })
 
@@ -95,17 +99,18 @@ export default {
 .python-editor {
   height: 100%;
   position: relative;
+  border:0.5px solid grey;
 
   ::v-deep {
     .CodeMirror {
       height: auto;
       min-height: 500px;
-      max-height: 800px;
+      max-height: 500px;
     }
 
     .CodeMirror-scroll {
       min-height: 500px;
-      max-height: 800px;
+      max-height: 500px;
     }
 
     .cm-s-rubyblue span.cm-string {

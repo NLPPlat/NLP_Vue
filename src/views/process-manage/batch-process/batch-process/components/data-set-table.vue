@@ -119,7 +119,7 @@
     >
       <div style="text-align:center;width:100%;">
         <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="批处理特征集" border>批处理特征集</el-radio>
+          <el-radio label="批处理特征集" border>当前步骤</el-radio>
         </el-radio-group>
       </div>
       <div style="text-align:center;margin-top:20px">注：不会拷贝批处理结果</div>
@@ -133,7 +133,7 @@
 
 <script>
 import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoUpdate } from '@/api/common/dataset'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
@@ -187,7 +187,7 @@ export default {
       downloadLoading: false,
       datasetCopy: {
         copyDialogVisible: false,
-        copyDes: '',
+        copyDes: '批处理特征集',
         datasetInitid: ''
       }
     }
@@ -298,11 +298,10 @@ export default {
     // 工具系列函数
     copyDialogShow(row) {
       this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
       this.datasetCopy.copyDialogVisible = true
     },
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }

@@ -117,8 +117,8 @@
     >
       <div style="text-align:center;width:100%;">
         <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="预处理数据集" border>预处理数据集</el-radio>
-          <el-radio label="特征数据集" border>特征数据集</el-radio>
+          <el-radio label="预处理数据集" border>当前步骤</el-radio>
+          <el-radio label="特征数据集" border>下一步骤（模型训练）</el-radio>
         </el-radio-group>
       </div>
       <div slot="footer" class="dialog-footer">
@@ -131,7 +131,7 @@
 
 <script>
 import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoUpdate } from '@/api/common/dataset'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import Pagination from '@/components/Pagination'
 
@@ -178,7 +178,7 @@ export default {
       downloadLoading: false,
       datasetCopy: {
         copyDialogVisible: false,
-        copyDes: '',
+        copyDes: '预处理数据集',
         datasetInitid: ''
       }
 
@@ -291,11 +291,10 @@ export default {
     // 工具系列函数
     copyDialogShow(row) {
       this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
       this.datasetCopy.copyDialogVisible = true
     },
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }

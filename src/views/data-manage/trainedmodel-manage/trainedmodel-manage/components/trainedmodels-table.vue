@@ -112,7 +112,7 @@
 <script>
 import { datafileInfoUpdate } from '@/api/common/datafile'
 import { trainedmodelsFetch } from '@/api/common/model'
-import { writePerssion } from '@/utils/permission'
+import { writePermission } from '@/utils/permission'
 
 import TrainedmodelUpload from './trainedmodel-upload'
 import Pagination from '@/components/Pagination'
@@ -237,7 +237,7 @@ export default {
     },
     // 工具系列函数
     permissionCheck(username) {
-      return writePerssion(username)
+      return writePermission(username)
     }
   }
 }
