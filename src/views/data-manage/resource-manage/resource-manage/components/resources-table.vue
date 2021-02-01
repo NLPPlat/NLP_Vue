@@ -112,10 +112,10 @@
 import { datafileInfoUpdate } from '@/api/common/datafile'
 import { resourcesFetch } from '@/api/common/resource'
 import { writePermission } from '@/utils/permission'
-
 import ResourceUpload from './resource-upload'
-
 import Pagination from '@/components/Pagination'
+
+import axios from 'axios'
 
 export default {
   name: 'ResourcesTable',
@@ -216,8 +216,6 @@ export default {
     handleResourceAdd() {
       this.$refs.ResourceUpload.showDialog()
     },
-    handleDownload(row) {
-    },
     handleDelete(row) {
     },
     handlePublicityChange(row) {
@@ -230,6 +228,21 @@ export default {
         document.body.click()
         this.$message.success('资源文件信息修改成功！')
       })
+    },
+    handleDownload(row) {
+      axios
+        .get(process.env.VUE_APP_BASE_API + '/data-manage/resource/resources/ID/download',
+          { params: { 'resourceid': row._id },
+            headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token }})
+        .then(response => {
+          const fileName = response.headers['content-disposition']
+          var url = window.URL.createObjectURL(new Blob([response.data]))
+          const a = document.createElement('a')
+          a.href = url
+          a.setAttribute('download', fileName)
+          a.click()
+          window.URL.revokeObjectURL(url)
+        })
     },
     // 工具系列函数
     permissionCheck(username) {

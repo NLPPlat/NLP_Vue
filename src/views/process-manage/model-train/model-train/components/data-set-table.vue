@@ -17,11 +17,13 @@
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleModelAdd">
         模型添加
       </el-button>
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-position" @click="handleProcessManage">
+        过程脉络
+      </el-button>
     </div>
 
     <el-table
       :key="tableKey"
-      v-loading="listLoading"
       :data="list"
       border
       fit
@@ -158,7 +160,6 @@ export default {
       tableKey: 0,
       list: null,
       total: 0,
-      listLoading: true,
       listQuery: {
         page: 1,
         limit: 20,
@@ -192,7 +193,8 @@ export default {
         copyDialogVisible: false,
         copyDes: '特征数据集',
         datasetInitid: ''
-      }
+      },
+      timer: null
     }
   },
   created() {
@@ -200,19 +202,21 @@ export default {
     this.taskTypeFilter = this.$store.state.taskTypes.taskTypeFilter
     this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
+    this.timer = setInterval(() => {
+      this.getList()
+    }, 1000)
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
   },
   mounted() {
   },
   methods: {
     // 数据获取系列函数
     getList() {
-      this.listLoading = true
       datasetListFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        setTimeout(() => {
-          this.listLoading = false
-        }, 0 * 1000)
       })
     },
     // 数据筛选系列函数
@@ -282,6 +286,9 @@ export default {
     },
     handleDataVenation(row) {
       this.$router.push('/data-manage/data-venation/features-dataset/' + row._id)
+    },
+    handleProcessManage() {
+      this.$router.push('/process-manage/chart/' + '模型训练')
     },
     handleCopy() {
       this.datasetCopy.copyDialogVisible = false

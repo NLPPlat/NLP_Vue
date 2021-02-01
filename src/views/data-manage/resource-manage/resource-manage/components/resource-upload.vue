@@ -6,22 +6,21 @@
     <el-row type="flex" justify="space-between">
       <el-col :span="2" />
       <el-col :span="16">
-        <el-form ref="uploadForm" :model="uploadForm" :rules="uploadRules" label-width="100px">
-          <el-form-item label="资源类型" prop="taskType">
+        <el-form ref="uploadForm" :model="uploadForm" label-width="100px">
+          <el-form-item label="资源类型" prop="resourceType" :rules="[{ required: true, message: '请选择资源类型', trigger: 'blur' }]">
             <el-select v-model="uploadForm.resourceType" placeholder="请选择资源类型" style="width:400px">
               <el-option label="停用词表" value="停用词表" />
               <el-option label="预训练向量" value="预训练向量" />
               <el-option label="通用资源" value="通用资源" />
-
             </el-select>
           </el-form-item>
-          <el-form-item label="资源名称" prop="resourceName">
+          <el-form-item label="资源名称" prop="resourceName" :rules="[{ required: true, message: '请填写资源名称', trigger: 'blur' }]">
             <el-input v-model="uploadForm.resourceName" placeholder="请填写资源名称" style="width:400px" />
           </el-form-item>
           <el-form-item label="资源描述">
             <el-input v-model="uploadForm.desc" type="textarea" placeholder="选填" style="width:400px" />
           </el-form-item>
-          <el-form-item label="公开性" prop="publicity">
+          <el-form-item label="公开性" prop="publicity" :rules="[{ required: true, message: '请选择公开性', trigger: 'blur' }]">
             <el-radio-group v-model="uploadForm.publicity">
               <el-radio label="公开" />
               <el-radio label="不公开" />
@@ -87,7 +86,11 @@ export default {
       this.uploadInfo.uploadURL = process.env.VUE_APP_BASE_API + url
     },
     onUploadSubmit() {
-      this.$refs.uploadFunc.submit()
+      this.$refs.uploadForm.validate((valid) => {
+        if (valid) {
+          this.$refs.uploadFunc.submit()
+        }
+      })
     },
     handleUploadSuccess() {
       this.$notify({
@@ -97,6 +100,7 @@ export default {
         duration: 2000
       })
       this.show = false
+      this.$parent.getList()
     }
   }
 }

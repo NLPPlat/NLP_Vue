@@ -5,10 +5,10 @@
       <el-button type="primary" @click="dataCut.show=true">
         数据拆分
       </el-button>
-      <el-button type="primary">
+      <el-button type="primary" @click="dataCleaningDialogShow()">
         数据清洗
       </el-button>
-      <el-button type="success" @click="handleDataVenation(row)">
+      <el-button type="success" @click="handleDataVenation()">
         数据脉络
       </el-button>
       <el-button type="primary" @click="handleSetAnnotation()">
@@ -103,6 +103,26 @@
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
+    <!-- 数据清洗对话框 -->
+    <el-dialog title="数据清洗" :visible.sync="dataCleaning.show" width="500px">
+      <el-row type="flex" justify="center">
+        <el-col :span="18" style="text-align:left">
+          <el-form :model="dataCleaning" label-width="100px">
+            <el-form-item label="清洗算子">
+              <el-select v-model="dataCleaning.operatorSelect" placeholder="请选择清洗算子">
+                <el-option v-for="item in operators" :key="item._id" :label="item.operatorName" :value="item._id" />
+              </el-select>
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+      <el-row type="flex" justify="center" style="margin-top:20px">
+        <el-col :span="4" style="text-align:center">
+          <el-button type="primary" @click="handleDataCleaning">确认</el-button>
+        </el-col>
+      </el-row>
+    </el-dialog>
+
     <!-- 数据拆分对话框 -->
     <el-dialog title="数据拆分" :visible.sync="dataCut.show" width="500px">
       <el-row type="flex" justify="center">
@@ -139,8 +159,10 @@
 
 <script>
 import { datasetVectorsFetch, datasetInfoFetch, datasetVectorUpdate } from '@/api/common/dataset'
-import { dataCut } from '@/api/process-manage/data-set'
-import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+import { dataCut, dataCleaning } from '@/api/process-manage/data-set'
+import { operatorsFetch } from '@/api/common/operator'
+
+import Pagination from '@/components/Pagination'
 import ExtractionConfigDialog from '@/views/process-manage/annotation/components/extraction-config-dialog'
 import RelationAnalysisConfigDialog from '@/views/process-manage/annotation/components/relation-analysis-config-dialog'
 import L2rConfigDialog from '@/views/process-manage/annotation/components/l2r-config-dialog'
@@ -186,7 +208,12 @@ export default {
         show: false,
         level: '句子',
         tool: ''
-      }
+      },
+      dataCleaning: {
+        show: false,
+        operatorSelect: ''
+      },
+      operators: []
     }
   },
   created() {
@@ -253,6 +280,24 @@ export default {
     configDialogClose() {
       this.annotation.configDialogShow = false
       this.$router.push('/process-manage/annotation/data-detail/' + this.listQuery.datasetid)
+    },
+    dataCleaningDialogShow() {
+      operatorsFetch({ 'type': 'all', 'operatorType': ['数据清洗算子'], 'operatorName': '', 'username': ['自己'], 'sort': '-id' }).then(response => {
+        this.operators = response.data.items
+        this.dataCleaning.show = true
+      })
+    },
+    handleDataCleaning() {
+      dataCleaning({ 'datasetid': this.listQuery.datasetid, 'operatorid': this.dataCleaning.operatorSelect }).then(response => {
+        this.$notify({
+          title: '数据清洗任务开始！',
+          message: '请耐心等待清洗完成',
+          type: 'success',
+          duration: 2000
+        })
+        this.dataCleaning = false
+        this.$router.push('/process-manage/data-set')
+      })
     },
     handleSetAnnotation() {
       if (this.annotation.status === '未开始') {

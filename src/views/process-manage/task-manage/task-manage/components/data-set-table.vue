@@ -11,14 +11,11 @@
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleSearch">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
       </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleDataUpload">
-        数据接入
-      </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
-        数据集表格导出
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-position" @click="handleProcessManage">
+        过程脉络
       </el-button>
     </div>
 
@@ -43,12 +40,12 @@
           <span>{{ row.taskName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="归属者" column-key="username" :filters="usernameFilter" width="100px" align="center">
+      <el-table-column label="发起者" column-key="username" :filters="usernameFilter" width="100px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.username }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="发起数据集名称" column-key="datasetName" width="160px" align="center">
+      <el-table-column label="发起数据集" column-key="datasetName" width="160px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.datasetName }}</span>
         </template>
@@ -78,7 +75,7 @@
       <el-table-column label="操作" align="center" min-width="120px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <div>
-            <el-button type="primary" size="mini" @click="copyDialogShow(row)">
+            <el-button type="primary" size="mini" @click="handleForward(row)">
               跳转
             </el-button>
             <el-button size="mini" type="danger" @click="handleDelete(row)">
@@ -91,30 +88,13 @@
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
-    <el-dialog
-      title="拷贝至"
-      :visible.sync="datasetCopy.copyDialogVisible"
-      width="30%"
-    >
-      <div style="text-align:center;width:100%;">
-        <el-radio-group v-model="datasetCopy.copyDes">
-          <el-radio label="训练数据集" border>训练数据集</el-radio>
-          <el-radio label="预处理数据集" border>预处理数据集</el-radio>
-        </el-radio-group>
-      </div>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleCopy">确认</el-button>
-      </div>
-    </el-dialog>
-
   </div>
 </template>
 
 <script>
-import { datasetCopy, datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
+import { datasetDelete, datasetInfoVerify } from '@/api/common/dataset'
 import { tasksFetch } from '@/api/process-manage/task-manage'
-import waves from '@/directive/waves' // waves directive
-import { parseTime, calTime } from '@/utils'
+import { calTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
 const taskTypeOptions = [
@@ -133,7 +113,6 @@ const calendarTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
 export default {
   name: 'DataSetTable',
   components: { Pagination },
-  directives: { waves },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -172,7 +151,6 @@ export default {
         { text: '数据集拷贝', value: '数据集拷贝' },
         { text: '模型训练', value: '模型训练' },
         { text: '批处理', value: '批处理' }
-
       ],
       statusFilter: [
         { text: '执行中', value: '执行中' },
@@ -246,32 +224,6 @@ export default {
         this.getList()
       })
     },
-    handleDataVenation(row) {
-      this.$router.push('/data-manage/data-venation/' + row._id)
-    },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['timestamp', 'title', 'type', 'importance', 'status']
-        const filterVal = ['timestamp', 'title', 'type', 'importance', 'status']
-        const data = this.formatJson(filterVal)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'table-list'
-        })
-        this.downloadLoading = false
-      })
-    },
-    formatJson(filterVal) {
-      return this.list.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
-        }
-      }))
-    },
     getSortClass: function(key) {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
@@ -293,24 +245,23 @@ export default {
       }
       this.handleFilter()
     },
-    handleCopy() {
-      this.datasetCopy.copyDialogVisible = false
-      datasetCopy({ 'datasetInitType': '训练数据集', 'datasetInitid': this.datasetCopy.datasetInitid, 'copyDes': this.datasetCopy.copyDes }).then(response => {
-        this.getList()
-        this.$notify({
-          title: '拷贝成功',
-          message: '可操作拷贝完成的数据集。',
-          type: 'success',
-          duration: 2000
-        })
-      })
+    handleForward(row) {
+      switch (row.taskType) {
+        case '数据接入':
+          this.$router.push('/process-manage/data-set')
+          break
+        case '数据集拷贝':
+          break
+        case '模型训练':
+          this.$router.push('/process-manage/model-train')
+          break
+        case '批处理':
+          this.$router.push('/process-manage/batch-process')
+          break
+      }
     },
-    handleDataUpload() {
-
-    },
-    handleShowTest(row) {
-      console.log(this.$store.state.user.username)
-      return true
+    handleProcessManage() {
+      this.$router.push('/process-manage/chart/' + '任务管理')
     },
     getCalTime(time, endtime = '') {
       return calTime(time, endtime)

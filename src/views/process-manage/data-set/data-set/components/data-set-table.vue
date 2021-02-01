@@ -23,12 +23,14 @@
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleDataUpload">
         数据接入
       </el-button>
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-position" @click="handleProcessManage">
+        过程脉络
+      </el-button>
     </div>
 
     <!-- 主体表格 -->
     <el-table
       :key="tableKey"
-      v-loading="listLoading"
       :data="list"
       border
       fit
@@ -97,13 +99,13 @@
       <el-table-column label="操作" align="center" min-width="300px" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <div v-if="permissionCheck(row.username)">
-            <el-button type="primary" size="mini" :disabled="row.analyseStatus==='解析中'" @click="handleManage(row)">
+            <el-button type="primary" size="mini" :disabled="row.analyseStatus!='已就绪'" @click="handleManage(row)">
               管理数据
             </el-button>
             <el-button size="mini" type="success" @click="handleDataVenation(row)">
               数据脉络
             </el-button>
-            <el-button type="primary" size="mini" :disabled="row.analyseStatus==='解析中'" @click="copyDialogShow(row)">
+            <el-button type="primary" size="mini" :disabled="row.analyseStatus!='已就绪'" @click="copyDialogShow(row)">
               拷贝
             </el-button>
             <el-button size="mini" type="danger" @click="handleDelete(row)">
@@ -170,7 +172,7 @@
 
 <script>
 import { datasetCopy, datasetListFetch, datasetDelete, datasetInfoUpdate } from '@/api/common/dataset'
-import { pipelinesForUserFetch } from '@/api/common/pipeline'
+import { pipelinesFetch } from '@/api/common/pipeline'
 import { writePermission } from '@/utils/permission'
 
 import Pagination from '@/components/Pagination'
@@ -181,8 +183,9 @@ export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        '解析完成': 'success',
-        '解析中': 'primary'
+        '已就绪': 'success',
+        '解析中': 'primary',
+        '清洗中': 'primary'
       }
       return statusMap[status]
     }
@@ -192,7 +195,6 @@ export default {
       tableKey: 0,
       list: null,
       total: 0,
-      listLoading: true,
       listQuery: {
         switchDataset: '训练数据集',
         page: 1,
@@ -202,7 +204,7 @@ export default {
         datasetType: '训练数据集',
         username: ['自己', '他人'],
         taskType: [],
-        analyseStatus: ['解析中', '解析完成']
+        analyseStatus: ['解析中', '已就绪']
       },
       searchQuery: {
         usernameSelect: '',
@@ -210,12 +212,12 @@ export default {
       },
       taskTypeOptions: [],
       usernameOptions: ['自己', '他人'],
-      analyseStatusOptions: ['解析中', '解析完成'],
+      analyseStatusOptions: ['解析中', '已就绪'],
       sortOptions: [{ label: 'ID升序', key: 'id' }, { label: 'ID降序', key: '-id' }],
       taskTypeFilter: [],
       statusFilter: [
         { text: '解析中', value: '解析中' },
-        { text: '解析完成', value: '解析完成' }
+        { text: '已就绪', value: '已就绪' }
       ],
       usernameFilter: [
         { text: '自己', value: '自己' },
@@ -233,7 +235,9 @@ export default {
         datasetInitid: '',
         pipeline: ''
       },
-      pipelines: []
+      pipelines: [],
+      timer: null
+
     }
   },
   watch: {
@@ -254,21 +258,23 @@ export default {
     this.taskTypeFilter = this.$store.state.taskTypes.taskTypeFilter
     this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
+    this.timer = setInterval(() => {
+      this.getList()
+    }, 1000)
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
   },
   methods: {
     // 数据获取系列函数
     getList() {
-      this.listLoading = true
       datasetListFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        setTimeout(() => {
-          this.listLoading = false
-        }, 0 * 1000)
       })
     },
     pipelinesFetch(taskType) {
-      pipelinesForUserFetch({ 'taskType': [taskType], 'type': 'all', 'username': ['自己'], 'pipelineName': '' }).then(response => {
+      pipelinesFetch({ 'taskType': [taskType], 'type': 'all', 'username': ['自己'], 'pipelineName': '' }).then(response => {
         this.pipelines = response.data.items
       })
     },
@@ -343,6 +349,9 @@ export default {
       } else {
         this.$router.push('/data-manage/data-venation/original-batch-dataset/' + row._id)
       }
+    },
+    handleProcessManage() {
+      this.$router.push('/process-manage/chart/' + '数据查看')
     },
     handleCopy() {
       if (this.listQuery.switchDataset === '训练数据集') {

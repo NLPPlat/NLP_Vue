@@ -14,11 +14,13 @@
       <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
       </el-button>
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-position" @click="handleProcessManage">
+        过程脉络
+      </el-button>
     </div>
 
     <el-table
       :key="tableKey"
-      v-loading="listLoading"
       :data="list"
       border
       fit
@@ -141,7 +143,7 @@ export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        '解析完成': 'success',
+        '已就绪': 'success',
         '解析中': 'primary'
       }
       return statusMap[status]
@@ -152,7 +154,6 @@ export default {
       tableKey: 0,
       list: null,
       total: 0,
-      listLoading: true,
       listQuery: {
         page: 1,
         limit: 20,
@@ -161,7 +162,7 @@ export default {
         datasetType: '预处理数据集',
         username: ['自己', '他人'],
         taskType: [],
-        analyseStatus: ['解析中', '解析完成']
+        analyseStatus: ['解析中', '已就绪']
       },
       searchQuery: {
         usernameSelect: '',
@@ -180,8 +181,8 @@ export default {
         copyDialogVisible: false,
         copyDes: '预处理数据集',
         datasetInitid: ''
-      }
-
+      },
+      timer: null
     }
   },
   created() {
@@ -189,17 +190,19 @@ export default {
     this.taskTypeFilter = this.$store.state.taskTypes.taskTypeFilter
     this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
+    this.timer = setInterval(() => {
+      this.getList()
+    }, 1000)
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
   },
   methods: {
     // 数据获取系列函数
     getList() {
-      this.listLoading = true
       datasetListFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        setTimeout(() => {
-          this.listLoading = false
-        }, 0 * 1000)
       })
     },
     // 数据筛选系列函数
@@ -282,6 +285,9 @@ export default {
     },
     handleDataVenation(row) {
       this.$router.push('/data-manage/data-venation/preprocess-dataset/' + row._id)
+    },
+    handleProcessManage() {
+      this.$router.push('/process-manage/chart/' + '预处理')
     },
     handlePublicityChange(row) {
       datasetInfoUpdate({ 'datasetid': row._id, 'infos': { 'publicity': row.publicity }}).then(response => {

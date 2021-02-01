@@ -10,3 +10,13 @@ export function datafileInfoUpdate(data) {
     headers: { 'Authorization': 'Bearer ' + store.state.user.token }
   })
 }
+
+// 数据文件生成（拷贝）
+export function datafileCopy(data) {
+  return request({
+    url: '/common/datafile/datafiles',
+    method: 'post',
+    data: data,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}

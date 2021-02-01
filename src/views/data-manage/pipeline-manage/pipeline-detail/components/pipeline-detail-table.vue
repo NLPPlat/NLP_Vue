@@ -45,6 +45,12 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 参数查看对话框 -->
+    <el-dialog title="参数查看" :visible.sync="preprocessParamsShow.show" width="450px">
+      <pre-process-params-show :params="preprocessParamsShow.params" />
+    </el-dialog>
+
   </div>
 
 </template>
@@ -57,11 +63,13 @@ import { operatorsFetch } from '@/api/common/operator'
 import { datasetCopy } from '@/api/common/dataset'
 import { pipelineUpload } from '@/api/data-manage/pipeline'
 
+import PreProcessParamsShow from './pre-process-params-show'
+
 import axios from 'axios'
 
 export default {
   name: 'PipelineDetailTable',
-  components: { },
+  components: { PreProcessParamsShow },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -112,8 +120,7 @@ export default {
         preprocessid: '',
         pipelineName: '',
         publicity: '不公开'
-      },
-      timer: null
+      }
     }
   },
   watch: {
@@ -123,12 +130,6 @@ export default {
     this.preprocessAdd.preprocessList = this.$store.state.preprocessParams.preprocessList
     this.getList()
     this.getOperators()
-    this.timer = setInterval(() => {
-      this.getList()
-    }, 1000)
-  },
-  beforeDestroy() {
-    clearInterval(this.timer)
   },
   methods: {
     // 信息获取系列函数

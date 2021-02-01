@@ -6,7 +6,7 @@
 
 <script>
 // import { mapGetters } from 'vuex'
-import processChart from './components/process-chart'
+import processChart from '@/components/ProcessManageChart'
 
 export default {
   name: 'Home',

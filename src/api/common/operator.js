@@ -11,12 +11,3 @@ export function operatorsFetch(query) {
   })
 }
 
-// 某个人的算子列表获取
-export function operatorsForUserFetch(query) {
-  return request({
-    url: '/common/operator/operators',
-    method: 'get',
-    params: query,
-    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
-  })
-}

@@ -14,11 +14,13 @@
       <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleSearch">
         搜索
       </el-button>
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-position" @click="handleProcessManage">
+        过程脉络
+      </el-button>
     </div>
 
     <el-table
       :key="tableKey"
-      v-loading="listLoading"
       :data="list"
       border
       fit
@@ -167,7 +169,6 @@ export default {
       tableKey: 0,
       list: null,
       total: 0,
-      listLoading: true,
       dialogComponent: '',
       clickID: '',
       listQuery: {
@@ -199,7 +200,8 @@ export default {
         { text: '他人', value: '他人' }
       ],
       downloadLoading: false,
-      configDialogShow: false
+      configDialogShow: false,
+      timer: null
     }
   },
   created() {
@@ -207,17 +209,19 @@ export default {
     this.taskTypeFilter = this.$store.state.taskTypes.taskTypeFilter
     this.listQuery.taskType = this.$store.state.taskTypes.taskType
     this.getList()
+    this.timer = setInterval(() => {
+      this.getList()
+    }, 1000)
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
   },
   methods: {
     // 数据获取系列函数
     getList() {
-      this.listLoading = true
       datasetListFetch(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-        setTimeout(() => {
-          this.listLoading = false
-        }, 0 * 1000)
       })
     },
     // 数据筛选系列函数
@@ -310,6 +314,9 @@ export default {
     },
     handleDataVenation(row) {
       this.$router.push('/data-manage/data-venation/original-dataset/' + row._id)
+    },
+    handleProcessManage() {
+      this.$router.push('/process-manage/chart/' + '数据标注')
     },
     // 工具系列函数
     configDialogClose() {

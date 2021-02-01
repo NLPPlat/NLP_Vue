@@ -7,6 +7,7 @@ Vue.use(Router)
 import Layout from '@/layout'
 import ProcessManage from './modules/process-manage'
 import DataManage from './modules/data-manage'
+import Expand from './modules/expand'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -81,6 +82,7 @@ export const constantRoutes = [
   },
   ProcessManage,
   DataManage,
+  Expand,
   {
     path: '/gui',
     component: Layout,
@@ -91,6 +93,20 @@ export const constantRoutes = [
         component: () => import('@/views/gui/index'),
         name: 'Gui',
         meta: { title: '图形界面', icon: 'eye-open', affix: false }
+      }
+    ]
+  },
+  {
+    path: '/service',
+    component: Layout,
+    redirect: 'noRedirect',
+    name: 'Serivce',
+    children: [
+      {
+        path: 'user-center',
+        component: () => import('@/views/service/user-center/index'),
+        name: 'user-center',
+        meta: { title: '个人中心', icon: 'people' }
       }
     ]
   },
@@ -130,14 +146,19 @@ export const asyncRoutes = [
   {
     path: '/admin',
     component: Layout,
-    redirect: '/admin/index',
-    meta: { roles: ['admin'] },
+    name: 'Admin',
+    redirect: 'noRedirect',
+    meta: {
+      title: '系统管理',
+      icon: 'lock',
+      roles: ['admin']
+    },
     children: [
       {
-        path: 'index',
-        component: () => import('@/views/admin/index'),
-        name: 'Admin',
-        meta: { title: '管理员权限', icon: 'lock', noCache: true }
+        path: 'user-manage',
+        component: () => import('@/views/admin/user-manage/user-manage/index'),
+        name: 'user-manage',
+        meta: { title: '用户管理', icon: 'lock', noCache: true }
       }
     ]
   },

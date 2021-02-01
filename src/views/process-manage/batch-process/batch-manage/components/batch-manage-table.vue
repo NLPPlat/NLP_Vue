@@ -1,22 +1,57 @@
 <template>
-  <div class="app-container" style="background-color:#f0f3f5;">
+  <div ref="container" class="app-container" style="background-color:#f0f3f5;">
 
     <el-row type="flex" justify="space-between" :gutter="20">
-      <el-col :span="9">
+      <el-col :span="15">
+        <el-card shadow="hover" class="feature-config">
+          <div slot="header" class="clearfix" style="vertical-align:middle">
+            <span>数据集信息</span>
+          </div>
+          <el-row>
+            <el-col :span="12">
+              <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                <el-form-item label="任务ID">
+                  <el-tag type="warning" effect="dark">{{ datasetid }}</el-tag>
+                </el-form-item>
+                <el-form-item label="任务名称">
+                  <el-tag effect="dark">{{ datasetInfo.taskName }}</el-tag>
+                </el-form-item>
+                <el-form-item label="任务类型">
+                  <el-tag effect="dark">{{ datasetInfo.taskType }}</el-tag>
+                </el-form-item>
+              </el-form>
+            </el-col>
+            <el-col :span="12">
+              <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
+                <el-form-item label="批处理状态">
+                  <el-tag effect="dark" :type="dataStatus.batchStatus | statusFilter">{{ dataStatus.batchStatus }}</el-tag>
+                </el-form-item>
+                <!-- <el-form-item label="运行时间">
+                  <span>{{ getCalTime() }}</span>
+                </el-form-item> -->
+                <el-form-item label="结果文件">
+                  <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">导出文件</el-button>
+                </el-form-item>
+              </el-form>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
         <el-card shadow="hover" class="feature-config">
           <div slot="header" class="clearfix">
-            <span>执行设置</span>
+            <span>批处理设置</span>
           </div>
-          <el-form ref="form" :model="batchConfig" label-width="100px" style="width:300px">
-            <el-form-item label="训练模型">
+          <el-form ref="batchConfigForm" :model="batchConfig" label-width="100px" style="width:300px">
+            <el-form-item label="自定义批处理">
+              <el-switch v-model="batchConfig.operatorOn" />
+            </el-form-item>
+            <el-form-item v-if="batchConfig.operatorOn===false" label="训练模型" prop="trainedmodelSelect" :rules="[{ required: true, message: '请选择模型', trigger: 'blur' }]">
               <el-select v-model="batchConfig.trainedmodelSelect" placeholder="选择已有的模型">
                 <el-option v-for="model in trainedmodels" :key="model" :label="model.modelName" :value="model._id" />
               </el-select>
             </el-form-item>
-            <el-form-item label="自定义批处理">
-              <el-switch v-model="batchConfig.operatorOn" />
-            </el-form-item>
-            <el-form-item v-if="batchConfig.operatorOn===true" label="算子选择">
+            <el-form-item v-if="batchConfig.operatorOn===true" label="算子选择" prop="operatorSelect" :rules="[{ required: true, message: '请选择算子', trigger: 'blur' }]">
               <el-select v-model="batchConfig.operatorSelect" placeholder="选择批处理算子" @change="handleOperatorChange">
                 <el-option v-for="operator in operators" :key="operator" :label="operator.operatorName" :value="operator._id" />
               </el-select>
@@ -28,36 +63,19 @@
           </el-form>
         </el-card>
       </el-col>
-      <el-col :span="15">
+      <el-col :span="8">
         <el-card shadow="hover" class="feature-config">
           <div slot="header" class="clearfix" style="vertical-align:middle">
-            <span>基本信息</span>
+            <span>拓展支持</span>
           </div>
-          <el-row>
-            <el-col :span="12">
-              <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
-                <el-form-item label="批处理状态">
-                  <span>{{ dataStatus.batchStatus }}</span>
-                </el-form-item>
-                <el-form-item label="任务类型">
-                  <span>{{ dataStatus.taskType }}</span>
-                </el-form-item>
-                <!-- <el-form-item label="运行时间">
-                  <span>{{ getCalTime() }}</span>
-                </el-form-item> -->
-                <el-form-item label="结果操作">
-                  <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">导出结果</el-button>
-                </el-form-item>
-              </el-form>
-            </el-col>
-            <el-col :span="12">
-              <el-form ref="form" :model="dataInfo" label-width="100px" style="width:300px">
-                <el-form-item label="拓展应用">
-                  <el-button :disabled="dataStatus.batchStatus!=='处理完成'" style="float:left;" type="text">知识图谱</el-button>
-                </el-form-item>
-              </el-form>
-            </el-col>
-          </el-row>
+          <el-form ref="batchConfigForm" :model="batchConfig" label-width="100px" style="width:300px">
+            <el-form-item>
+              <el-link type="primary">知识图谱</el-link>
+            </el-form-item>
+            <el-form-item>
+              <el-link type="primary">QA系统</el-link>
+            </el-form-item>
+          </el-form>
         </el-card>
       </el-col>
     </el-row>
@@ -67,7 +85,7 @@
         <div slot="header" class="clearfix" style="vertical-align:middle">
           <span>批处理结果</span>
         </div>
-        <data-detail-table ref="result" :datasetid="dataStatus.resultDataset" :task-type="dataStatus.taskType" />
+        <data-detail-table ref="result" :datasetid="dataStatus.resultDataset" :task-type="datasetInfo.taskType" />
       </el-card>
     </transition>
 
@@ -94,8 +112,8 @@
 
 <script>
 import { datasetInfoFetch } from '@/api/common/dataset'
-import { operatorsForUserFetch } from '@/api/common/operator'
-import { trainedmodelsForUserFetch } from '@/api/common/model'
+import { operatorsFetch } from '@/api/common/operator'
+import { trainedmodelsFetch } from '@/api/common/model'
 import { batchRun } from '@/api/process-manage/batch-process'
 import PythonEditor from '@/components/PythonEditor'
 import { calTime } from '@/utils'
@@ -107,18 +125,30 @@ export default {
   components: { PythonEditor, DataDetailTable },
   directives: { },
   filters: {
+    statusFilter(status) {
+      const statusMap = {
+        '处理完成': 'success',
+        '处理中': 'primary',
+        '未开始': 'info'
+      }
+      return statusMap[status]
+    }
   },
   data() {
     return {
       datasetid: '',
-      dataInfo: {},
+      datasetInfo: {
+        taskType: '',
+        datasetid: '',
+        taskName: ''
+      },
       dataStatus: {
         batchStatus: '未开始',
         resultDataset: null,
-        taskType: '',
         begintime: '',
         endtime: ''
       },
+      dataInfo: {},
       operators: [],
       trainedmodels: [],
       batchConfig: {
@@ -151,6 +181,10 @@ export default {
       this.getInfo()
     }, 1000 * 2)
   },
+  mounted() {
+    var height = document.documentElement.clientHeight
+    this.$refs.container.style['min-height'] = height - 50 + 'px'
+  },
   beforeDestroy() {
     if (this.timer !== null) {
       clearInterval(this.timer)
@@ -159,10 +193,11 @@ export default {
   methods: {
     getInfo() {
       datasetInfoFetch({ 'datasetid': this.datasetid }).then(response => {
-        this.datasetInfo = response.data
+        console.log(response.data)
+        this.datasetInfo.taskType = response.data.taskType
+        this.datasetInfo.taskName = response.data.taskName
         this.dataStatus.batchStatus = response.data.batchStatus
         this.dataStatus.resultDataset = response.data.resultDataset
-        this.dataStatus.taskType = response.data.taskType
         if (this.dataStatus.batchStatus !== '未开始') {
           this.dataStatus.begintime = response.data.begintime.$date
         }
@@ -172,12 +207,12 @@ export default {
       })
     },
     getOpreators() {
-      operatorsForUserFetch({ 'operatorType': '批处理算子' }).then(response => {
+      operatorsFetch({ 'type': 'all', 'operatorType': ['批处理算子'], 'operatorName': '', 'username': ['自己'], 'sort': '-id' }).then(response => {
         this.operators = response.data.items
       })
     },
     getTrainedmodels() {
-      trainedmodelsForUserFetch({ }).then(response => {
+      trainedmodelsFetch({ 'type': 'all', 'platType': ['Keras', 'Pytorch', 'Tensorflow1.X', 'Tensorflow2.X'], 'modelName': '', 'username': ['自己'], 'sort': '-id' }).then(response => {
         this.trainedmodels = response.data.items
       })
     },
@@ -192,14 +227,17 @@ export default {
       }
     },
     handleBatchRun() {
-      batchRun({ 'datasetid': this.datasetid, 'trainedmodelSelect': this.batchConfig.trainedmodelSelect, 'operatorOn': this.batchConfig.operatorOn }).then(response => {
-
+      this.$refs.batchConfigForm.validate((valid) => {
+        if (valid) {
+          batchRun({ 'datasetid': this.datasetid, 'trainedmodelSelect': this.batchConfig.trainedmodelSelect, 'operatorOn': this.batchConfig.operatorOn, 'code': this.batchConfig.code }).then(response => {
+          })
+        }
       })
     },
     getCalTime() {
       if (this.dataStatus.batchStatus === '未开始') {
         return '未开始计时'
-      } else if (this.dataStatus.batchStatus === '训练中') {
+      } else if (this.dataStatus.batchStatus === '处理中') {
         return calTime(this.dataStatus.begintime - 8 * 60 * 60 * 1000)
       } else {
         return calTime(this.dataStatus.begintime, this.dataStatus.endtime)
@@ -212,7 +250,7 @@ export default {
 <style scoped>
 
 .feature-config{
-  height:380px
+  height:330px
 }
 
 .feature-info{

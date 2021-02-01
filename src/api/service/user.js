@@ -25,8 +25,24 @@ export function getInfo() {
   })
 }
 
+export function getAllInfo() {
+  return request({
+    url: '/service/user/infos',
+    method: 'get',
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
+export function modifyInfo(data) {
+  return request({
+    url: '/service/user/infos',
+    method: 'patch',
+    data: data,
+    headers: { 'Authorization': 'Bearer ' + store.state.user.token }
+  })
+}
+
 export function logout() {
-  console.log(store)
   return request({
     url: '/service/token',
     method: 'delete',

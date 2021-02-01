@@ -1,15 +1,15 @@
 <template>
   <div>
-    hello world! This is annotation page.
+    <data-set-table />
   </div>
 </template>
 
 <script>
-// import { mapGetters } from 'vuex'
+import DataSetTable from './components/data-set-table'
 
 export default {
-  name: 'Home',
-  components: { },
+  name: 'UserManage',
+  components: { DataSetTable },
   data() {
     return {
     }

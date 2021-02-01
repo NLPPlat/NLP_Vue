@@ -43,9 +43,6 @@ const state = {
     children: [{
       value: '序列化',
       label: '序列化'
-    }, {
-      value: '特征矩阵生成',
-      label: '特征矩阵生成'
     }]
   }, {
     value: '特征降维',
@@ -157,24 +154,24 @@ const state = {
   },
   Word2vec描述: '使用vectors属性的数据训练向量，向量文件存储至vectors属性',
   Word2vec参数说明: {
-    size: 100,
-    alpha: 0.025,
-    window: 5,
-    min_count: 5,
-    max_vocab_size: 'None',
-    sample: 1e-3,
-    seed: 1,
-    workers: 3,
+    size: '特征向量的维度',
+    alpha: '学习速率',
+    window: '当前词与预测词在一个句子中的最大距离',
+    min_count: '最小词频，低于该词频的词语将被舍弃',
+    max_vocab_size: '词向量构建期间的RAM限制',
+    sample: '高频词汇的随机降采样的配置阈值',
+    seed: '随机数发生器',
+    workers: '训练的并行数',
     min_alpha: 0,
-    sg: 0,
-    hs: 0,
-    negative: 5,
-    cbow_mean: 1,
-    hashfxn: 'hash',
-    iter: 5,
-    trim_rule: 'None',
-    sorted_vocab: 1,
-    batch_words: 10000
+    sg: '设置训练算法，默认为0，对应CBOW算法,sg=1则采用skip-gram算法',
+    hs: '如果为1则会采用hierarchica·softmax技巧。如果设置为0（defaut），则negative sampling会被使用',
+    negative: '如果>0,则会采用negativesamping，用于设置多少个noise words',
+    cbow_mean: '如果为0，则采用上下文词向量的和，如果为1（defau·t）则采用均值。只有使用CBOW的时候才起作用',
+    hashfxn: '初始化权重。默认使用python的hash函数',
+    iter: '迭代次数',
+    trim_rule: '设置词汇表的整理规则，指定那些单词要留下，哪些要被删除',
+    sorted_vocab: '如果为1（defaut），则在分配word index 的时候会先对单词基于频率降序排序',
+    batch_words: '每一批的传递给线程的单词的数量，默认为10000'
   },
   Doc2vec: {
     dm: 1,
@@ -235,20 +232,11 @@ const state = {
   序列化: {
     maxlen: 20
   },
+  序列化描述: '使用embedding属性的向量文件对vectors属性的数据进行序列化，序列化后的id序列保存至feature属性，对应的向量矩阵保存至embedding_matrix',
   序列化参数说明: {
-    maxlen: 20
+    maxlen: '每个文本向量最大长度'
   },
-  特征矩阵生成: {
-    method: '向量平均',
-    padding: 20
-  },
-  特征矩阵生成选项: {
-    method: ['向量平均', '向量求和', 'TFIDF加权']
-  },
-  特征矩阵生成参数说明: {
-    method: '生成方式',
-    padding: '截取个数'
-  }
+  单标签数值映射描述: '对vectors属性中的label按照分类任务将标签值映射为离散自然数，结果存储至label_id属性中'
 }
 
 const mutations = {

@@ -2,8 +2,8 @@
   <div class="components-container">
 
     <el-row>
-      <el-form :inline="true" :model="codeUpload" class="demo-form-inline">
-        <el-form-item label="运行平台">
+      <el-form ref="codeUploadForm" :inline="true" :model="codeUpload" class="demo-form-inline">
+        <el-form-item label="运行平台" prop="platType" :rules="[{ required: true, message: '请选择运行平台', trigger: 'blur' }]">
           <el-select v-model="codeUpload.platType" placeholder="请选择运行平台">
             <el-option label="Tensorflow1.X" value="Tensorflow1.X" />
             <el-option label="Tensorflow2.X" value="Tensorflow2.X" />
@@ -11,7 +11,7 @@
             <el-option label="Pytorch" value="Pytorch" />
           </el-select>
         </el-form-item>
-        <el-form-item label="模型名称">
+        <el-form-item label="模型名称" prop="modelName" :rules="[{ required: true, message: '请填写模型名称', trigger: 'blur' }]">
           <el-input v-model="codeUpload.modelName" placeholder="请填写模型名称" />
         </el-form-item>
         <el-form-item label="公开性">
@@ -114,16 +114,20 @@ export default {
       })
     },
     handlemodelUpload() {
-      modelUpload(Object.assign({ 'modelid': this.modelid }, this.codeUpload)).then(response => {
-        if (this.modelid === '-1') {
-          this.$router.push('/data-manage/model-manage/codehub/' + response.data['modelid'])
+      this.$refs.codeUploadForm.validate((valid) => {
+        if (valid) {
+          modelUpload(Object.assign({ 'modelid': this.modelid }, this.codeUpload)).then(response => {
+            if (this.modelid === '-1') {
+              this.$router.push('/data-manage/model-manage/codehub/' + response.data['modelid'])
+            }
+            this.$notify({
+              title: '模型保存成功',
+              message: '可在模型训练模块使用',
+              type: 'success',
+              duration: 2000
+            })
+          })
         }
-        this.$notify({
-          title: '模型保存成功',
-          message: '可在模型训练模块使用',
-          type: 'success',
-          duration: 2000
-        })
       })
     },
     handleReadpy() {

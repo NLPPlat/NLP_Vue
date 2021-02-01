@@ -86,7 +86,7 @@
             <el-button type="primary" size="mini" @click="handleManage(row)">
               进入算子
             </el-button>
-            <el-button type="primary" size="mini" @click="copyDialogShow(row)">
+            <el-button type="primary" size="mini" @click="handleCopy(row)">
               拷贝
             </el-button>
             <el-button size="mini" type="danger" @click="handleDelete(row)">
@@ -108,7 +108,7 @@
 </template>
 
 <script>
-import { datafileInfoUpdate } from '@/api/common/datafile'
+import { datafileInfoUpdate, datafileCopy } from '@/api/common/datafile'
 import { operatorsFetch } from '@/api/common/operator'
 import { writePermission } from '@/utils/permission'
 
@@ -221,8 +221,16 @@ export default {
     handleOperatorAdd() {
       this.$router.push('/data-manage/operator-manage/codehub/' + '-1')
     },
-    handleCopy() {
-      this.datasetCopy.copyDialogVisible = false
+    handleCopy(row) {
+      datafileCopy({ 'datafileInitid': row._id, 'datafileType': '算子文件' }).then(response => {
+        this.$notify({
+          title: '算子拷贝成功！',
+          message: '拷贝至ID为' + response.data.datafileDesID + '的算子中',
+          type: 'success',
+          duration: 2000
+        })
+        this.getList()
+      })
     },
     handleDelete(row) {
     },
@@ -241,11 +249,6 @@ export default {
       this.$router.push('/data-manage/data-venation/' + row._id)
     },
     // 工具系列函数
-    copyDialogShow(row) {
-      this.datasetCopy.datasetInitid = row._id
-      this.datasetCopy.copyDes = ''
-      this.datasetCopy.copyDialogVisible = true
-    },
     permissionCheck(username) {
       return writePermission(username)
     }

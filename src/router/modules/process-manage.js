@@ -9,9 +9,16 @@ const componentsRouter = {
   name: 'ProcessManage',
   meta: {
     title: '过程管理',
-    icon: 'component'
+    icon: 'guide'
   },
   children: [
+    {
+      path: 'chart/:process',
+      component: () => import('@/views/home/process-manage-chart/index'),
+      name: 'process-manage-chart',
+      hidden: true,
+      meta: { title: '过程脉络' }
+    },
     {
       path: 'data-upload',
       component: () => import('@/views/process-manage/data-upload/index'),

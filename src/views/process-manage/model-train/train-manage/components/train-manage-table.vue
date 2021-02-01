@@ -11,13 +11,13 @@
           </div>
           <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
             <el-form-item label="任务ID">
-              <span>{{ datasetid }}</span>
+              <el-tag type="warning" effect="dark">{{ datasetid }}</el-tag>
             </el-form-item>
             <el-form-item label="任务名称">
-              <span>{{ taskName }}</span>
+              <el-tag effect="dark">{{ taskName }}</el-tag>
             </el-form-item>
             <el-form-item label="任务类型">
-              <span>{{ taskType }}</span>
+              <el-tag effect="dark">{{ taskType }}</el-tag>
             </el-form-item>
           </el-form>
         </el-card>
@@ -29,11 +29,11 @@
             <span>训练集/测试集切割</span>
             <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 3px" type="text" @click="handleFeaturesSplit('不跳过')">确认配置</el-button>
             <el-button v-if="datasetInfo.splitStatus==='未完成'" style="float: right; padding: 3px 9px" type="text" @click="handleFeaturesSplit('跳过')">跳过配置</el-button>
-            <span v-else style="float: right;display:inline"><i class="el-icon-check el-icon--right" /> </span>
+            <span v-else style="float: right;display:inline"><i class="el-icon-check" style="color:green;font-weight:900" /></span>
           </div>
           <el-form ref="form" :model="featuresConfig" label-width="100px" style="width:300px">
             <el-form-item label="Shape">
-              <span>{{ datasetInfo.featuresShape }}</span>
+              <el-tag type="success">{{ datasetInfo.featuresShape }}</el-tag>
             </el-form-item>
             <el-form-item label="Stratify">
               <el-select v-model="featuresConfig.stratify" placeholder="选择参数值" :disabled="datasetInfo.splitStatus==='已完成'">
@@ -54,15 +54,15 @@
           <div slot="header" class="clearfix">
             <span>模型载入</span>
             <el-button v-if="datasetInfo.modelStatus==='未完成'" style="float: right; padding: 3px 0" type="text" @click="handleModelUpdate()">确认配置</el-button>
-            <span v-else style="float: right;display:inline"><i class="el-icon-check el-icon--right" /> </span>
+            <span v-else style="float: right;display:inline"><i class="el-icon-check" style="color:green;font-weight:900" /> </span>
           </div>
-          <el-form ref="form" :model="modelConfig" label-width="100px" style="width:300px">
-            <el-form-item label="基础模型">
+          <el-form ref="modelConfigForm" :model="modelConfig" label-width="100px" style="width:300px">
+            <el-form-item label="基础模型" prop="modelSelect" :rules="[{ required: true, message: '请选择模型', trigger: 'blur' }]">
               <el-select v-model="modelConfig.modelSelect" placeholder="选择已有的模型代码" :disabled="datasetInfo.modelStatus==='已完成'" @change="handleBaseModelChange">
                 <el-option v-for="model in models" :key="model._id" :label="model.modelName" :value="model._id" />
               </el-select>
             </el-form-item>
-            <el-form-item label="模型命名">
+            <el-form-item label="模型命名" prop="modelName" :rules="[{ required: true, message: '请填写模型名称', trigger: 'blur' }]">
               <el-input v-model="modelConfig.modelName" placeholder="输入要训练的模型名称" :disabled="datasetInfo.modelStatus==='已完成'" />
             </el-form-item>
             <el-form-item label="模型调整">
@@ -81,39 +81,26 @@
         <el-col :span="12">
           <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" class="feature-info" shadow="hover">
             <div slot="header" class="clearfix" style="vertical-align:middle">
-              <span>数据集与模型信息</span>
+              <span>模型信息</span>
             </div>
             <el-row>
-              <el-col :span="8">
-                <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
-                  <el-form-item label="数据集Shape">
-                    <span>{{ datasetInfo.featuresShape }}</span>
-                  </el-form-item>
-                  <el-form-item label="训练集Shape">
-                    <span>{{ datasetInfo.trainShape }}</span>
-                  </el-form-item>
-                  <el-form-item label="测试集Shape">
-                    <span>{{ datasetInfo.testShape }}</span>
-                  </el-form-item>
-                </el-form>
-              </el-col>
-              <el-col :span="8">
+              <el-col :span="12">
                 <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
                   <el-form-item label="训练模型名称">
-                    <span>{{ modelConfig.modelName }}</span>
+                    <el-tag type="warning" effect="dark"> {{ modelConfig.modelName }}</el-tag>
                   </el-form-item>
                   <el-form-item label="模型运行平台">
-                    <span>Keras</span>
+                    <el-tag effect="dark">Keras</el-tag>
                   </el-form-item>
                 </el-form>
               </el-col>
-              <el-col :span="8">
+              <el-col :span="12">
                 <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
                   <el-form-item label="训练状态">
-                    <span>{{ trainedmodel.trainStatus }}</span>
+                    <el-tag effect="dark" :type="trainedmodel.trainStatus | statusFilter">{{ trainedmodel.trainStatus }}</el-tag>
                   </el-form-item>
                   <el-form-item label="训练时间">
-                    <span>{{ getCalTime() }}</span>
+                    <el-tag type="success">{{ getCalTime() }}</el-tag>
                   </el-form-item>
                   <el-form-item label="模型操作">
                     <el-button :disabled="trainedmodel.trainStatus!=='已完成'" style="float:left;" type="text" @click="confirmDownload">下载模型</el-button>
@@ -127,40 +114,7 @@
 
         <el-col :span="12">
           <el-card v-if="datasetInfo.splitStatus==='已完成' && datasetInfo.modelStatus==='已完成'" class="feature-info" shadow="hover">
-            <div slot="header" class="clearfix" style="vertical-align:middle">
-              <span>训练状态与结果</span>
-            </div>
-            <el-row>
-              <el-col :span="12">
-                <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
-                  <el-form-item label="训练状态">
-                    <span>{{ trainedmodel.trainStatus }}</span>
-                  </el-form-item>
-                  <el-form-item label="训练时间">
-                    <span>{{ getCalTime() }}</span>
-                  </el-form-item>
-                  <el-form-item label="模型操作">
-                    <el-button :disabled="trainedmodel.trainStatus!=='已完成'" style="float:left;" type="text" @click="confirmDownload">下载模型</el-button>
-                  </el-form-item>
-                </el-form>
-              </el-col>
-              <el-col :span="12">
-                <el-form ref="form" :model="datasetInfo" label-width="100px" style="width:300px">
-                  <el-form-item label="Accuracy">
-                    <span>{{ trainedmodel.evaluation['accuracy'] }}</span>
-                  </el-form-item>
-                  <el-form-item label="Precision">
-                    <span>{{ trainedmodel.evaluation['precision'] }}</span>
-                  </el-form-item>
-                  <el-form-item label="Recall">
-                    <span>{{ trainedmodel.evaluation['recall'] }}</span>
-                  </el-form-item>
-                  <el-form-item label="F1">
-                    <span>{{ trainedmodel.evaluation['f1'] }}</span>
-                  </el-form-item>
-                </el-form>
-              </el-col>
-            </el-row>
+            <evaluation-chart :data="trainedmodel.evaluationData" />
           </el-card>
         </el-col>
 
@@ -180,7 +134,6 @@
             <el-button type="success" style="margin:30px 0px 0px 40px" @click="trainedmodel.codeshow=true">模型调整</el-button>
             <el-button type="danger" style="margin:30px 0px 0px 40px">停止训练</el-button>
             <el-button type="success" style="margin:30px 0px 0px 40px" :disabled="trainedmodel.trainStatus!=='已完成'">模型导出</el-button>
-
           </el-card>
         </el-col>
 
@@ -284,12 +237,21 @@ import { calTime } from '@/utils'
 import axios from 'axios'
 import PythonEditor from '@/components/PythonEditor'
 import PythonConsole from '@/components/PythonConsoleForWhite'
+import EvaluationChart from './evaluation-chart'
 
 export default {
   name: 'TrainManageTable',
-  components: { PythonEditor, PythonConsole },
+  components: { PythonEditor, PythonConsole, EvaluationChart },
   directives: { },
   filters: {
+    statusFilter(status) {
+      const statusMap = {
+        '已完成': 'success',
+        '训练中': 'primary',
+        '未开始': 'info'
+      }
+      return statusMap[status]
+    }
   },
   data() {
     return {
@@ -318,7 +280,8 @@ export default {
         figs: {},
         datetime: '',
         endtime: '',
-        evaluation: {}
+        evaluation: {},
+        evaluationData: []
       },
       timer: null
     }
@@ -379,6 +342,10 @@ export default {
         this.trainedmodel.figs = response.data.figs
         this.trainedmodel.evaluation = response.data.evaluation
         this.trainedmodel.datetime = response.data.datetime.$date
+        this.trainedmodel.evaluationData = []
+        for (var data in this.trainedmodel.evaluation) {
+          this.trainedmodel.evaluationData.push(parseFloat(this.trainedmodel.evaluation[data]))
+        }
         if (this.trainedmodel.trainStatus === '已完成') {
           this.trainedmodel.endtime = response.data.endtime.$date
         }
@@ -390,6 +357,10 @@ export default {
         this.trainedmodel.result = response.data.result
         this.trainedmodel.figs = response.data.figs
         this.trainedmodel.evaluation = response.data.evaluation
+        this.trainedmodel.evaluationData = []
+        for (var data in this.trainedmodel.evaluation) {
+          this.trainedmodel.evaluationData.push(parseFloat(this.trainedmodel.evaluation[data]))
+        }
         this.trainedmodel.datetime = response.data.datetime.$date
         if (this.trainedmodel.trainStatus === '已完成') {
           this.trainedmodel.endtime = response.data.endtime.$date
@@ -420,14 +391,18 @@ export default {
       })
     },
     handleModelUpdate() {
-      modelUpdate({ 'datasetid': this.datasetid, 'modelSelect': this.modelConfig.modelSelect, 'modelName': this.modelConfig.modelName, 'code': this.modelConfig.code }).then(response => {
-        this.getInfo()
-        this.$notify({
-          title: '模型载入成功',
-          message: '完成全部配置后展示训练集和测试集',
-          type: 'success',
-          duration: 2000
-        })
+      this.$refs.modelConfigForm.validate((valid) => {
+        if (valid) {
+          modelUpdate({ 'datasetid': this.datasetid, 'modelSelect': this.modelConfig.modelSelect, 'modelName': this.modelConfig.modelName, 'code': this.modelConfig.code }).then(response => {
+            this.getInfo()
+            this.$notify({
+              title: '模型载入成功',
+              message: '完成全部配置后展示训练集和测试集',
+              type: 'success',
+              duration: 2000
+            })
+          })
+        }
       })
     },
     handleModelRun() {
@@ -451,10 +426,13 @@ export default {
     confirmDownload() {
       axios
         .get(process.env.VUE_APP_BASE_API + '/process-manage/model-train/trainedmodels/ID/model',
-          { params: { 'trainedmodelid': this.trainedmodel.id },
-            headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token }})
+          {
+            params: { 'trainedmodelid': this.trainedmodel.id },
+            headers: { 'Authorization': 'Bearer ' + this.$store.state.user.token, 'responseType': 'blob' }
+          })
         .then(response => {
-          const fileName = response.headers['content-disposition']
+          // const fileName = response.headers['content-disposition']
+          const fileName = 'model.h5'
           var url = window.URL.createObjectURL(new Blob([response.data]))
           const a = document.createElement('a')
           a.href = url

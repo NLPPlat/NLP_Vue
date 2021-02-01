@@ -6,8 +6,8 @@
     <el-row type="flex" justify="space-between">
       <el-col :span="2" />
       <el-col :span="16">
-        <el-form ref="uploadForm" :model="uploadForm" :rules="uploadRules" label-width="100px">
-          <el-form-item label="运行平台" prop="taskType">
+        <el-form ref="uploadForm" :model="uploadForm" :rules="uploadRules" label-width="120px">
+          <el-form-item label="运行平台" prop="plat" :rules="[{ required: true, message: '请选择运行平台', trigger: 'blur' }]">
             <el-select v-model="uploadForm.plat" placeholder="请选择运行平台" style="width:400px">
               <el-option label="Tensorflow1.X" value="Tensorflow1.X" />
               <el-option label="Tensorflow2.X" value="Tensorflow2.X" />
@@ -15,13 +15,13 @@
               <el-option label="Pytorch" value="Pytorch" />
             </el-select>
           </el-form-item>
-          <el-form-item label="训练模型名称" prop="trainedmodelName">
+          <el-form-item label="训练模型名称" prop="trainedmodelName" :rules="[{ required: true, message: '请填写模型名称', trigger: 'blur' }]">
             <el-input v-model="uploadForm.trainedmodelName" placeholder="请填写训练模型名称" style="width:400px" />
           </el-form-item>
           <el-form-item label="训练模型描述">
             <el-input v-model="uploadForm.desc" type="textarea" placeholder="选填" style="width:400px" />
           </el-form-item>
-          <el-form-item label="公开性" prop="publicity">
+          <el-form-item label="公开性" prop="publicity" :rules="[{ required: true, message: '请选择公开性', trigger: 'blur' }]">
             <el-radio-group v-model="uploadForm.publicity">
               <el-radio label="公开" />
               <el-radio label="不公开" />
@@ -38,7 +38,6 @@
               :limit="1"
               :auto-upload="false"
               :on-success="handleUploadSuccess"
-              accept=".csv, .txt, .tsv, .doc, .docx, .xls, .xlsx, .json"
               style="height:60px"
             >
               <el-button size="small" type="primary">点击选择</el-button>
@@ -87,7 +86,11 @@ export default {
       this.uploadInfo.uploadURL = process.env.VUE_APP_BASE_API + url
     },
     onUploadSubmit() {
-      this.$refs.uploadFunc.submit()
+      this.$refs.uploadForm.validate((valid) => {
+        if (valid) {
+          this.$refs.uploadFunc.submit()
+        }
+      })
     },
     handleUploadSuccess() {
       this.$notify({
@@ -97,6 +100,7 @@ export default {
         duration: 2000
       })
       this.show = false
+      this.$parent.getList()
     }
   }
 }

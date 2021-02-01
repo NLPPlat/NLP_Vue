@@ -2,16 +2,16 @@
   <div class="components-container">
 
     <el-row>
-      <el-form :inline="true" :model="codeUpload" class="demo-form-inline">
+      <el-form ref="codeUploadForm" :inline="true" :model="codeUpload" class="demo-form-inline">
 
-        <el-form-item label="算子类型">
+        <el-form-item label="算子类型" prop="operatorType" :rules="[{ required: true, message: '请选择算子类型', trigger: 'blur' }]">
           <el-select v-model="codeUpload.operatorType" placeholder="请选择算子类型">
             <el-option label="数据清洗算子" value="数据清洗算子" />
             <el-option label="预处理算子" value="预处理算子" />
             <el-option label="批处理算子" value="批处理算子" />
           </el-select>
         </el-form-item>
-        <el-form-item label="算子名称">
+        <el-form-item label="算子名称" prop="operatorName" :rules="[{ required: true, message: '请填写算子名称', trigger: 'blur' }]">
           <el-input v-model="codeUpload.operatorName" placeholder="请填写算子名称" />
         </el-form-item>
         <el-form-item label="公开性">
@@ -32,7 +32,7 @@
       <el-button type="primary" @click="handleReadpy()">
         本地读取
       </el-button>
-      <el-button type="success" @click="APIDrawer=true">
+      <el-button type="success" @click="handleApiFetch()">
         数据访问API
       </el-button>
     </el-row>
@@ -71,10 +71,10 @@
     <!-- API文档 -->
     <el-drawer title="API文档" :visible.sync="APIDrawer" :with-header="false">
       <el-card>
-        <h2>预处理数据集：数据访问API</h2>
-        <el-collapse v-model="activeName" accordion>
-          <el-collapse-item title="app.dataAPI.preprocess.getPreprocessData(id)" name="0">
-            <div>输入预处理步骤id，返回结果。id为-1时为最后一个步骤。</div>
+        <h2>数据访问API</h2>
+        <el-collapse v-model="activeName">
+          <el-collapse-item v-for="item in API" :key="item.name" :title="item.name" :name="item.name">
+            <div>{{ item.content }}</div>
           </el-collapse-item>
         </el-collapse>
       </el-card>
@@ -100,7 +100,7 @@
 import PythonEditor from '@/components/PythonEditor'
 import PythonConsole from '@/components/PythonConsoleForWhite'
 
-import { operatorUpload, operatorFetch, codeRun } from '@/api/data-manage/operator'
+import { operatorUpload, operatorFetch, codeRun, apiFetch } from '@/api/data-manage/operator'
 import { datasetIDListFetch } from '@/api/common/dataset'
 
 export default {
@@ -119,6 +119,7 @@ export default {
         code: '此处查看测试输出'
       },
       APIDrawer: false,
+      API: [],
       datasetSelect: {
         list: [],
         datasetid: '',
@@ -134,15 +135,14 @@ export default {
     'codeUpload.operatorType': {
       handler: function(val) {
         switch (val) {
-          case '分词分句算子':
           case '数据清洗算子':
             this.getDatasetList('训练数据集')
             break
           case '预处理算子':
             this.getDatasetList('预处理数据集')
             break
-          case '数据切割算子':
-            this.getDatasetList('特征数据集')
+          case '批处理算子':
+            this.getDatasetList('批处理特征集')
             break
         }
       }
@@ -167,16 +167,20 @@ export default {
       })
     },
     handleOperatorUpload() {
-      operatorUpload(Object.assign({ 'operatorid': this.operatorid }, this.codeUpload)).then(response => {
-        if (this.operatorid === '-1') {
-          this.$router.push('/data-manage/operator-manage/codehub/' + response.data['operatorid'])
+      this.$refs.codeUploadForm.validate((valid) => {
+        if (valid) {
+          operatorUpload(Object.assign({ 'operatorid': this.operatorid }, this.codeUpload)).then(response => {
+            if (this.operatorid === '-1') {
+              this.$router.push('/data-manage/operator-manage/codehub/' + response.data['operatorid'])
+            }
+            this.$notify({
+              title: '算子保存成功',
+              message: '可在各个模块调用算子',
+              type: 'success',
+              duration: 2000
+            })
+          })
         }
-        this.$notify({
-          title: '算子保存成功',
-          message: '可在各个模块调用算子',
-          type: 'success',
-          duration: 2000
-        })
       })
     },
     handleCodeRun() {
@@ -194,6 +198,16 @@ export default {
       reader.readAsText(event.raw)
       reader.onload = () => {
         this.codeUpload.code = reader.result
+      }
+    },
+    handleApiFetch() {
+      if (this.codeUpload.operatorType === '') {
+        this.$message.error('请先选择算子类型！')
+      } else {
+        apiFetch({ 'operatorType': this.codeUpload.operatorType }).then(response => {
+          this.API = response.data.API
+          this.APIDrawer = true
+        })
       }
     }
   }

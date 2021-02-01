@@ -417,8 +417,8 @@ export default {
           if (valid) {
             this.featuresConstruction.show = false
             this.$notify({
-              title: '生成成功',
-              message: '可对生成的特征集进行训练。',
+              title: '生成任务创建成功！',
+              message: '即将生成至ID为' + response.data.datasetDesID + '的数据集中',
               type: 'success',
               duration: 2000
             })
